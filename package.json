@@ -25,7 +25,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "knip": "knip",
-    "ls-lint": "ls-lint"
+    "ls-lint": "ls-lint",
+    "codecheck": "pnpm run typecheck && pnpm run lint && pnpm run format && pnpm run stylelint && pnpm run ls-lint && pnpm run knip"
   },
   "dependencies": {
     "@hello-pangea/dnd": "18.0.1",

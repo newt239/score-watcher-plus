@@ -1,8 +1,6 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "ignore": [
-    "drizzle.config.ts"
-  ],
+  "ignore": ["drizzle.config.ts"],
   "ignoreDependencies": [
     "@css-modules-kit/stylelint-plugin",
     "dotenv",

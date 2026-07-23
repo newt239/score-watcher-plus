@@ -17,9 +17,15 @@ jobs:
           cache: "pnpm"
       - name: 依存関係をインストール
         run: pnpm install --frozen-lockfile
+      - name: 型チェック
+        run: pnpm run typecheck
       - name: Lintチェック
         run: pnpm run lint
       - name: Formatチェック
         run: pnpm run format
       - name: Stylelintチェック
         run: pnpm run stylelint
+      - name: ls-lintチェック
+        run: pnpm run ls-lint
+      - name: Knipチェック
+        run: pnpm run knip
