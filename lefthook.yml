@@ -13,3 +13,6 @@ pre-commit:
       run: pnpm run stylelint:fix
       stage_fixed: true
       fail_text: "Stylelintエラーがあります。修正してください。"
+    ls-lint:
+      run: pnpm run ls-lint
+      fail_text: "ファイル名の命名規則エラーがあります。修正してください。"
