@@ -4,6 +4,21 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // 旧オンライン版URL（/online/...）からの恒久リダイレクト
+  redirects: async () => {
+    return [
+      {
+        source: "/online",
+        destination: "/games",
+        permanent: true,
+      },
+      {
+        source: "/online/:path*",
+        destination: "/:path*",
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.infrastructureLogging = {
       level: "error",
