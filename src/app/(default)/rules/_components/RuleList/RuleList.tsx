@@ -16,7 +16,11 @@ import type { RuleNames } from "@/models/game";
 import createApiClient from "@/utils/hono/browser";
 import { rules } from "@/utils/rules";
 
-const RuleList: React.FC = () => {
+type RuleListProps = {
+  isLoggedIn: boolean;
+};
+
+const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
   const router = useRouter();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState<RuleNames | null>(null);
@@ -40,6 +44,10 @@ const RuleList: React.FC = () => {
   const ruleNameList = Object.keys(rules) as RuleNames[];
 
   const onClick = (rule_name: RuleNames) => {
+    if (!isLoggedIn) {
+      router.push("/sign-in");
+      return;
+    }
     setSelectedRule(rule_name);
     form.setFieldValue("name", rules[rule_name].name);
     setCreateModalOpen(true);

@@ -4,15 +4,15 @@ import { getUser } from "@/utils/auth/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
-type OnlineLayoutProps = {
+type AuthedLayoutProps = {
   children: React.ReactNode;
 };
 
 /**
- * オンライン版のレイアウト
+ * 認証必須ページのレイアウト
  * ユーザーが未ログインの場合は/sign-inにリダイレクトする
  */
-const OnlineLayout = async ({ children }: OnlineLayoutProps) => {
+const AuthedLayout = async ({ children }: AuthedLayoutProps) => {
   const user = await getUser();
 
   if (!user) {
@@ -22,4 +22,4 @@ const OnlineLayout = async ({ children }: OnlineLayoutProps) => {
   return <>{children}</>;
 };
 
-export default OnlineLayout;
+export default AuthedLayout;
