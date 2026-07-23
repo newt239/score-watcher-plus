@@ -1,6 +1,9 @@
 import { and, asc, count, eq, isNull, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+import { DBClient } from "@/utils/drizzle/client";
+import { quizQuestion, quizSet } from "@/utils/drizzle/schema";
+
 import type {
   ApiQuizDataType,
   CreateQuizRequestType,
@@ -9,12 +12,7 @@ import type {
   UpdateQuizRequestType,
 } from "@/models/quiz";
 
-import { DBClient } from "@/utils/drizzle/client";
-import { quizQuestion, quizSet } from "@/utils/drizzle/schema";
-
-/**
- * クイズ問題一覧取得
- */
+/** クイズ問題一覧取得 */
 export const getQuizes = async (userId: string) => {
   const quizes = await DBClient.select({
     id: quizQuestion.id,
@@ -46,9 +44,7 @@ export const getQuizes = async (userId: string) => {
   return quizesWithFormattedData;
 };
 
-/**
- * ページネーション付きクイズ問題一覧取得
- */
+/** ページネーション付きクイズ問題一覧取得 */
 export const getQuizesWithPagination = async (
   userId: string,
   limit: number = 50,
@@ -103,9 +99,7 @@ export const getQuizesWithPagination = async (
   };
 };
 
-/**
- * クイズ問題詳細取得
- */
+/** クイズ問題詳細取得 */
 export const getQuizDetail = async (quizId: string, userId: string) => {
   const [quiz] = await DBClient.select()
     .from(quizQuestion)
@@ -130,9 +124,7 @@ export const getQuizDetail = async (quizId: string, userId: string) => {
   };
 };
 
-/**
- * クイズ問題作成
- */
+/** クイズ問題作成 */
 export const createQuiz = async (quizesData: CreateQuizRequestType, userId: string) => {
   const createdQuizes = [];
 
@@ -185,9 +177,7 @@ export const createQuiz = async (quizesData: CreateQuizRequestType, userId: stri
   };
 };
 
-/**
- * クイズ問題更新
- */
+/** クイズ問題更新 */
 export const updateQuiz = async (quizesData: UpdateQuizRequestType, userId: string) => {
   let updatedCount = 0;
 
@@ -229,9 +219,7 @@ export const updateQuiz = async (quizesData: UpdateQuizRequestType, userId: stri
   return { updatedCount };
 };
 
-/**
- * クイズ問題削除（ソフトデリート）
- */
+/** クイズ問題削除（ソフトデリート） */
 export const deleteQuiz = async (quizIds: DeleteQuizRequestType, userId: string) => {
   const deletedIds = [];
 

@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * AttackSurvival形式のスコア計算
- * 正解で他のプレイヤーのポイントを減らし、誤答で自分のポイントが減る
- */
+/** AttackSurvival形式のスコア計算 正解で他のプレイヤーのポイントを減らし、誤答で自分のポイントが減る */
 const computeAttackSurvival = (
   game: Extract<GetGameDetailResponseType, { ruleType: "attacksurvival" }>,
   playersState: ComputedScoreProps[],

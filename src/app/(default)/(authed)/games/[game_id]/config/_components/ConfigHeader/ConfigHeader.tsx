@@ -1,11 +1,11 @@
 import { Accordion, AccordionControl, AccordionItem, AccordionPanel } from "@mantine/core";
 
+import Link from "@/components/Link";
+import { rules } from "@/utils/rules";
+
 import GameStartButton from "../GameStartButton/GameStartButton";
 
 import type { RuleNames } from "@/models/game";
-
-import Link from "@/components/Link";
-import { rules } from "@/utils/rules";
 
 type ConfigHeaderProps = {
   gameId: string;
@@ -14,9 +14,7 @@ type ConfigHeaderProps = {
   logCount: number;
 };
 
-/**
- * ゲーム設定ページのヘッダー部分
- */
+/** ゲーム設定ページのヘッダー部分 */
 const ConfigHeader: React.FC<ConfigHeaderProps> = ({ gameId, ruleType, playerCount, logCount }) => {
   return (
     <>

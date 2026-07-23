@@ -1,16 +1,14 @@
 import { zValidator } from "@hono/zod-validator";
 import { createFactory } from "hono/factory";
 
-import { getPublicGameById } from "../../repositories/game";
-
 import { GetViewerBoardDataParamSchema } from "@/models/game";
 import { getCachedBoardData } from "@/utils/cache/cache-service";
 
+import { getPublicGameById } from "../../repositories/game";
+
 const factory = createFactory();
 
-/**
- * 公開ゲームのボードデータを取得（認証不要・viewer用）
- */
+/** 公開ゲームのボードデータを取得（認証不要・viewer用） */
 const handler = factory.createHandlers(
   zValidator("param", GetViewerBoardDataParamSchema),
   async (c) => {

@@ -7,9 +7,7 @@ import { updateGameByKey } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲーム更新
- */
+/** ゲーム更新 */
 const handler = factory.createHandlers(
   zValidator("param", UpdateGameRequestParamSchema),
   zValidator("json", UpdateGameRequestJsonSchema),

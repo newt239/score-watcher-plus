@@ -9,19 +9,16 @@ import { IconFileExport } from "@tabler/icons-react";
 import { cdate } from "cdate";
 import { parseResponse } from "hono/client";
 
-import type { RuleNames } from "@/models/game";
-
 import createApiClient from "@/utils/hono/browser";
+
+import type { RuleNames } from "@/models/game";
 
 type Props = {
   gameId: string;
   ruleType: RuleNames;
 };
 
-/**
- * オンライン版ゲームエクスポートコンポーネント
- * ゲームデータをJSONファイルとしてエクスポート
- */
+/** オンライン版ゲームエクスポートコンポーネント ゲームデータをJSONファイルとしてエクスポート */
 const ExportGame: React.FC<Props> = ({ gameId, ruleType }) => {
   const [isPending, startTransition] = useTransition();
 

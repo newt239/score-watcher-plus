@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Backstream形式のスコア計算
- * 正答で+1、n回目の誤答で-n、目標ポイントで勝ち抜け
- */
+/** Backstream形式のスコア計算 正答で+1、n回目の誤答で-n、目標ポイントで勝ち抜け */
 const computeBackstream = (
   game: Extract<GetGameDetailResponseType, { ruleType: "backstream" }>,
   playersState: ComputedScoreProps[],

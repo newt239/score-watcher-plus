@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { Group, Input, Text, Title } from "@mantine/core";
+import Link from "next/link";
 
 import ButtonLink from "@/components/ButtonLink";
 

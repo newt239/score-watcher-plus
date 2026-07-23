@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { parseResponse } from "hono/client";
-
-import Board from "./_components/Board/Board";
+import { redirect } from "next/navigation";
 
 import { getUser } from "@/utils/auth/auth-helpers";
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import Board from "./_components/Board/Board";
 
 export const dynamic = "force-dynamic";
 

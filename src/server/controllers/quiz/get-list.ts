@@ -7,9 +7,7 @@ import { getQuizes, getQuizesWithPagination } from "@/server/repositories/quiz";
 
 const factory = createFactory();
 
-/**
- * クイズ問題一覧取得
- */
+/** クイズ問題一覧取得 */
 const handler = factory.createHandlers(zValidator("query", GetQuizzesQuerySchema), async (c) => {
   const userId = await getUserId();
   if (!userId) {

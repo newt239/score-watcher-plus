@@ -7,9 +7,7 @@ import { createGame } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲーム作成
- */
+/** ゲーム作成 */
 const handler = factory.createHandlers(zValidator("json", CreateGameRequestSchema), async (c) => {
   try {
     const userId = await getUserId();

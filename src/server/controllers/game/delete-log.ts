@@ -7,9 +7,7 @@ import { sendDiscordResetNotification } from "@/utils/online/discord";
 
 const factory = createFactory();
 
-/**
- * ゲームログ削除
- */
+/** ゲームログ削除 */
 const handler = factory.createHandlers(async (c) => {
   try {
     const logId = c.req.param("logId");

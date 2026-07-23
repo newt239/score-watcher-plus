@@ -7,9 +7,7 @@ import { deletePlayer } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤー削除
- */
+/** プレイヤー削除 */
 const handler = factory.createHandlers(zValidator("json", DeletePlayerRequestSchema), async (c) => {
   try {
     const userId = await getUserId();

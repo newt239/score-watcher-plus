@@ -1,6 +1,9 @@
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+import { DBClient } from "@/utils/drizzle/client";
+import { game, gameLog, gamePlayer, player } from "@/utils/drizzle/schema";
+
 import { parseGameOption, setupDefaultGameOption } from "../utils/options";
 
 import type {
@@ -13,12 +16,7 @@ import type {
   UpdateGameSettingsRequestType,
 } from "@/models/game";
 
-import { DBClient } from "@/utils/drizzle/client";
-import { game, gameLog, gamePlayer, player } from "@/utils/drizzle/schema";
-
-/**
- * 特定のゲーム情報を取得
- */
+/** 特定のゲーム情報を取得 */
 export const getGameById = async (gameId: string, userId: string) => {
   const queryResult = await DBClient.query.game.findFirst({
     where: and(eq(game.id, gameId), eq(game.userId, userId), isNull(game.deletedAt)),
@@ -77,9 +75,7 @@ export const getGameById = async (gameId: string, userId: string) => {
   };
 };
 
-/**
- * ユーザーのゲーム一覧を取得
- */
+/** ユーザーのゲーム一覧を取得 */
 export const getGames = async (userId: string) => {
   const games = await DBClient.select({
     id: game.id,
@@ -99,9 +95,7 @@ export const getGames = async (userId: string) => {
   return games.filter((g) => g.id !== null);
 };
 
-/**
- * ゲーム作成
- */
+/** ゲーム作成 */
 export const createGame = async (
   gamesData: CreateGameRequestType,
   userId: string
@@ -123,9 +117,7 @@ export const createGame = async (
   };
 };
 
-/**
- * ゲーム更新
- */
+/** ゲーム更新 */
 export const updateGameByKey = async (
   updateData: {
     gameId: string;
@@ -160,9 +152,7 @@ export const updateGameByKey = async (
   return false;
 };
 
-/**
- * ゲーム削除
- */
+/** ゲーム削除 */
 export const deleteGameById = async (gameId: string, userId: string) => {
   const result = await DBClient.update(game)
     .set({
@@ -174,9 +164,7 @@ export const deleteGameById = async (gameId: string, userId: string) => {
   return result.rowsAffected > 0;
 };
 
-/**
- * クラウドゲームプレイヤー取得
- */
+/** クラウドゲームプレイヤー取得 */
 export const getGamePlayers = async (gameId: string, userId: string) => {
   const players = await DBClient.select({
     id: gamePlayer.id,
@@ -210,9 +198,7 @@ export const getGamePlayers = async (gameId: string, userId: string) => {
   }));
 };
 
-/**
- * ゲームプレイヤー追加
- */
+/** ゲームプレイヤー追加 */
 export const addGamePlayer = async (
   gameId: string,
   playerData: AddPlayerToGameRequestType,
@@ -226,9 +212,7 @@ export const addGamePlayer = async (
   return result.rowsAffected > 0;
 };
 
-/**
- * ゲームログ取得
- */
+/** ゲームログ取得 */
 export const getGameLogsById = async (gameId: string, userId: string) => {
   const logs = await DBClient.select()
     .from(gameLog)
@@ -238,9 +222,7 @@ export const getGameLogsById = async (gameId: string, userId: string) => {
   return logs;
 };
 
-/**
- * クラウドゲームログ追加
- */
+/** クラウドゲームログ追加 */
 export const addGameLog = async (logData: AddGameLogRequestType, userId: string) => {
   const logId = nanoid();
 
@@ -258,9 +240,7 @@ export const addGameLog = async (logData: AddGameLogRequestType, userId: string)
   return logId;
 };
 
-/**
- * ゲームログ情報を取得
- */
+/** ゲームログ情報を取得 */
 export const getGameLogById = async (logId: string, userId: string) => {
   const log = await DBClient.select({
     id: gameLog.id,
@@ -273,16 +253,12 @@ export const getGameLogById = async (logId: string, userId: string) => {
   return log[0] || null;
 };
 
-/**
- * クラウドゲームログ削除（元に戻す用）
- */
+/** クラウドゲームログ削除（元に戻す用） */
 export const removeGameLog = async (logId: string, userId: string) => {
   await DBClient.delete(gameLog).where(and(eq(gameLog.id, logId), eq(gameLog.userId, userId)));
 };
 
-/**
- * ゲームの名前かDiscord Webhook URLを更新
- */
+/** ゲームの名前かDiscord Webhook URLを更新 */
 export const updateGameSettings = async (
   gameId: string,
   settingsData: UpdateGameSettingsRequestType,
@@ -306,9 +282,7 @@ export const updateGameSettings = async (
   }
 };
 
-/**
- * ゲームプレイヤー一括更新
- */
+/** ゲームプレイヤー一括更新 */
 export const updateGamePlayers = async (
   gameId: string,
   players: UpdateGamePlayerType[],
@@ -353,9 +327,7 @@ export const updateGamePlayers = async (
   }
 };
 
-/**
- * 既存ゲームからプレイヤーをコピー
- */
+/** 既存ゲームからプレイヤーをコピー */
 export const copyPlayersFromGame = async (
   targetGameId: string,
   sourceGameId: string,
@@ -417,9 +389,7 @@ export const copyPlayersFromGame = async (
   return { copiedCount };
 };
 
-/**
- * ゲームオプション取得
- */
+/** ゲームオプション取得 */
 export const getGameOptionById = async (gameId: string, userId: string) => {
   const gameData = await DBClient.query.game.findFirst({
     where: and(eq(game.id, gameId), eq(game.userId, userId)),
@@ -435,9 +405,7 @@ export const getGameOptionById = async (gameId: string, userId: string) => {
   return parsedOption;
 };
 
-/**
- * ゲームオプション更新
- */
+/** ゲームオプション更新 */
 export const updateGameOption = async (
   gameId: string,
   option: {
@@ -455,9 +423,7 @@ export const updateGameOption = async (
   return result.rowsAffected > 0;
 };
 
-/**
- * ゲームプレイヤー個別更新
- */
+/** ゲームプレイヤー個別更新 */
 export const updateGamePlayerByKey = async (
   gamePlayerId: string,
   updateData: UpdateGamePlayerRequestJsonType,
@@ -486,9 +452,7 @@ export const updateGamePlayerByKey = async (
   }
 };
 
-/**
- * ゲームプレイヤー削除（指定されたプレイヤーIDのリストを削除）
- */
+/** ゲームプレイヤー削除（指定されたプレイヤーIDのリストを削除） */
 export const removeGamePlayers = async (
   gameId: string,
   playerIds: string[],
@@ -524,9 +488,7 @@ export const removeGamePlayers = async (
   }
 };
 
-/**
- * 公開ゲーム情報を取得（認証不要）
- */
+/** 公開ゲーム情報を取得（認証不要） */
 export const getPublicGameById = async (gameId: string) => {
   const queryResult = await DBClient.query.game.findFirst({
     where: and(eq(game.id, gameId), eq(game.isPublic, true), isNull(game.deletedAt)),

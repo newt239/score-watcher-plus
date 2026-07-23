@@ -13,11 +13,12 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 type AttackSurvivalGame = Extract<GetGameDetailResponseType, { ruleType: "attacksurvival" }>;
 
 /**
- * attacksurvival形式のゲームデータを生成する。
+ * Attacksurvival形式のゲームデータを生成する。
+ *
  * @param players ゲームに参加するプレイヤー一覧
  * @param logs 適用するゲームログ
  * @param option オプション設定
- * @returns attacksurvival形式のゲーム設定
+ * @returns Attacksurvival形式のゲーム設定
  */
 const createAttackSurvivalGame = (
   players: GamePlayerProps[],
@@ -40,6 +41,7 @@ const createAttackSurvivalGame = (
 
 /**
  * ゲーム参加者を生成する。
+ *
  * @param id プレイヤーID
  * @param initialScore 初期スコア
  * @param displayOrder 表示順
@@ -62,6 +64,7 @@ const createPlayer = (
 
 /**
  * 計算済みスコアを生成する。
+ *
  * @param override 上書きするスコア情報
  * @returns 計算済みスコア
  */

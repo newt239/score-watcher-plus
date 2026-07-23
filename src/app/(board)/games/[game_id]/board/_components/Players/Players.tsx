@@ -3,7 +3,6 @@
 import { Flex } from "@mantine/core";
 
 import Player from "../Player/Player";
-
 import classes from "./Players.module.css";
 
 import type { ComputedScoreProps, GamePlayerProps, LogDBProps, RuleNames } from "@/models/game";
@@ -25,10 +24,7 @@ type PlayersProps = {
   preferences: UserPreferencesType | null;
 };
 
-/**
- * オンライン版のプレイヤー一覧表示コンポーネント
- * ローカル版のPlayersコンポーネントと同等の機能を提供
- */
+/** オンライン版のプレイヤー一覧表示コンポーネント ローカル版のPlayersコンポーネントと同等の機能を提供 */
 const Players: React.FC<PlayersProps> = ({
   game,
   scores,

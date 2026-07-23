@@ -12,6 +12,7 @@ type GameWithRelations = NonNullable<
 
 /**
  * Discord Webhookによる勝ち抜け通知を送信する
+ *
  * @param gameData リポジトリから取得したゲームデータ
  */
 export async function sendDiscordWinnerNotification(gameData: GameWithRelations): Promise<void> {
@@ -95,6 +96,7 @@ export async function sendDiscordWinnerNotification(gameData: GameWithRelations)
 
 /**
  * Discord Webhookによるゲームリセット通知を送信する
+ *
  * @param gameData リポジトリから取得したゲームデータ
  */
 export async function sendDiscordResetNotification(gameData: GameWithRelations): Promise<void> {

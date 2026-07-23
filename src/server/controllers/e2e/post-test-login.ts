@@ -7,10 +7,7 @@ import { auth } from "@/utils/auth/auth";
 
 const factory = createFactory();
 
-/**
- * テスト専用ログインエンドポイント
- * E2Eテストでのみ使用される固定クレデンシャルでのログイン機能
- */
+/** テスト専用ログインエンドポイント E2Eテストでのみ使用される固定クレデンシャルでのログイン機能 */
 export default factory.createHandlers(zValidator("json", TestLoginRequestSchema), async (c) => {
   // 本番環境では無効
   if (process.env.NODE_ENV === "production") {

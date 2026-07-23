@@ -21,25 +21,19 @@ type PublicityToggleProps = {
   gameName: string;
 };
 
-/**
- * ゲーム公開/非公開切り替えトグルコンポーネント
- */
+/** ゲーム公開/非公開切り替えトグルコンポーネント */
 const PublicityToggle: React.FC<PublicityToggleProps> = ({ gameId, isPublic, gameName }) => {
   const [isPending, startTransition] = useTransition();
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [pendingValue, setPendingValue] = useState<boolean | null>(null);
 
-  /**
-   * トグル切り替えハンドラー（確認モーダルを表示）
-   */
+  /** トグル切り替えハンドラー（確認モーダルを表示） */
   const handleToggle = (newValue: boolean) => {
     setPendingValue(newValue);
     setConfirmModalOpened(true);
   };
 
-  /**
-   * 実際の公開設定更新処理
-   */
+  /** 実際の公開設定更新処理 */
   const confirmToggle = () => {
     if (pendingValue === null) return;
 
@@ -71,9 +65,7 @@ const PublicityToggle: React.FC<PublicityToggleProps> = ({ gameId, isPublic, gam
     });
   };
 
-  /**
-   * 確認モーダルをキャンセル
-   */
+  /** 確認モーダルをキャンセル */
   const cancelToggle = () => {
     setConfirmModalOpened(false);
     setPendingValue(null);

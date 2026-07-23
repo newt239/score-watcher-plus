@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * AQL形式のスコア計算
- * 正解数がスコア、誤答で休み
- */
+/** AQL形式のスコア計算 正解数がスコア、誤答で休み */
 const computeAql = (
   _game: Extract<GetGameDetailResponseType, { ruleType: "aql" }>,
   playersState: ComputedScoreProps[],

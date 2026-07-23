@@ -1,16 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Box, Button, Group, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { sendGAEvent } from "@next/third-parties/google";
 import { parseResponse } from "hono/client";
-
-import type { RuleNames } from "@/models/game";
+import { useRouter } from "next/navigation";
 
 import createApiClient from "@/utils/hono/browser";
+
+import type { RuleNames } from "@/models/game";
 
 type CopyGamePropsUnion = {
   gameId: string;
@@ -19,10 +19,7 @@ type CopyGamePropsUnion = {
   discordWebhookUrl: string;
 };
 
-/**
- * オンライン版ゲームコピーコンポーネント
- * ゲームの形式設定のみ、またはすべてをコピー
- */
+/** オンライン版ゲームコピーコンポーネント ゲームの形式設定のみ、またはすべてをコピー */
 const CopyGame: React.FC<CopyGamePropsUnion> = ({
   gameId,
   gameName,

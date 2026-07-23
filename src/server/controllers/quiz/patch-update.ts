@@ -7,9 +7,7 @@ import { updateQuiz } from "@/server/repositories/quiz";
 
 const factory = createFactory();
 
-/**
- * クイズ問題更新
- */
+/** クイズ問題更新 */
 const handler = factory.createHandlers(zValidator("json", UpdateQuizRequestSchema), async (c) => {
   try {
     const userId = await getUserId();

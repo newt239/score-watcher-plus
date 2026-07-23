@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import { Flex } from "@mantine/core";
 import {
   IconHelp,
@@ -13,6 +11,7 @@ import {
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
+import { usePathname } from "next/navigation";
 
 import ButtonLink from "@/components/ButtonLink";
 
@@ -23,9 +22,7 @@ type AuthUser = {
   image?: string | null;
 };
 
-/**
- * リンクリストを生成する
- */
+/** リンクリストを生成する */
 const getLinkList = (): { text: string; path: string; icon: React.ReactNode }[] => [
   { path: "/", text: "ホーム", icon: <IconHome /> },
   { path: "/rules", text: "形式一覧", icon: <IconListDetails /> },

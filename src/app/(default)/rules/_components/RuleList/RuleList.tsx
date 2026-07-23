@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Box, Button, Card, Group, Modal, Text, TextInput, Title } from "@mantine/core";
@@ -8,13 +7,14 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconCirclePlus } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
+import { useRouter } from "next/navigation";
+
+import createApiClient from "@/utils/hono/browser";
+import { rules } from "@/utils/rules";
 
 import classes from "./RuleList.module.css";
 
 import type { RuleNames } from "@/models/game";
-
-import createApiClient from "@/utils/hono/browser";
-import { rules } from "@/utils/rules";
 
 type RuleListProps = {
   isLoggedIn: boolean;

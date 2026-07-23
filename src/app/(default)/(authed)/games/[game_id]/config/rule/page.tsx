@@ -3,15 +3,14 @@ import type { Metadata } from "next";
 import { Flex } from "@mantine/core";
 import { parseResponse } from "hono/client";
 
+import { createApiClientOnServer } from "@/utils/hono/server";
+
 import ConfigBooleanInput from "../_components/ConfigBooleanInput";
 import ConfigInput from "../_components/ConfigInput";
 import ConfigNumberInput from "../_components/ConfigNumberInput";
-
 import AQLOptions from "./_components/AQLOptions";
 
 import type { AqlOption } from "@/utils/drizzle/types";
-
-import { createApiClientOnServer } from "@/utils/hono/server";
 
 export const metadata: Metadata = {
   title: "形式設定",
@@ -21,9 +20,7 @@ type RulePageProps = {
   params: Promise<{ game_id: string }>;
 };
 
-/**
- * 形式設定ページ
- */
+/** 形式設定ページ */
 const RulePage = async ({ params }: RulePageProps) => {
   const { game_id } = await params;
 

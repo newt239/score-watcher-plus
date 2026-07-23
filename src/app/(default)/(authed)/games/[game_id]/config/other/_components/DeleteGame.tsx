@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Box, Button, Title } from "@mantine/core";
@@ -9,11 +8,12 @@ import { notifications } from "@mantine/notifications";
 import { sendGAEvent } from "@next/third-parties/google";
 import { IconTrash } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
-
-import type { RuleNames } from "@/models/game";
+import { useRouter } from "next/navigation";
 
 import createApiClient from "@/utils/hono/browser";
 import { rules } from "@/utils/rules";
+
+import type { RuleNames } from "@/models/game";
 
 type DeleteGamePropsUnion = {
   gameId: string;
@@ -21,10 +21,7 @@ type DeleteGamePropsUnion = {
   ruleType: RuleNames;
 };
 
-/**
- * オンライン版ゲーム削除コンポーネント
- * ゲームの削除機能
- */
+/** オンライン版ゲーム削除コンポーネント ゲームの削除機能 */
 const DeleteGame: React.FC<DeleteGamePropsUnion> = ({ gameId, gameName, ruleType }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();

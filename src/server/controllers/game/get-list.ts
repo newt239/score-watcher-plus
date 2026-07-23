@@ -5,9 +5,7 @@ import { getGames } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * クラウドゲーム一覧取得
- */
+/** クラウドゲーム一覧取得 */
 const handler = factory.createHandlers(async (c) => {
   try {
     const userId = await getUserId();

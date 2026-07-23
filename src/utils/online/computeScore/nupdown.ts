@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Nupdown形式のスコア計算
- * N回正解で勝ち抜け、一度でも誤答すると0に戻る
- */
+/** Nupdown形式のスコア計算 N回正解で勝ち抜け、一度でも誤答すると0に戻る */
 const computeNupdown = (
   game: Extract<GetGameDetailResponseType, { ruleType: "nupdown" }>,
   playersState: ComputedScoreProps[],

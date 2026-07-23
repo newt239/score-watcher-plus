@@ -4,9 +4,9 @@ import React, { createContext, useCallback, useContext, useState } from "react";
 
 import { parseResponse } from "hono/client";
 
-import type { GetGameDetailResponseType } from "@/models/game";
-
 import createApiClient from "@/utils/hono/browser";
+
+import type { GetGameDetailResponseType } from "@/models/game";
 
 type GameStateContextType = {
   game: GetGameDetailResponseType | null;
@@ -23,18 +23,13 @@ type GameStateProviderProps = {
   initialGame: GetGameDetailResponseType;
 };
 
-/**
- * ゲーム状態を管理するProvider
- * config内の各コンポーネントでゲーム状態を共有し、更新を同期する
- */
+/** ゲーム状態を管理するProvider config内の各コンポーネントでゲーム状態を共有し、更新を同期する */
 export const GameStateProvider = ({ children, gameId, initialGame }: GameStateProviderProps) => {
   const [game, setGame] = useState<GetGameDetailResponseType | null>(initialGame);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * APIからゲーム情報を再取得して状態を更新
-   */
+  /** APIからゲーム情報を再取得して状態を更新 */
   const updateGame = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -70,10 +65,7 @@ export const GameStateProvider = ({ children, gameId, initialGame }: GameStatePr
   return <GameStateContext.Provider value={value}>{children}</GameStateContext.Provider>;
 };
 
-/**
- * ゲーム状態を使用するためのカスタムフック
- * config内のコンポーネントでゲーム情報の取得・更新を行う
- */
+/** ゲーム状態を使用するためのカスタムフック config内のコンポーネントでゲーム情報の取得・更新を行う */
 export const useGameState = () => {
   const context = useContext(GameStateContext);
   if (context === undefined) {

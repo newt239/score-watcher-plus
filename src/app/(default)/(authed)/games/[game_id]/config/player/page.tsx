@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { parseResponse } from "hono/client";
-
-import PlayersConfig from "./_components/PlayersConfig";
+import { notFound } from "next/navigation";
 
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import PlayersConfig from "./_components/PlayersConfig";
 
 export const metadata: Metadata = {
   title: "プレイヤー設定",
@@ -15,9 +15,7 @@ type PlayerPageProps = {
   params: Promise<{ game_id: string }>;
 };
 
-/**
- * プレイヤー設定ページ
- */
+/** プレイヤー設定ページ */
 const PlayerPage = async ({ params }: PlayerPageProps) => {
   const { game_id } = await params;
 

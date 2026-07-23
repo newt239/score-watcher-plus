@@ -5,6 +5,7 @@ import { useQueryState } from "nuqs";
 
 /**
  * ゲーム一覧の表示制御コンポーネント
+ *
  * @returns ゲーム一覧の表示制御UI
  */
 const GameListControl: React.FC = () => {

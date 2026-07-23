@@ -6,9 +6,7 @@ type PublicityBadgeProps = {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
 };
 
-/**
- * ゲーム公開状態表示バッジコンポーネント
- */
+/** ゲーム公開状態表示バッジコンポーネント */
 const PublicityBadge: React.FC<PublicityBadgeProps> = ({ isPublic, size = "sm" }) => {
   if (isPublic) {
     return (

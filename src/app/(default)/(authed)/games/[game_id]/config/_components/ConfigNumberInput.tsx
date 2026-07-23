@@ -5,11 +5,11 @@ import { useState, useTransition } from "react";
 import { NumberInput } from "@mantine/core";
 import { parseResponse } from "hono/client";
 
+import createApiClient from "@/utils/hono/browser";
+
 import { useGameState } from "../_hooks/useGameState";
 
 import type { GameOptionKey } from "@/utils/drizzle/types";
-
-import createApiClient from "@/utils/hono/browser";
 
 type ConfigNumberInputProps = {
   gameId: string;
@@ -20,9 +20,7 @@ type ConfigNumberInputProps = {
   max?: number;
 };
 
-/**
- * 数値入力コンポーネント
- */
+/** 数値入力コンポーネント */
 const ConfigNumberInput: React.FC<ConfigNumberInputProps> = ({
   gameId,
   label,

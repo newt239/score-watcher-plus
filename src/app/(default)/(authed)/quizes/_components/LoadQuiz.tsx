@@ -12,9 +12,7 @@ type Props = {
   createQuizes: (quizesData: CreateQuizType[]) => Promise<number>;
 };
 
-/**
- * 貼り付けによるクイズ問題一括作成コンポーネント
- */
+/** 貼り付けによるクイズ問題一括作成コンポーネント */
 const LoadQuiz: React.FC<Props> = ({ createQuizes }) => {
   const [rawQuizText, setRawQuizText] = useState("");
   const [separateType, setSeparateType] = useState<"tab" | "comma">("tab");

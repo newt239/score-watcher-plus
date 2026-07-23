@@ -5,9 +5,7 @@ import { getGameLogsById } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲームログ取得
- */
+/** ゲームログ取得 */
 const handler = factory.createHandlers(async (c) => {
   try {
     const gameId = c.req.param("gameId");

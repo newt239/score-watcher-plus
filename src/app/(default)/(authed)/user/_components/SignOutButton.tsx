@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { Button } from "@mantine/core";
+import { useRouter } from "next/navigation";
 
 import { authClient } from "@/utils/auth/auth-client";
 

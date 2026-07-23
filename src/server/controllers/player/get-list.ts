@@ -7,9 +7,7 @@ import { getPlayers } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤー一覧取得
- */
+/** プレイヤー一覧取得 */
 const handler = factory.createHandlers(
   zValidator("query", GetPlayersListRequestSchema),
   async (c) => {

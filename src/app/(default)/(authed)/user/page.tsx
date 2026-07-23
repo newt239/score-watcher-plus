@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { Avatar, Box, Group, Text, Title } from "@mantine/core";
-
-import SignOutButton from "./_components/SignOutButton";
-import UserPreferencesSettings from "./_components/UserPreferencesSettings";
+import { redirect } from "next/navigation";
 
 import { defaultUserPreferences } from "@/models/user-preference";
 import { getUser } from "@/utils/auth/auth-helpers";
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import SignOutButton from "./_components/SignOutButton";
+import UserPreferencesSettings from "./_components/UserPreferencesSettings";
 
 export const dynamic = "force-dynamic";
 

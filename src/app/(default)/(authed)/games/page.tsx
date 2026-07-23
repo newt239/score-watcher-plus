@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { Group, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
-
-import GameListControl from "./_components/GameListControl/GameListControl";
-import GameListGrid from "./_components/GameListGrid/GameListGrid";
-import GameListTable from "./_components/GameListTable/GameListTable";
+import { notFound } from "next/navigation";
 
 import ButtonLink from "@/components/ButtonLink";
 import Link from "@/components/Link";
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import GameListControl from "./_components/GameListControl/GameListControl";
+import GameListGrid from "./_components/GameListGrid/GameListGrid";
+import GameListTable from "./_components/GameListTable/GameListTable";
 
 export const metadata: Metadata = {
   title: "ゲーム一覧",
@@ -27,9 +27,7 @@ type GamesPageProps = {
   }>;
 };
 
-/**
- * ゲーム一覧ページ
- */
+/** ゲーム一覧ページ */
 const GamesPage = async ({ searchParams }: GamesPageProps) => {
   const params = await searchParams;
   const displayMode: "grid" | "table" = params.display === "table" ? "table" : "grid";

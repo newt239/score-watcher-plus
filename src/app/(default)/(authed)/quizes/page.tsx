@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { parseResponse } from "hono/client";
-
-import ManageQuiz from "./_components/ManageQuiz";
+import { notFound } from "next/navigation";
 
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import ManageQuiz from "./_components/ManageQuiz";
 
 export const metadata: Metadata = {
   title: "クイズ問題管理",

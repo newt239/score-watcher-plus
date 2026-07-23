@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { Box, Title } from "@mantine/core";
 import { parseResponse } from "hono/client";
+import { notFound } from "next/navigation";
+
+import { createApiClientOnServer } from "@/utils/hono/server";
 
 import ConfigInput from "../_components/ConfigInput";
-
 import CopyGame from "./_components/CopyGame";
 import DeleteGame from "./_components/DeleteGame";
 import ExportGame from "./_components/ExportGame";
 import PublicityToggle from "./_components/PublicityToggle";
 import SelectQuizset from "./_components/SelectQuizset";
-
-import { createApiClientOnServer } from "@/utils/hono/server";
 
 export const metadata: Metadata = {
   title: "その他の設定",
@@ -22,9 +21,7 @@ type OtherPageProps = {
   params: Promise<{ game_id: string }>;
 };
 
-/**
- * その他の設定ページ
- */
+/** その他の設定ページ */
 const OtherPage = async ({ params }: OtherPageProps) => {
   const { game_id } = await params;
 

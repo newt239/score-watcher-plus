@@ -13,12 +13,13 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 type NomxGame = Extract<GetGameDetailResponseType, { ruleType: "nomx" }>;
 
 /**
- * nomx形式のゲームデータを生成する。
+ * Nomx形式のゲームデータを生成する。
+ *
  * @param players ゲームに参加するプレイヤー一覧
  * @param logs 適用するゲームログ
  * @param winPoint 勝ち抜けに必要な正解数
  * @param losePoint 失格となる誤答数
- * @returns nomx形式のゲーム設定
+ * @returns Nomx形式のゲーム設定
  */
 const createNomxGame = (
   players: GamePlayerProps[],
@@ -47,6 +48,7 @@ const createNomxGame = (
 
 /**
  * ゲーム参加者を生成する。
+ *
  * @param id プレイヤーID
  * @param initialScore 初期スコア
  * @param displayOrder 表示順
@@ -69,6 +71,7 @@ const createPlayer = (
 
 /**
  * 計算済みスコアを生成する。
+ *
  * @param override 上書きするスコア情報
  * @returns 計算済みスコア
  */

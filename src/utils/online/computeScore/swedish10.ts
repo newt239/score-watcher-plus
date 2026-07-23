@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Swedish10形式のスコア計算
- * 正答数に応じて誤答時のダメージポイントが変動
- */
+/** Swedish10形式のスコア計算 正答数に応じて誤答時のダメージポイントが変動 */
 const computeSwedish10 = (
   game: Extract<GetGameDetailResponseType, { ruleType: "swedish10" }>,
   playersState: ComputedScoreProps[],

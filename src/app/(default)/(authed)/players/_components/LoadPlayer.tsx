@@ -12,9 +12,7 @@ type Props = {
   createPlayers: (playersData: CreatePlayerType[]) => Promise<number>;
 };
 
-/**
- * 貼り付けによるプレイヤー一括作成コンポーネント
- */
+/** 貼り付けによるプレイヤー一括作成コンポーネント */
 const LoadPlayer: React.FC<Props> = ({ createPlayers }) => {
   const [rawPlayerText, setRawPlayerText] = useState("");
   const [separateType, setSeparateType] = useState<"tab" | "comma">("tab");

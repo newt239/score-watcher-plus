@@ -7,9 +7,7 @@ import { updatePlayer } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤー更新
- */
+/** プレイヤー更新 */
 const handler = factory.createHandlers(zValidator("json", UpdatePlayerRequestSchema), async (c) => {
   try {
     const userId = await getUserId();

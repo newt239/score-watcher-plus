@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Normal形式のスコア計算
- * 正答で+1、誤答で-1
- */
+/** Normal形式のスコア計算 正答で+1、誤答で-1 */
 const computeNormal = (
   game: GetGameDetailResponseType,
   playersState: ComputedScoreProps[],

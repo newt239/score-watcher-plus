@@ -5,9 +5,7 @@ import { getGamePlayers } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲームプレイヤー取得
- */
+/** ゲームプレイヤー取得 */
 const handler = factory.createHandlers(async (c) => {
   try {
     const gameId = c.req.param("gameId");

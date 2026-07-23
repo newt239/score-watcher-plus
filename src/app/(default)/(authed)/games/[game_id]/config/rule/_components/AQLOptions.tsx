@@ -11,9 +11,7 @@ type AQLOptionsProps = {
   settings: AqlOption;
 };
 
-/**
- * AQLゲーム設定オプション
- */
+/** AQLゲーム設定オプション */
 const AQLOptions: React.FC<AQLOptionsProps> = ({ gameId, ruleType, settings }) => {
   if (ruleType !== "aql") return null;
 

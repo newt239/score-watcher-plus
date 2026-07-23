@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * SquareX形式のスコア計算
- * 奇数問目と偶数問目の正解数をかけた数がX以上で勝ち抜け
- */
+/** SquareX形式のスコア計算 奇数問目と偶数問目の正解数をかけた数がX以上で勝ち抜け */
 const computeSquarex = (
   game: Extract<GetGameDetailResponseType, { ruleType: "squarex" }>,
   playersState: ComputedScoreProps[],

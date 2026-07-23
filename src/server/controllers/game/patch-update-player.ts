@@ -10,9 +10,7 @@ import { updateGamePlayerByKey } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲームプレイヤー更新
- */
+/** ゲームプレイヤー更新 */
 const handler = factory.createHandlers(
   zValidator("param", UpdateGamePlayerRequestParamSchema),
   zValidator("json", UpdateGamePlayerRequestJsonSchema),

@@ -20,10 +20,7 @@ type Props = {
   quizset_names: string[];
 };
 
-/**
- * オンライン版クイズセット選択コンポーネント
- * クイズセットの選択とオフセット設定
- */
+/** オンライン版クイズセット選択コンポーネント クイズセットの選択とオフセット設定 */
 const SelectQuizset: React.FC<Props> = ({ game_id, game_quiz, quizset_names }) => {
   const [isPending, startTransition] = useTransition();
 

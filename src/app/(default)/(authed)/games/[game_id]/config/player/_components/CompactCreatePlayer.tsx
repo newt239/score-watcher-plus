@@ -14,10 +14,7 @@ type CompactCreatePlayerProps = {
   playerCount: number;
 };
 
-/**
- * オンライン版コンパクトプレイヤー作成コンポーネント
- * プレイヤーを作成してゲームに追加
- */
+/** オンライン版コンパクトプレイヤー作成コンポーネント プレイヤーを作成してゲームに追加 */
 const CompactCreatePlayer: React.FC<CompactCreatePlayerProps> = ({ game_id, playerCount }) => {
   const [playerName, setPlayerName] = useState<string>("");
   const [playerText, setPlayerText] = useState<string>("");

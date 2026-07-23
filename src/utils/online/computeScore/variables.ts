@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Variables形式のスコア計算
- * 各プレイヤーが変動値Nを設定、正解で+N、誤答で-N×(N-2)
- */
+/** Variables形式のスコア計算 各プレイヤーが変動値Nを設定、正解で+N、誤答で-N×(N-2) */
 const computeVariables = (
   game: Extract<GetGameDetailResponseType, { ruleType: "variables" }>,
   playersState: ComputedScoreProps[],

@@ -11,9 +11,7 @@ const QuizDetailParamSchema = z.object({
   id: z.string().min(1, "クイズ問題IDは必須です"),
 });
 
-/**
- * クイズ問題詳細取得
- */
+/** クイズ問題詳細取得 */
 const handler = factory.createHandlers(zValidator("param", QuizDetailParamSchema), async (c) => {
   try {
     const userId = await getUserId();

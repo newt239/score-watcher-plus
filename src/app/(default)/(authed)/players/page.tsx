@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { parseResponse } from "hono/client";
-
-import ManagePlayer from "./_components/ManagePlayer";
+import { notFound } from "next/navigation";
 
 import { createApiClientOnServer } from "@/utils/hono/server";
+
+import ManagePlayer from "./_components/ManagePlayer";
 
 export const metadata: Metadata = {
   title: "プレイヤー管理",

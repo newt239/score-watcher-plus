@@ -1,8 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-
 import { Box, Tabs } from "@mantine/core";
+import { usePathname, useRouter } from "next/navigation";
 
 import classes from "./ConfigTabs.module.css";
 
@@ -11,10 +10,7 @@ type ConfigTabsProps = {
   children: React.ReactNode;
 };
 
-/**
- * 設定ページのタブナビゲーション
- * アクセシビリティを維持しつつLinkコンポーネントで実装
- */
+/** 設定ページのタブナビゲーション アクセシビリティを維持しつつLinkコンポーネントで実装 */
 const ConfigTabs = ({ gameId, children }: ConfigTabsProps) => {
   const pathname = usePathname();
   const router = useRouter();

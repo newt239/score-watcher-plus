@@ -7,9 +7,7 @@ import { ensureUserPreferences, updateUserPreferencesByUserId } from "@/server/r
 
 const factory = createFactory();
 
-/**
- * ユーザー設定更新
- */
+/** ユーザー設定更新 */
 const handler = factory.createHandlers(
   zValidator("json", UpdateUserPreferencesRequestSchema),
   async (c) => {

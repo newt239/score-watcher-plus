@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import RuleList from "./_components/RuleList/RuleList";
-
 import { getUser } from "@/utils/auth/auth-helpers";
+
+import RuleList from "./_components/RuleList/RuleList";
 
 export const dynamic = "force-dynamic";
 

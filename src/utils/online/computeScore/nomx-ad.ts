@@ -3,11 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * NomxAd形式のスコア計算
- * N回正解で勝ち抜け、M回誤答で失格、連答でアドバンテージ
- * stageの値が2のときアドバンテージ状態を表す
- */
+/** NomxAd形式のスコア計算 N回正解で勝ち抜け、M回誤答で失格、連答でアドバンテージ stageの値が2のときアドバンテージ状態を表す */
 const computeNomxAd = (
   game: Extract<GetGameDetailResponseType, { ruleType: "nomx-ad" }>,
   playersState: ComputedScoreProps[],

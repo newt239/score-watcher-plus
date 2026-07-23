@@ -2,15 +2,14 @@
 
 import { Flex, useComputedColorScheme } from "@mantine/core";
 
-import PlayerScoreButton from "../PlayerScoreButton/PlayerScoreButton";
-
-import classes from "./AQLPlayer.module.css";
-
-import type { ComputedScoreProps, GamePlayerProps, LogDBProps, States } from "@/models/game";
+import { numberSign } from "@/utils/functions";
 
 import PlayerHeader from "../PlayerHeader/PlayerHeader";
 import PlayerName from "../PlayerName/PlayerName";
-import { numberSign } from "@/utils/functions";
+import PlayerScoreButton from "../PlayerScoreButton/PlayerScoreButton";
+import classes from "./AQLPlayer.module.css";
+
+import type { ComputedScoreProps, GamePlayerProps, LogDBProps, States } from "@/models/game";
 
 type AQLPlayerProps = {
   player: GamePlayerProps;
