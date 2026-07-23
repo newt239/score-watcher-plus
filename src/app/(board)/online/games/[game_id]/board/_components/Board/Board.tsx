@@ -24,7 +24,7 @@ import type {
 import type { UserPreferencesType } from "@/models/user-preference";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-import WinModal from "@/app/(board)/games/[game_id]/board/_components/WinModal/WinModal";
+import WinModal from "../WinModal/WinModal";
 import createApiClient from "@/utils/hono/browser";
 import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineScore";
 

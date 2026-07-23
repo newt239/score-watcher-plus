@@ -8,8 +8,8 @@ import classes from "./AQLPlayer.module.css";
 
 import type { ComputedScoreProps, GamePlayerProps, LogDBProps, States } from "@/models/game";
 
-import PlayerHeader from "@/app/(board)/games/[game_id]/board/_components/PlayerHeader/PlayerHeader";
-import PlayerName from "@/app/(board)/games/[game_id]/board/_components/PlayerName/PlayerName";
+import PlayerHeader from "../PlayerHeader/PlayerHeader";
+import PlayerName from "../PlayerName/PlayerName";
 import { numberSign } from "@/utils/functions";
 
 type AQLPlayerProps = {
