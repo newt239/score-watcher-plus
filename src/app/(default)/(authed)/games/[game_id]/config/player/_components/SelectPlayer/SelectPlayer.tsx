@@ -41,7 +41,7 @@ const SelectPlayer: React.FC<SelectPlayerProps> = ({
         <ButtonLink
           leftSection={<IconUpload />}
           mt={3}
-          href={`/online/players?from=online/games/${game_id}`}
+          href={`/players?from=games/${game_id}`}
           size="md"
           color="blue"
           disabled={disabled}
@@ -80,7 +80,7 @@ const SelectPlayer: React.FC<SelectPlayerProps> = ({
                 <Accordion.Panel pb={4}>
                   {players.length === 0 ? (
                     <Box py={3}>
-                      <Link href="/online/players">プレイヤー管理</Link>
+                      <Link href="/players">プレイヤー管理</Link>
                       ページから一括でプレイヤー情報を登録できます。
                     </Box>
                   ) : (

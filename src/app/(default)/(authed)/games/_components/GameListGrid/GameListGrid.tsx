@@ -56,7 +56,7 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
               </CardSection>
               <Group className={classes.game_footer}>
                 <ButtonLink
-                  href={`/online/games/${game.id}/config`}
+                  href={`/games/${game.id}/config`}
                   leftSection={<IconAdjustmentsHorizontal />}
                   size="sm"
                   flex={1}
@@ -65,7 +65,7 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
                   設定
                 </ButtonLink>
                 <ButtonLink
-                  href={`/online/games/${game.id}/board`}
+                  href={`/games/${game.id}/board`}
                   leftSection={<IconPlayerPlay />}
                   size="sm"
                   flex={1}

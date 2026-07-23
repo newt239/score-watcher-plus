@@ -10,7 +10,7 @@ import { createApiClientOnServer } from "@/utils/hono/server";
 export const metadata: Metadata = {
   title: "プレイヤー管理",
   alternates: {
-    canonical: "https://score-watcher.com/online/players",
+    canonical: "https://score-watcher.com/players",
   },
 };
 

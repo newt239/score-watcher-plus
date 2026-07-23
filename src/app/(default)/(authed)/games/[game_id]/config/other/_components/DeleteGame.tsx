@@ -54,7 +54,7 @@ const DeleteGame: React.FC<DeleteGamePropsUnion> = ({ gameId, gameName, ruleType
             value: gameId,
           });
 
-          router.push("/online/games");
+          router.push("/games");
           router.refresh();
         } else {
           notifications.show({

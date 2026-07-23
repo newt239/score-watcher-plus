@@ -65,7 +65,7 @@ const GameListTable: React.FC<GameListTableProps> = ({ gameList }) => {
                   <TableTd>
                     <Group gap="xs">
                       <ButtonLink
-                        href={`/online/games/${game.id}/config`}
+                        href={`/games/${game.id}/config`}
                         leftSection={<IconAdjustmentsHorizontal />}
                         size="sm"
                       >

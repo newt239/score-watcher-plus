@@ -96,7 +96,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             size="xs"
             variant="default"
             leftSection={<IconAdjustmentsHorizontal size={20} />}
-            href={`/online/games/${game.id}/config`}
+            href={`/games/${game.id}/config`}
           >
             ゲーム設定
           </ButtonLink>

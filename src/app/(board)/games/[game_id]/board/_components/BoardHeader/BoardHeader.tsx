@@ -141,7 +141,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
             <Menu.Item
               component={Link}
               leftSection={<IconAdjustmentsHorizontal />}
-              href={`/online/games/${game.id}/config`}
+              href={`/games/${game.id}/config`}
             >
               ゲーム設定
             </Menu.Item>

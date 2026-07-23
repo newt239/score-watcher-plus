@@ -87,7 +87,7 @@ const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
           message: "ゲームを作成しました",
           color: "green",
         });
-        router.push(`/online/games/${result.data.ids[0]}/config`);
+        router.push(`/games/${result.data.ids[0]}/config`);
       }
     });
   };

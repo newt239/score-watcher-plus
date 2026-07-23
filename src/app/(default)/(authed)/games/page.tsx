@@ -58,7 +58,7 @@ const GamesPage = async ({ searchParams }: GamesPageProps) => {
     <>
       <Group justify="space-between" mb="lg">
         <Title order={2}>ゲーム</Title>
-        <ButtonLink href="/online/rules" leftSection={<IconPlus size={16} />}>
+        <ButtonLink href="/rules" leftSection={<IconPlus size={16} />}>
           新しいゲームを作成
         </ButtonLink>
       </Group>
@@ -66,7 +66,7 @@ const GamesPage = async ({ searchParams }: GamesPageProps) => {
       {orderedGameList.length === 0 ? (
         <p>
           作成済みのゲームはありません。
-          <Link href="/online/rules">形式一覧</Link>
+          <Link href="/rules">形式一覧</Link>
           ページから新しいゲームを作ることが出来ます。
         </p>
       ) : displayMode === "grid" ? (

@@ -79,7 +79,7 @@ const SelectQuizset: React.FC<Props> = ({ game_id, game_quiz, quizset_names }) =
       ) : (
         <ButtonLink
           leftSection={<IconUpload />}
-          href={`/online/quizes?from=cloud-games/${game_id}`}
+          href={`/quizes?from=cloud-games/${game_id}`}
           disabled={isPending}
         >
           問題データを読み込む

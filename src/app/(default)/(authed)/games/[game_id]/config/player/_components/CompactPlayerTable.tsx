@@ -231,7 +231,7 @@ const CompactPlayerTable: React.FC<CompactPlayerTableProps> = ({
           <Group justify="flex-end" mt="sm">
             <ButtonLink
               leftSection={<IconSettings />}
-              href={`/online/players?from=online/games/${game_id}`}
+              href={`/players?from=games/${game_id}`}
               variant="default"
               size="sm"
               disabled={isPending}

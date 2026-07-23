@@ -62,7 +62,7 @@ export async function sendDiscordWinnerNotification(gameData: GameWithRelations)
     }
 
     // Discord通知メッセージを作成
-    const description = `${winnerPlayer.name}さんが勝ち抜けました:tada:\nhttps://score-watcher.com/online/games/${gameData.id}/board`;
+    const description = `${winnerPlayer.name}さんが勝ち抜けました:tada:\nhttps://score-watcher.com/games/${gameData.id}/board`;
 
     // Discord Webhook APIにリクエストを送信
     await fetch(gameData.discordWebhookUrl, {
@@ -105,7 +105,7 @@ export async function sendDiscordResetNotification(gameData: GameWithRelations):
 
   try {
     // Discord通知メッセージを作成
-    const description = `ゲームがリセットされました\nhttps://score-watcher.com/online/games/${gameData.id}/board`;
+    const description = `ゲームがリセットされました\nhttps://score-watcher.com/games/${gameData.id}/board`;
 
     // Discord Webhook APIにリクエストを送信
     await fetch(gameData.discordWebhookUrl, {

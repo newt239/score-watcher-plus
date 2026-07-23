@@ -72,7 +72,7 @@ const GameStartButton: React.FC<GameStartButtonProps> = ({
             size="xl"
             variant="gradient"
             gradient={{ from: "teal", to: "lime", deg: 135 }}
-            href={`/online/games/${gameId}/board`}
+            href={`/games/${gameId}/board`}
             leftSection={<IconPlayerPlay />}
             miw={200}
           >

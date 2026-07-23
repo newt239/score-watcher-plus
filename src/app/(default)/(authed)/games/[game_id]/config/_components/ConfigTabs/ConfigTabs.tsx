@@ -25,7 +25,7 @@ const ConfigTabs = ({ gameId, children }: ConfigTabsProps) => {
       variant="outline"
       className={classes.tabs_area}
       value={pathname.split("/").at(-1)}
-      onChange={(value) => router.push(`/online/games/${gameId}/config/${value}`)}
+      onChange={(value) => router.push(`/games/${gameId}/config/${value}`)}
     >
       <Tabs.List className={classes.tab_list} grow>
         <Tabs.Tab

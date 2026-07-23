@@ -65,7 +65,7 @@ const CopyGame: React.FC<CopyGamePropsUnion> = ({
           withCloseButton: true,
         });
 
-        router.push(`/online/games/${newGame.data.ids[0]}/config`);
+        router.push(`/games/${newGame.data.ids[0]}/config`);
       } catch (error) {
         console.error("Failed to copy game:", error);
         notifications.show({
