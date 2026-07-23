@@ -1,7 +1,3 @@
-import type { Dexie, Table } from "dexie";
-
-export type DexieDatabase = { [P in keyof Dexie]: Dexie[P] };
-
 export type RuleNames =
   | "normal"
   | "nomx"
@@ -127,13 +123,6 @@ export type QuizDBProps = {
   a: string;
   set_name: string;
 };
-
-export interface ScoreWatcherDBTables extends DexieDatabase {
-  games: Table<GamePropsUnion>;
-  players: Table<PlayerDBProps>;
-  logs: Table<LogDBProps>;
-  quizes: Table<QuizDBProps>;
-}
 
 export type WinPlayerProps = {
   player_id: string;

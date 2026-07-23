@@ -39,8 +39,6 @@
     "better-auth": "1.4.7",
     "boring-avatars": "2.0.4",
     "cdate": "0.0.7",
-    "dexie": "4.2.1",
-    "dexie-react-hooks": "4.2.0",
     "drizzle-orm": "0.45.1",
     "encoding-japanese": "2.2.0",
     "hono": "4.11.1",
