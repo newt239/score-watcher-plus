@@ -25,6 +25,7 @@ import postAddPlayerHandler from "./controllers/game/post-add-player";
 import postCopyPlayersHandler from "./controllers/game/post-copy-players";
 import postCreateGameHandler from "./controllers/game/post-create";
 import postImportGameHandler from "./controllers/game/post-import";
+import postSentryTunnelHandler from "./controllers/monitoring/post-tunnel";
 import deletePlayerHandler from "./controllers/player/delete-player";
 import deletePlayerTagHandler from "./controllers/player/delete-tag";
 import getPlayerDetailHandler from "./controllers/player/get-detail";
@@ -110,6 +111,8 @@ const app = new Hono()
   .post("/stripe/webhook", ...postWebhookHandler)
   // Viewer API (認証不要)
   .get("/viewer/games/:gameId/board", ...getViewerBoardDataHandler)
+  // Sentryのイベント中継（認証不要）
+  .post("/monitoring", ...postSentryTunnelHandler)
   // e2eテスト用認証
   .post("/e2e/test-login", ...postTestLoginHandler)
   .delete("/e2e/test-user", ...deleteTestUserHandler)
