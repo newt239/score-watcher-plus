@@ -220,6 +220,10 @@ export const UpdateGameRequestJsonSchema = z.union([
     key: z.literal("quiz"),
     value: UpdateGameQuizSchema,
   }),
+  z.object({
+    key: z.literal("editable"),
+    value: z.boolean(),
+  }),
 ]);
 
 /** ゲーム削除リクエストのスキーマ */

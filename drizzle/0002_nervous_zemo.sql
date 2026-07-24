@@ -1,0 +1,1 @@
+ALTER TABLE `game` ADD `editable` integer DEFAULT false NOT NULL;

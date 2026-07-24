@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { ActionIcon, Box, Flex, Menu, MenuDivider } from "@mantine/core";
+import { ActionIcon, Box, Button, Flex, Menu, MenuDivider } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconAdjustmentsHorizontal,
@@ -11,6 +11,8 @@ import {
   IconComet,
   IconMaximize,
   IconSettings,
+  IconSquare,
+  IconSquareCheck,
 } from "@tabler/icons-react";
 
 import Link from "@/components/Link";
@@ -39,6 +41,9 @@ type BoardHeaderProps = {
   onThrough: () => void;
   preferences: UserPreferencesType | null;
   userId: string;
+  /** スコアの手動更新モードが有効かどうか */
+  editable: boolean;
+  onToggleEditable: () => void;
 };
 
 const BoardHeader: React.FC<BoardHeaderProps> = ({
@@ -50,9 +55,13 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
   onThrough,
   preferences,
   userId,
+  editable,
+  onToggleEditable,
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [isFullscreenEnabled, setIsFullscreenEnabled] = useState(false);
+  // 手動更新モードで問題番号を前後させるためのずれ幅
+  const [manualQuizShift, setManualQuizShift] = useState(0);
 
   // API経由で設定を取得（デフォルト値を設定）
   const showBoardHeader = preferences?.showBoardHeader ?? true;
@@ -63,12 +72,20 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
     setIsFullscreenEnabled(typeof document !== "undefined" && document.fullscreenEnabled);
   }, []);
 
+  // 手動更新モードを抜けたら問題番号のずれをリセットする
+  useEffect(() => {
+    setManualQuizShift(0);
+  }, [editable]);
+
   // オンライン版用のルール名表示関数
   const getRuleDisplayName = (ruleType: RuleNames): string => {
     return rules[ruleType].name;
   };
 
   if (!showBoardHeader) return null;
+
+  const displayedQuestionNumber = logsLength + 1 + manualQuizShift;
+  const displayedQuizPosition = quizPosition + manualQuizShift;
 
   return (
     <>
@@ -83,7 +100,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
           // ゲーム名なしの場合
           game.name === rules[game.ruleType].name || game.name === "" ? (
             <div className={classes.game_name_only} data-showqn={showQn}>
-              <span>Q{logsLength + 1}</span>
+              <span>Q{displayedQuestionNumber}</span>
               <span>{getRuleDisplayName(game.ruleType)}</span>
             </div>
           ) : (
@@ -94,7 +111,21 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
               </Flex>
               {showQn && (
                 <Flex className={classes.quiz_number_area}>
-                  <Box className={classes.quiz_number}>Q{logsLength + 1}</Box>
+                  <Box className={classes.quiz_number}>Q{displayedQuestionNumber}</Box>
+                  {editable && (
+                    <Button.Group variant="outline">
+                      <Button
+                        h="auto"
+                        disabled={displayedQuestionNumber <= 1}
+                        onClick={() => setManualQuizShift((v) => v - 1)}
+                      >
+                        {"<"}
+                      </Button>
+                      <Button h="auto" onClick={() => setManualQuizShift((v) => v + 1)}>
+                        {">"}
+                      </Button>
+                    </Button.Group>
+                  )}
                 </Flex>
               )}
             </Flex>
@@ -103,14 +134,14 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
         {quizList.length > 0 && (
           <Box className={classes.quiz_area}>
             <span>
-              {quizPosition < 0 || quizPosition >= quizList.length
+              {displayedQuizPosition < 0 || displayedQuizPosition >= quizList.length
                 ? "ここに問題文が表示されます"
-                : quizList[quizPosition].question}
+                : quizList[displayedQuizPosition].question}
             </span>
             <span className={classes.answer}>
-              {quizPosition < 0 || quizPosition >= quizList.length
+              {displayedQuizPosition < 0 || displayedQuizPosition >= quizList.length
                 ? "ここに答えが表示されます"
-                : quizList[quizPosition].answer}
+                : quizList[displayedQuizPosition].answer}
             </span>
           </Box>
         )}
@@ -127,17 +158,31 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            <Menu.Item closeMenuOnClick={false} leftSection={<IconComet />} onClick={onThrough}>
+            <Menu.Item
+              closeMenuOnClick={false}
+              leftSection={<IconComet />}
+              disabled={editable}
+              onClick={onThrough}
+            >
               スルー
             </Menu.Item>
             <Menu.Item
               closeMenuOnClick={false}
               leftSection={<IconArrowBackUp />}
-              disabled={logsLength === 0}
+              disabled={logsLength === 0 || editable}
               onClick={onUndo}
             >
               一つ戻す
             </Menu.Item>
+            {game.ruleType !== "aql" && (
+              <Menu.Item
+                closeMenuOnClick={false}
+                leftSection={editable ? <IconSquareCheck /> : <IconSquare />}
+                onClick={onToggleEditable}
+              >
+                スコアの手動更新
+              </Menu.Item>
+            )}
             {isFullscreenEnabled && (
               <Menu.Item
                 leftSection={<IconMaximize />}

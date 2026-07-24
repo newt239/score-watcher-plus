@@ -47,6 +47,8 @@ export const game = sqliteTable("game", {
   quizSetName: text("quiz_set_name"),
   // クイズセット内の何問目から開始するかのオフセット
   quizOffset: integer("quiz_offset").default(0).notNull(),
+  // スコアを手動で書き換える「スコアの手動更新」モードが有効かどうか
+  editable: integer("editable", { mode: "boolean" }).default(false).notNull(),
   userId: text("user_id").references(() => user.id),
 });
 

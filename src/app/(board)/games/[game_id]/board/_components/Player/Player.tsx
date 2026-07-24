@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Flex, useComputedColorScheme } from "@mantine/core";
 
 import { rules } from "@/utils/rules";
 
+import PlayerColorConfig from "../PlayerColorConfig/PlayerColorConfig";
 import PlayerHeader from "../PlayerHeader/PlayerHeader";
 import PlayerName from "../PlayerName/PlayerName";
 import PlayerScore from "../PlayerScore/PlayerScore";
@@ -34,6 +37,8 @@ type Props = {
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
   totalPlayers: number;
+  /** スコアの手動更新モードが有効かどうか */
+  editable: boolean;
 };
 
 const Player: React.FC<Props> = ({
@@ -45,14 +50,29 @@ const Player: React.FC<Props> = ({
   onAddLog,
   preferences,
   totalPlayers,
+  editable,
 }) => {
   const computedColorScheme = useComputedColorScheme("light");
+  const [editableState, setEditableState] = useState<States>("playing");
 
   const reversePlayerInfo = preferences?.reversePlayerInfo ?? false;
+
+  // 手動更新モードに入った時点の状態を初期値として扱う
+  useEffect(() => {
+    if (score) {
+      setEditableState(score.state);
+    }
+  }, [score]);
 
   if (!score) return null;
 
   const rows = rules[game.ruleType].rows;
+
+  // 手動更新モードでは画面上で上書きされた状態を優先して表示する
+  const displayedScore: ComputedScoreProps = {
+    ...score,
+    state: editable ? editableState : score.state,
+  };
 
   const getColor = (state: States) => {
     return state === "win"
@@ -69,36 +89,45 @@ const Player: React.FC<Props> = ({
   return (
     <Flex
       className={classes.player}
-      bg={getColor(score.state)}
-      c={getColor(score.state) && (computedColorScheme === "light" ? "white" : "black")}
+      bg={getColor(displayedScore.state)}
+      c={getColor(displayedScore.state) && (computedColorScheme === "light" ? "white" : "black")}
       w={{
         base: "100%",
         md: `clamp(8vw, ${(98 - totalPlayers) / totalPlayers}vw, 15vw)`,
       }}
       style={{
         borderColor: `var(--mantine-color-${(
-          getColor(score.state) ||
-          getColor(score.reach_state) ||
+          getColor(displayedScore.state) ||
+          getColor(displayedScore.reach_state) ||
           (computedColorScheme === "dark" ? "gray.8" : "gray.1")
         ).replace(".", "-")})`,
       }}
       data-reverse={reversePlayerInfo}
     >
       <Flex className={classes.player_info} data-rows={rows}>
-        <PlayerHeader
-          belong={player.affiliation || ""}
-          index={index}
-          isVerticalView={true}
-          text={player.description || ""}
-        />
+        {editable ? (
+          <PlayerColorConfig
+            colorState={getColor(displayedScore.state)}
+            editableState={editableState}
+            setEditableState={setEditableState}
+          />
+        ) : (
+          <PlayerHeader
+            belong={player.affiliation || ""}
+            index={index}
+            isVerticalView={true}
+            text={player.description || ""}
+          />
+        )}
         <PlayerName player_name={player.name} rows={rows} />
       </Flex>
       <PlayerScore
         game={game}
-        player={score}
+        player={displayedScore}
         isPending={isPending}
         onAddLog={onAddLog}
         preferences={preferences}
+        editable={editable}
       />
     </Flex>
   );

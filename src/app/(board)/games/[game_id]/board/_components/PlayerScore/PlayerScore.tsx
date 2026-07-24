@@ -21,6 +21,8 @@ type PlayerScoreProps = {
   isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
+  /** スコアの手動更新モードが有効かどうか */
+  editable: boolean;
 };
 
 const PlayerScore: React.FC<PlayerScoreProps> = ({
@@ -29,11 +31,13 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
   isPending,
   onAddLog,
   preferences,
+  editable,
 }) => {
   const props = {
     playerId: player.player_id,
     isPending,
     onAddLog,
+    editable,
   };
 
   // 設定に基づいてnumberSignを実行するヘルパー関数

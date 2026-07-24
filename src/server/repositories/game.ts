@@ -159,6 +159,14 @@ export const updateGameByKey = async (
       })
       .where(and(eq(game.id, gameId), eq(game.userId, userId)));
     return result.rowsAffected > 0;
+  } else if (key === "editable") {
+    const result = await DBClient.update(game)
+      .set({
+        editable: value,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(game.id, gameId), eq(game.userId, userId)));
+    return result.rowsAffected > 0;
   }
   return false;
 };

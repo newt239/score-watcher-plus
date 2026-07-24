@@ -48,6 +48,7 @@ const Board: React.FC<BoardProps> = ({
   const [isPending, startTransition] = useTransition();
   const [order, setOrder] = useState<"asc" | "desc">("asc");
   const [skipSuggest, setSkipSuggest] = useState(false);
+  const [editable, setEditable] = useState(initialGame.editable);
 
   // サーバーから取得した設定を使用
   const [preferences] = useState<UserPreferencesType | null>(initialPreferences);
@@ -105,6 +106,29 @@ const Board: React.FC<BoardProps> = ({
     addLog("-", "through");
   }, [addLog]);
 
+  const toggleEditable = useCallback(() => {
+    const nextValue = !editable;
+    setEditable(nextValue);
+    startTransition(async () => {
+      try {
+        await parseResponse(
+          apiClient.games[":gameId"].$patch({
+            param: { gameId },
+            json: { key: "editable", value: nextValue },
+          })
+        );
+      } catch (e) {
+        console.error("Failed to switch editable mode:", e);
+        setEditable(!nextValue);
+        notifications.show({
+          title: "エラー",
+          message: "スコアの手動更新モードの切り替えに失敗しました",
+          color: "red",
+        });
+      }
+    });
+  }, [editable, gameId]);
+
   const undo = useCallback(async () => {
     const last = logs[logs.length - 1];
     if (!last) return;
@@ -131,6 +155,8 @@ const Board: React.FC<BoardProps> = ({
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (!initialGame) return;
+      // 手動更新モードではスコアを直接入力するため、ショートカットを無効にする
+      if (editable) return;
       if (event.code.startsWith("Digit") || event.code.startsWith("Numpad")) {
         const code = event.code.startsWith("Digit") ? event.code[5] : event.code[6];
         const idx = Number(code);
@@ -152,7 +178,7 @@ const Board: React.FC<BoardProps> = ({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [players, addLog, undo, initialGame]);
+  }, [players, addLog, undo, initialGame, editable]);
 
   // useEffectを先に定義
   useEffect(() => {
@@ -210,6 +236,8 @@ const Board: React.FC<BoardProps> = ({
         onThrough={addThrough}
         preferences={preferences}
         userId={user.id}
+        editable={editable}
+        onToggleEditable={toggleEditable}
       />
       {initialGame.ruleType === "squarex" && (
         <Box
@@ -240,6 +268,8 @@ const Board: React.FC<BoardProps> = ({
           isPending={isPending}
           onAddLog={addLog}
           preferences={preferences}
+          showQuiz={quizList.length > 0}
+          editable={editable}
         />
       )}
 
@@ -250,6 +280,8 @@ const Board: React.FC<BoardProps> = ({
         onThrough={addThrough}
         userId={user.id}
         preferences={preferences}
+        editable={editable}
+        onToggleEditable={toggleEditable}
       />
 
       <GameLogs

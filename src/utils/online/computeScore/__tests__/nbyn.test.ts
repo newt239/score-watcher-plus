@@ -31,6 +31,7 @@ const createNbynGame = (
   discordWebhookUrl: null,
   quizSetName: null,
   quizOffset: 0,
+  editable: false,
   isPublic: false,
   userId: "user-1",
   players,
