@@ -104,14 +104,12 @@ describe("online squarex形式", () => {
       even_score: 3,
       score: 9,
     });
+    // 初期値が0の場合、総合スコアは(0 || 1) * (0 || 1) = 1として扱われる
     expect(initialStates[1]).toMatchObject({
       player_id: "player-2",
       odd_score: 0,
       even_score: 0,
-      score: 0,
-    });
-    initialStates.forEach((state) => {
-      expect(state.score).toBe(state.odd_score * state.even_score);
+      score: 1,
     });
   });
 

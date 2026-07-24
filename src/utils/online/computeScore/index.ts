@@ -19,8 +19,8 @@ export const getInitialPlayersStateForOnline = (
     last_wrong: -10,
     state: "playing",
     reach_state: "playing",
-    odd_score: game.ruleType === "squarex" ? (p.initialScore ?? 0) : 0,
-    even_score: game.ruleType === "squarex" ? (p.initialScore ?? 0) : 0,
+    odd_score: game.ruleType === "squarex" ? (p.initialCorrectCount ?? 0) : 0,
+    even_score: game.ruleType === "squarex" ? (p.initialWrongCount ?? 0) : 0,
     stage: game.ruleType === "z" ? 1 : 1,
     is_incapacity: false,
     order: 0,
@@ -34,21 +34,22 @@ const getInitialScore = (game: GetGameDetailResponseType, player: GamePlayerProp
     case "divide":
       return game.option.correct_me;
     case "attacksurvival":
-      return (game.option.win_through ?? 15) + (player.initialScore ?? 0);
+      // 持ち点（win_point）に個人の初期値を加算する
+      return (game.option.win_point ?? 15) + (player.initialCorrectCount ?? 0);
     case "ny":
-      return (player.initialScore ?? 0) - (player.initialScore ?? 0);
+      return (player.initialCorrectCount ?? 0) - (player.initialWrongCount ?? 0);
     case "nomr":
-      return player.initialScore ?? 0;
+      return player.initialCorrectCount ?? 0;
     case "backstream":
-      return (player.initialScore ?? 0) - initialBackstreamWrong(player.initialScore ?? 0);
-    case "squarex": {
-      const baseScore = player.initialScore ?? 0;
-      return baseScore * baseScore;
-    }
+      return (
+        (player.initialCorrectCount ?? 0) - initialBackstreamWrong(player.initialWrongCount ?? 0)
+      );
+    case "squarex":
+      return (player.initialCorrectCount || 1) * (player.initialWrongCount || 1);
     case "aql":
       return 1;
     default:
-      return (player.initialScore ?? 0) - (player.initialScore ?? 0);
+      return player.initialCorrectCount ?? 0;
   }
 };
 
@@ -57,18 +58,18 @@ const getInitialCorrect = (game: GetGameDetailResponseType, player: GamePlayerPr
   if (["attacksurvival", "squarex", "variables"].includes(game.ruleType)) {
     return 0;
   }
-  return player.initialScore ?? 0;
+  return player.initialCorrectCount ?? 0;
 };
 
 /** ゲーム形式に応じた初期誤答数を計算 */
 const getInitialWrong = (game: GetGameDetailResponseType, player: GamePlayerProps): number => {
   if (game.ruleType === "backstream") {
-    return initialBackstreamWrong(player.initialScore ?? 0);
+    return initialBackstreamWrong(player.initialWrongCount ?? 0);
   }
   if (game.ruleType === "squarex") {
     return 0;
   }
-  return player.initialScore ?? 0;
+  return player.initialWrongCount ?? 0;
 };
 
 /** Backstreamの初期誤答計算 */

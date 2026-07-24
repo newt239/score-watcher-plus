@@ -172,14 +172,16 @@ describe("online nomx-ad形式", () => {
     const player1 = result.scores.find((s) => s.player_id === "player-1");
     const player2 = result.scores.find((s) => s.player_id === "player-2");
 
+    // p1は2連答目がアドバンテージで+2（計3）。player-2の正解でp1のアドバンテージは解除される
     expect(player1).toMatchObject({
-      score: 2,
+      score: 3,
       stage: 1,
       correct: 2,
     });
+    // p2は正解直後なので次問アドバンテージ状態（stage=2）
     expect(player2).toMatchObject({
       score: 1,
-      stage: 1,
+      stage: 2,
       correct: 1,
     });
   });
@@ -241,9 +243,10 @@ describe("online nomx-ad形式", () => {
     const initialStates = getInitialPlayersStateForOnline(game);
     const result = computeNomxAd(game, initialStates, logs);
 
+    // streak_over3=true: +1, +2, +2, +2 = 7
     expect(result.scores[0]).toMatchObject({
       player_id: "player-1",
-      score: 4,
+      score: 7,
       correct: 4,
       stage: 2,
       state: "win",

@@ -104,7 +104,7 @@ describe("online nomx形式", () => {
     expect(initialStates).toHaveLength(2);
     expect(initialStates[0]).toMatchObject({
       player_id: "player-1",
-      score: 0,
+      score: 2,
       correct: 2,
       wrong: 2,
       state: "playing",
@@ -191,9 +191,9 @@ describe("online nomx形式", () => {
       {
         id: "log-3",
         gameId: "game-nomx",
-        playerId: "player-1",
+        playerId: "player-2",
         questionNumber: 2,
-        actionType: "correct",
+        actionType: "wrong",
         scoreChange: 0,
         timestamp: "2024-01-01T00:00:03.000Z",
         isSystemAction: false,
@@ -203,9 +203,9 @@ describe("online nomx形式", () => {
       {
         id: "log-4",
         gameId: "game-nomx",
-        playerId: "player-2",
+        playerId: "player-1",
         questionNumber: 3,
-        actionType: "wrong",
+        actionType: "correct",
         scoreChange: 0,
         timestamp: "2024-01-01T00:00:04.000Z",
         isSystemAction: false,

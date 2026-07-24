@@ -103,7 +103,7 @@ describe("online nupdown形式", () => {
 
     expect(initialStates[0]).toMatchObject({
       player_id: "player-1",
-      score: 0,
+      score: 2,
       correct: 2,
       wrong: 2,
       state: "playing",

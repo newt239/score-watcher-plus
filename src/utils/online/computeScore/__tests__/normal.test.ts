@@ -75,7 +75,7 @@ describe("online normal形式", () => {
     expect(initialStates).toHaveLength(2);
     expect(initialStates[0]).toMatchObject({
       player_id: "player-1",
-      score: 0,
+      score: 3,
       correct: 3,
       wrong: 3,
       state: "playing",
