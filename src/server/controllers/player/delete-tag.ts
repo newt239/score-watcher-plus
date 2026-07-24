@@ -7,9 +7,7 @@ import { removePlayerTag } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤータグ削除APIハンドラー
- */
+/** プレイヤータグ削除APIハンドラー */
 const handler = factory.createHandlers(
   zValidator("json", RemovePlayerTagRequestSchema),
   async (c) => {

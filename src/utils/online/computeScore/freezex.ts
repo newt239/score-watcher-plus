@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * FreezeX形式のスコア計算
- * X回正解で勝ち抜け、N回目の誤答でN回休み
- */
+/** FreezeX形式のスコア計算 X回正解で勝ち抜け、N回目の誤答でN回休み */
 const computeFreezex = (
   game: Extract<GetGameDetailResponseType, { ruleType: "freezex" }>,
   playersState: ComputedScoreProps[],

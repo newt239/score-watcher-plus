@@ -7,9 +7,7 @@ import { addGamePlayer } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲームプレイヤー追加
- */
+/** ゲームプレイヤー追加 */
 const handler = factory.createHandlers(
   zValidator("json", AddPlayerToGameRequestSchema),
   async (c) => {

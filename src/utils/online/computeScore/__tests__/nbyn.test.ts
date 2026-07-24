@@ -12,9 +12,7 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 type NbynGame = Extract<GetGameDetailResponseType, { ruleType: "nbyn" }>;
 
-/**
- * nbyn形式のゲームデータを生成する。
- */
+/** Nbyn形式のゲームデータを生成する。 */
 const createNbynGame = (
   players: GamePlayerProps[],
   logs: SeriarizedGameLog[],
@@ -37,9 +35,7 @@ const createNbynGame = (
   logs,
 });
 
-/**
- * ゲーム参加者を生成する。
- */
+/** ゲーム参加者を生成する。 */
 const createPlayer = (
   id: string,
   initialScore: number | null,
@@ -55,9 +51,7 @@ const createPlayer = (
   initialWrongCount: initialScore,
 });
 
-/**
- * 計算済みスコアを生成する。
- */
+/** 計算済みスコアを生成する。 */
 const createScoreState = (override: Partial<ComputedScoreProps>): ComputedScoreProps => ({
   game_id: "game-nbyn",
   player_id: "player-base",
@@ -78,16 +72,17 @@ const createScoreState = (override: Partial<ComputedScoreProps>): ComputedScoreP
 });
 
 describe("online nbyn形式", () => {
-  it("初期状態は全員score=0でstageやreach_stateがplaying", () => {
+  it("初期状態はscoreが初期正解数でstageやreach_stateがplaying", () => {
     const players = [createPlayer("player-1", 2, 0), createPlayer("player-2", null, 1)];
     const game = createNbynGame(players, []);
 
     const initialStates = getInitialPlayersStateForOnline(game);
 
     expect(initialStates).toHaveLength(2);
+    expect(initialStates[0]).toMatchObject({ score: 2 });
+    expect(initialStates[1]).toMatchObject({ score: 0 });
     initialStates.forEach((state) => {
       expect(state).toMatchObject({
-        score: 0,
         reach_state: "playing",
         state: "playing",
         stage: 1,

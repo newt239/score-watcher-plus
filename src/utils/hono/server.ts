@@ -1,16 +1,15 @@
 "use server";
 
-import { headers } from "next/headers";
-
 import { hc } from "hono/client";
-
-import type { APIRouteType } from "@/server";
+import { headers } from "next/headers";
 
 import { getUser } from "@/utils/auth/auth-helpers";
 
+import type { APIRouteType } from "@/server";
+
 /**
- * サーバーサイドで使用するAPIクライアント
- * ユーザーがログインしている場合はx-user-idヘッダーを追加
+ * サーバーサイドで使用するAPIクライアント ユーザーがログインしている場合はx-user-idヘッダーを追加
+ *
  * @returns APIクライアント
  */
 export const createApiClientOnServer = async () => {

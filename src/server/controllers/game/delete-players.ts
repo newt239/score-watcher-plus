@@ -10,9 +10,7 @@ import { removeGamePlayers } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲームプレイヤー削除
- */
+/** ゲームプレイヤー削除 */
 const handler = factory.createHandlers(
   zValidator("param", RemoveGamePlayersRequestParamSchema),
   zValidator("json", RemoveGamePlayersRequestJsonSchema),

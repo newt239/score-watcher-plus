@@ -8,9 +8,7 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 type BackstreamGame = Extract<GetGameDetailResponseType, { ruleType: "backstream" }>;
 
-/**
- * backstream形式のゲームデータを生成する。
- */
+/** Backstream形式のゲームデータを生成する。 */
 const createBackstreamGame = (
   players: GamePlayerProps[],
   logs: SeriarizedGameLog[]
@@ -32,9 +30,7 @@ const createBackstreamGame = (
   logs,
 });
 
-/**
- * ゲーム参加者を生成する。
- */
+/** ゲーム参加者を生成する。 */
 const createPlayer = (id: string, initialScore: number, order: number): GamePlayerProps => ({
   id,
   name: id,
@@ -46,9 +42,7 @@ const createPlayer = (id: string, initialScore: number, order: number): GamePlay
   initialWrongCount: initialScore,
 });
 
-/**
- * 計算済みスコアを生成する。
- */
+/** 計算済みスコアを生成する。 */
 const createScoreState = (override: Partial<ComputedScoreProps>): ComputedScoreProps => ({
   game_id: "game-backstream",
   player_id: "player-base",

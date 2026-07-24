@@ -1,55 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { Flex, useComputedColorScheme } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
-import { useLiveQuery } from "dexie-react-hooks";
 
-import PlayerColorConfig from "../PlayerColorConfig";
+import { rules } from "@/utils/rules";
+
 import PlayerHeader from "../PlayerHeader/PlayerHeader";
 import PlayerName from "../PlayerName/PlayerName";
 import PlayerScore from "../PlayerScore/PlayerScore";
-
 import classes from "./Player.module.css";
 
-import type { ComputedScoreProps, PlayerDBProps, States } from "@/utils/types";
+import type {
+  ComputedScoreProps,
+  GamePlayerProps,
+  LogDBProps,
+  RuleNames,
+  States,
+} from "@/models/game";
+import type { UserPreferencesType } from "@/models/user-preference";
 
-import db from "@/utils/db";
-import { rules } from "@/utils/rules";
-
-type Props = {
-  game_id: string;
-  player: PlayerDBProps;
-  index: number;
-  score: ComputedScoreProps | undefined;
-  currentProfile: string;
+type OnlineGame = {
+  id: string;
+  name: string;
+  ruleType: RuleNames;
+  win_point?: number; // nbyn形式で使用
 };
 
-const Player: React.FC<Props> = ({ game_id, player, index, score, currentProfile }) => {
+type Props = {
+  game: OnlineGame;
+  player: GamePlayerProps;
+  index: number;
+  score: ComputedScoreProps | undefined;
+  isPending: boolean;
+  onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
+  preferences: UserPreferencesType | null;
+  totalPlayers: number;
+};
+
+const Player: React.FC<Props> = ({
+  game,
+  player,
+  index,
+  score,
+  isPending,
+  onAddLog,
+  preferences,
+  totalPlayers,
+}) => {
   const computedColorScheme = useComputedColorScheme("light");
-  const game = useLiveQuery(() => db(currentProfile).games.get(game_id as string));
-  const [editableState, setEditableState] = useState<States>("playing");
 
-  const [reversePlayerInfo] = useLocalStorage({
-    key: "reversePlayerInfo",
-    defaultValue: false,
-  });
+  const reversePlayerInfo = preferences?.reversePlayerInfo ?? false;
 
-  useEffect(() => {
-    if (score) {
-      setEditableState(score.state || "playing");
-    }
-  }, [score]);
+  if (!score) return null;
 
-  if (!game || !score) return null;
-
-  const rows = rules[game.rule].rows;
-
-  const editedScore: ComputedScoreProps = {
-    ...score,
-    state: game.editable ? editableState : score.state,
-  };
+  const rows = rules[game.ruleType].rows;
 
   const getColor = (state: States) => {
     return state === "win"
@@ -65,41 +68,38 @@ const Player: React.FC<Props> = ({ game_id, player, index, score, currentProfile
 
   return (
     <Flex
-      data-testid="player"
       className={classes.player}
-      bg={getColor(editedScore.state)}
-      c={getColor(editedScore.state) && (computedColorScheme === "light" ? "white" : "black")}
+      bg={getColor(score.state)}
+      c={getColor(score.state) && (computedColorScheme === "light" ? "white" : "black")}
       w={{
         base: "100%",
-        md: `clamp(8vw, ${(98 - game.players.length) / game.players.length}vw, 15vw)`,
+        md: `clamp(8vw, ${(98 - totalPlayers) / totalPlayers}vw, 15vw)`,
       }}
       style={{
         borderColor: `var(--mantine-color-${(
-          getColor(editedScore.state) ||
-          getColor(editedScore.reach_state) ||
+          getColor(score.state) ||
+          getColor(score.reach_state) ||
           (computedColorScheme === "dark" ? "gray.8" : "gray.1")
         ).replace(".", "-")})`,
       }}
       data-reverse={reversePlayerInfo}
     >
       <Flex className={classes.player_info} data-rows={rows}>
-        {game.editable ? (
-          <PlayerColorConfig
-            colorState={getColor(editedScore.state)}
-            editableState={editableState}
-            setEditableState={setEditableState}
-          />
-        ) : (
-          <PlayerHeader
-            belong={player.belong}
-            index={index}
-            isVerticalView={true}
-            text={player.text}
-          />
-        )}
+        <PlayerHeader
+          belong={player.affiliation || ""}
+          index={index}
+          isVerticalView={true}
+          text={player.description || ""}
+        />
         <PlayerName player_name={player.name} rows={rows} />
       </Flex>
-      <PlayerScore game={game} player={editedScore} currentProfile={currentProfile} />
+      <PlayerScore
+        game={game}
+        player={score}
+        isPending={isPending}
+        onAddLog={onAddLog}
+        preferences={preferences}
+      />
     </Flex>
   );
 };

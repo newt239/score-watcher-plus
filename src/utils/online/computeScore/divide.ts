@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Divide形式のスコア計算
- * 正解で+10pt、誤答回数に応じて割る数が増加
- */
+/** Divide形式のスコア計算 正解で+10pt、誤答回数に応じて割る数が増加 */
 const computeDivide = (
   game: Extract<GetGameDetailResponseType, { ruleType: "divide" }>,
   playersState: ComputedScoreProps[],

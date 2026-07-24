@@ -7,9 +7,7 @@ import { deleteGameById } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * ゲーム削除
- */
+/** ゲーム削除 */
 const handler = factory.createHandlers(
   zValidator("param", DeleteGameRequestParamSchema),
   async (c) => {

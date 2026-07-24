@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * EndlessChance形式のスコア計算
- * 同じ問題に対して正答が出るまで複数人が回答できる
- */
+/** EndlessChance形式のスコア計算 同じ問題に対して正答が出るまで複数人が回答できる */
 const computeEndlessChance = (
   game: Extract<GetGameDetailResponseType, { ruleType: "endless-chance" }>,
   playersState: ComputedScoreProps[],

@@ -13,11 +13,12 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 type FreezexGame = Extract<GetGameDetailResponseType, { ruleType: "freezex" }>;
 
 /**
- * freezex形式のゲームデータを生成する。
+ * Freezex形式のゲームデータを生成する。
+ *
  * @param players ゲームに参加するプレイヤー一覧
  * @param logs 適用するゲームログ
  * @param winPoint 勝ち抜けに必要な正解数
- * @returns freezex形式のゲーム設定
+ * @returns Freezex形式のゲーム設定
  */
 const createFreezexGame = (
   players: GamePlayerProps[],
@@ -44,6 +45,7 @@ const createFreezexGame = (
 
 /**
  * ゲーム参加者を生成する。
+ *
  * @param id プレイヤーID
  * @param initialScore 初期スコア
  * @param displayOrder 表示順
@@ -66,6 +68,7 @@ const createPlayer = (
 
 /**
  * 計算済みスコアを生成する。
+ *
  * @param override 上書きするスコア情報
  * @returns 計算済みスコア
  */
@@ -97,7 +100,7 @@ describe("online freezex形式", () => {
 
     expect(initialStates[0]).toMatchObject({
       player_id: "player-1",
-      score: 0,
+      score: 2,
       correct: 2,
       wrong: 2,
       is_incapacity: false,

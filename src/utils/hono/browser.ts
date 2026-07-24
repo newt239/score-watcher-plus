@@ -6,9 +6,7 @@ const baseUrl = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
   ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
   : "http://localhost:3000";
 
-/**
- * ブラウザ上で動作するAPIクライアントを作成
- */
+/** ブラウザ上で動作するAPIクライアントを作成 */
 const createApiClient = () => {
   return hc<APIRouteType>(`${baseUrl}/api`, {
     init: {

@@ -5,10 +5,7 @@ import { DBClient, user, account, session } from "@/utils/drizzle/client";
 
 const factory = createFactory();
 
-/**
- * テスト専用ユーザー削除エンドポイント
- * E2Eテストでのみ使用される
- */
+/** テスト専用ユーザー削除エンドポイント E2Eテストでのみ使用される */
 export default factory.createHandlers(async (c) => {
   // 本番環境では無効
   if (process.env.NODE_ENV === "production") {

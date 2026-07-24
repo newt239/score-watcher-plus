@@ -2,39 +2,32 @@
 
 import React from "react";
 
-import { TextInput, UnstyledButton, useComputedColorScheme } from "@mantine/core";
-import { sendGAEvent } from "@next/third-parties/google";
-import { cdate } from "cdate";
-import { nanoid } from "nanoid";
+import { UnstyledButton, useComputedColorScheme } from "@mantine/core";
 
 import classes from "./PlayerScoreButton.module.css";
 
-import db from "@/utils/db";
+import type { LogDBProps } from "@/models/game";
 
-type Props = {
+type PlayerScoreButtonProps = {
   color: "red" | "blue" | "green" | "gray" | "black" | "win" | "lose" | "playing";
   filled?: boolean;
   compact?: boolean;
-  game_id: string;
-  player_id: string;
-  currentProfile: string;
-  editable: boolean;
+  playerId: string;
+  isPending: boolean;
+  onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   disabled?: boolean;
-  onClick?: () => void;
   children: string;
 };
 
-const PlayerScoreButton: React.FC<Props> = ({
+const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
   color,
   children,
   filled = false,
   compact = false,
-  game_id,
-  player_id,
-  currentProfile,
-  editable,
+  playerId,
+  isPending,
+  onAddLog,
   disabled,
-  onClick,
 }) => {
   const numberSign = children.endsWith("pt")
     ? "pt"
@@ -63,82 +56,39 @@ const PlayerScoreButton: React.FC<Props> = ({
               ? "green.9"
               : "yellow.3";
 
-  const handleClick = async () => {
-    if (color !== "green" && !disabled) {
-      try {
-        await db(currentProfile).logs.put({
-          id: nanoid(),
-          game_id,
-          player_id,
-          variant: color === "red" ? "correct" : "wrong",
-          system: 0,
-          timestamp: cdate().text(),
-          available: 1,
-        });
-      } catch (err) {
-        console.log(err);
-      }
+  const handleClick = () => {
+    if (color !== "green" && !disabled && !isPending) {
+      onAddLog(playerId, color === "red" ? "correct" : "wrong");
     }
   };
 
   return (
-    <>
-      {editable ? (
-        <TextInput
-          variant="unstyled"
-          classNames={{ input: classes.player_score_button }}
-          data-compact={compact}
-          styles={{
-            input: {
-              cursor: "text",
-              color: `var(--mantine-color-${(filled ? defaultColor : variantColor).replace(
-                ".",
-                "-"
-              )})`,
-              backgroundColor: filled ? variantColor : "transparent",
-            },
-          }}
-          defaultValue={children}
-        />
+    <UnstyledButton
+      onClick={handleClick}
+      className={classes.player_score_button}
+      data-signed={numberSign !== "none"}
+      data-compact={compact}
+      data-disabled={disabled || isPending}
+      style={{
+        cursor:
+          disabled && color !== "green"
+            ? "not-allowed"
+            : disabled || color === "green" || isPending
+              ? "default"
+              : "pointer",
+      }}
+      c={filled ? defaultColor : variantColor}
+      bg={filled ? variantColor : "transparent"}
+    >
+      {numberSign === "none" ? (
+        <span>{children}</span>
       ) : (
-        <UnstyledButton
-          onClick={() => {
-            if (onClick) {
-              onClick();
-            } else {
-              handleClick();
-            }
-            sendGAEvent({
-              event: "click_score_button",
-              value: color,
-            });
-          }}
-          className={classes.player_score_button}
-          data-signed={numberSign !== "none"}
-          data-compact={compact}
-          data-disabled={disabled}
-          style={{
-            cursor:
-              disabled && color !== "green"
-                ? "not-allowed"
-                : disabled || color === "green" || editable
-                  ? "default"
-                  : "pointer",
-          }}
-          c={filled ? defaultColor : variantColor}
-          bg={filled ? variantColor : "transparent"}
-        >
-          {numberSign === "none" ? (
-            <span>{children}</span>
-          ) : (
-            <>
-              <span>{children.split(/((?:○)|(?:✕)|(?:pt))/)[0]}</span>
-              <span style={{ fontSize: "50%" }}>{children.split(/((?:○)|(?:✕)|(?:pt))/)[1]}</span>
-            </>
-          )}
-        </UnstyledButton>
+        <>
+          <span>{children.split(/((?:○)|(?:✕)|(?:pt))/)[0]}</span>
+          <span style={{ fontSize: "50%" }}>{children.split(/((?:○)|(?:✕)|(?:pt))/)[1]}</span>
+        </>
       )}
-    </>
+    </UnstyledButton>
   );
 };
 

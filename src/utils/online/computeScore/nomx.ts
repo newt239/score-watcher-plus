@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * NoMx形式のスコア計算
- * N回正解で勝ち抜け、M回誤答で失格
- */
+/** NoMx形式のスコア計算 N回正解で勝ち抜け、M回誤答で失格 */
 const computeNomx = (
   game: Extract<GetGameDetailResponseType, { ruleType: "nomx" }>,
   playersState: ComputedScoreProps[],

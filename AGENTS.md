@@ -10,7 +10,8 @@
 - [コマンド一覧](#コマンド一覧)
 - [ファイル構造とアーキテクチャ](#ファイル構造とアーキテクチャ)
 - [コーディング規約](#コーディング規約)
-- [AGENTS.md更新ルール](#agents.md更新ルール)
+- [リポジトリ設定](#リポジトリ設定)
+- [AGENTS.md更新ルール](#agentsmd更新ルール)
 
 ## 原則
 
@@ -22,15 +23,15 @@
 
 機能や実装について少しでも不明点があれば必ず質問してください。
 
-### lintの実行
+### codecheckの実行
 
 実装後の必須作業として、以下のコマンドを実行してください。
 
 ```bash
-npx tsc --noEmit && pnpm run lint:fix
+pnpm run codecheck
 ```
 
-型エラーやリントエラーが出た場合は、コミット前に必ず修正してください。
+`codecheck` は typecheck / lint / format / stylelint / ls-lint / knip を順に実行します。エラーが出た場合は、コミット前に必ず修正してください。エラーを解消するために各種設定ファイル（tsconfig, .oxlintrc.json 等）を緩めるのは禁止です。
 
 ### 定期的なコミット
 
@@ -42,17 +43,31 @@ npx tsc --noEmit && pnpm run lint:fix
 
 ドキュメントを追加するよう指示があった場合は`docs`以下にMarkdownファイルを作成して記述してください。
 
-### オンライン機能
-
-プレイデータがIndexedDBに保存されるローカル版と、プレイデータがサーバーに保存されるオンライン版があります。ローカル版はブラウザ内で完結するオフライン運用と、ログインして利用するオンライン運用の両方に対応しており、現場での迅速なスコアリングから大規模なイベントでの公開・観戦まで幅広い用途をサポートします。オンライン版はGoogleアカウントでログインして利用します。
-
-オンライン機能のURLは`/online/...`で統一してください。オンライン機能の実装にあたり、ローカル版の実装にデグレードが発生しないようにしてください。
-
-ローカル版の実装は一切変更しないでください。
-
 ## プロジェクト概要
 
 Score Watcher は競技クイズのスコア可視化Webアプリケーションです。Next.jsのApp Routerアーキテクチャを使用しています。
+
+プレイデータはすべてサーバー（Turso DB）に保存されます。Googleアカウントでログインして利用し、ゲームを公開設定にすると認証なしの観戦モード（`/viewer/[game_id]`）で誰でも観戦できます。
+
+### URL構成
+
+- `/` … トップページ（LP、認証不要）
+- `/sign-in` … ログイン（認証不要）
+- `/rules` … 形式一覧（認証不要。ゲーム作成にはログインが必要）
+- `/games`, `/players`, `/quizes`, `/user` … 認証必須（`src/app/(default)/(authed)/` 配下）
+- `/games/[game_id]/board` … スコアボード（認証必須、`(board)`グループ）
+- `/viewer/[game_id]` … 観戦モード（認証不要、公開ゲームのみ）
+- `/docs` … アプリ情報（認証不要）
+
+旧URL `/online/*` は `next.config.ts` の `redirects()` で新URLへ301リダイレクトされます。
+
+### 認証ガード
+
+`middleware.ts` は使用していません。認証ガードは以下で行います。
+
+- `src/app/(default)/(authed)/layout.tsx` … `(authed)`グループ全体を`getUser()` + `redirect("/sign-in")`で保護（`dynamic = "force-dynamic"` を必ず維持すること）
+- `src/app/(board)/games/[game_id]/board/page.tsx` … `(board)`グループにはlayoutガードがないためページ内で個別に保護
+- API側は各コントローラーが`getUserId()`で認証確認
 
 ## 主要技術
 
@@ -67,13 +82,6 @@ Next.js v15を使用し、TypeScriptで記述します。App Routerを使用し�
 - **API Routes経由でのデータアクセス**: コンポーネントから`repositories`以下の関数を直接呼び出さないでください。必ずAPI Routes経由で取得してください
 - **型アサーションの使用禁止**: 安易に型アサーションを使用しないでください。APIレスポンスは型を信頼し、そのまま受け入れてください
 
-**オンライン機能はServer Actionsへ移行予定です。** 現在は以下の実装が併存しています：
-
-- API Routes (`/api/...`) + Honoクライアント（既存実装）
-- Server Actions (`src/actions/...`)（新規実装、推奨）
-
-ローカル機能については引き続きAPI Routesを使用してください。
-
 Reactのガイドも参考にしてください：
 https://react.dev/learn/you-might-not-need-an-effect
 
@@ -81,21 +89,21 @@ https://react.dev/learn/you-might-not-need-an-effect
 
 UIコンポーネントライブラリの一つである**Mantine**を使用します。新しいUIを実装する際はまずMantineのコンポーネントの使用を検討してください。
 
-デザインのカスタマイズは**CSS Modules**を使用してください。**Tailwind CSSは使用禁止**とします。クラス名はkebab-caseで命名してください。
+デザインのカスタマイズは**CSS Modules**を使用してください。**Tailwind CSSは使用禁止**とします。クラス名はsnake_caseで命名してください（css-modules-kit がJavaScript識別子として扱えない名前をサポートしないため、kebab-caseは使用禁止）。
 
 ### データベース
 
-**ユーザーのデータはIndexedDB**に保存しています。データを操作する場合はDexie.jsで生成したクライアントがある`src/utils/db.ts`を使用してください。テーブルは以下のようなものがあります。
+データは**Turso（libSQL）**に保存し、**Drizzle ORM**で操作します。
 
-- `users` - ユーザー情報
-- `games` - ゲーム情報
-- `players` - プレイヤー情報
-- `logs` - ゲーム操作ログ（元に戻す/やり直し用）
-- `quizes` - クイズ問題
+- スキーマ定義: `src/utils/drizzle/schema/`（`auth.ts`, `game.ts`, `quiz.ts`）
+- 接続クライアント: `src/utils/drizzle/client.ts`
+- データベース操作は`src/server/repositories/`以下の関数で行い、必ず`userId`で本人スコープを強制してください
 
-### PWA機能
+観戦モードのボードデータは**Cloudflare KV**（`src/utils/cache/`）でキャッシュされます。
 
-オフラインでの動作に対応させるため、サービスワーカーを使用しています。
+### 認証
+
+**better-auth**（`src/utils/auth/auth.ts`）を使用します。本番はGoogle OAuth、非本番環境ではE2Eテスト用のEmail/Password認証も有効です。サーバー側でのユーザー取得は`src/utils/auth/auth-helpers.ts`の`getUser()`を使用してください。
 
 ## コマンド一覧
 
@@ -111,13 +119,17 @@ pnpm run start        # プロダクションサーバー起動
 ### 品質管理
 
 ```bash
-pnpm run formatt
-pnpm run formatt:fix
-pnpm run lint
+pnpm run codecheck     # typecheck + lint + format + stylelint + ls-lint + knip を一括実行
+pnpm run typecheck     # TypeScript型チェック
+pnpm run lint          # oxlint
 pnpm run lint:fix
-pnpm run stylelint
+pnpm run format        # oxfmt（importソート含む）
+pnpm run format:fix
+pnpm run stylelint     # CSSのlint
 pnpm run stylelint:fix
-pnpm run gen          # CSS Modules Kitによる型生成
+pnpm run ls-lint       # ファイル名の命名規則チェック
+pnpm run knip          # 未使用ファイル・依存・エクスポートの検出
+pnpm run gen           # CSS Modules Kitによる型生成
 ```
 
 ### データベース
@@ -132,9 +144,12 @@ pnpm run db:push       # データベーススキーマをデプロイ
 ### テスト実行
 
 ```bash
-pnpm run playwright    # Playwright E2E テスト
-pnpm run vitest       # Vitest ユニットテスト
+pnpm run test         # Vitest ユニットテスト（src/**/*.test.ts）
+pnpm run vitest       # Vitest（watchモード）
+pnpm run playwright   # Playwright E2E テスト
 ```
+
+E2Eテスト（`tests/online-game.spec.ts`）は開発サーバー経由で実際のTurso DBに接続します。ローカル実行には`.env`にTurso・better-auth関連の環境変数が必要です。テストログインは`/api/e2e/test-login`（NODE_ENV=production では無効）を使用します。
 
 ## ファイル構造とアーキテクチャ
 
@@ -143,16 +158,25 @@ pnpm run vitest       # Vitest ユニットテスト
 ```bash
 src/
 ├── app/
-│   ├── (board)/           # スコアボード表示ページ群
-│   ├── (default)/         # メイン管理ページ群
+│   ├── (board)/           # スコアボード・観戦ページ群（全画面レイアウト）
+│   │   ├── games/[game_id]/board/  # スコアボード（認証必須）
+│   │   └── viewer/[game_id]/       # 観戦モード（認証不要）
+│   ├── (default)/         # 通常レイアウトのページ群
+│   │   ├── (authed)/      # 認証必須ページ（games, players, quizes, user）
+│   │   ├── rules/         # 形式一覧（公開）
+│   │   ├── sign-in/       # ログイン
+│   │   ├── docs/          # アプリ情報
+│   │   └── _components/   # (default)グループ共有コンポーネント
 │   ├── _components/       # アプリ全体で使用する共有コンポーネント
 │   ├── api/               # API Routes（Honoでルーティング）
 │   ├── globals.css        # グローバルスタイル
 │   └── layout.tsx         # ルートレイアウト
 ├── assets/                # 画像などの静的アセット
+├── components/            # 汎用UIコンポーネント（ButtonLink, Link等）
 ├── models/                # Zodスキーマと型定義（機能ごと）
 │   ├── game.ts            # ゲーム関連
 │   ├── player.ts          # プレイヤー関連
+│   ├── quiz.ts            # クイズ関連
 │   └── user-preference.ts # ユーザー設定関連
 ├── server/                # サーバーサイド実装
 │   ├── controllers/       # APIハンドラー（機能別ディレクトリ）
@@ -160,52 +184,38 @@ src/
 │   │   ├── player/        # プレイヤー関連エンドポイント
 │   │   ├── quiz/          # クイズ関連エンドポイント
 │   │   ├── user/          # ユーザー関連エンドポイント
-│   │   └── viewer/        # 観戦者関連エンドポイント
+│   │   ├── viewer/        # 観戦者関連エンドポイント
+│   │   └── e2e/           # E2Eテスト用エンドポイント（非本番のみ）
 │   ├── repositories/      # データベース操作層
 │   ├── utils/             # サーバー専用ユーティリティ
 │   └── index.ts           # Honoアプリのエントリーポイント
 ├── utils/
-│   ├── auth/              # 認証関連ユーティリティ
-│   ├── cache/             # キャッシュ管理
-│   ├── computeScore/      # 17種類のゲーム形式の計算ロジック
-│   ├── drizzle/           # Drizzle ORM設定
+│   ├── auth/              # 認証関連ユーティリティ（better-auth）
+│   ├── cache/             # Cloudflare KVキャッシュ管理（観戦用）
+│   ├── drizzle/           # Drizzle ORM設定・スキーマ
 │   ├── hono/              # Honoクライアント設定
-│   ├── online/            # オンライン機能関連
-│   ├── db.ts              # IndexedDB操作・スキーマ管理
+│   ├── online/            # ドメインロジック
+│   │   ├── computeScore/  # 17種類のゲーム形式の計算ロジック
+│   │   └── discord.ts     # Discord Webhook通知
 │   ├── types.ts           # TypeScript型定義
 │   ├── functions.ts       # 共通ユーティリティ関数
 │   ├── rules.ts           # ゲームルール定義
 │   └── theme.ts           # Mantineテーマ設定
-├── middleware.ts          # Next.js ミドルウェア
-└── instrumentation.ts     # Next.js 計測設定
+└── instrumentation.ts     # Sentry計測設定
 ```
-
-### データベース設計
-
-**IndexedDB テーブル（Dexie.js使用）:**
-
-- `games` - ゲーム情報
-- `players` - プレイヤー情報
-- `logs` - ゲーム操作ログ（元に戻す/やり直し用）
-- `quizes` - クイズ問題
-
-**操作場所:**
-
-- データベース初期化: `src/utils/db.ts`
-- スキーマバージョニング: `src/utils/db.ts`
-- 型定義: `src/utils/types.ts`
 
 ### スコア計算システム
 
 各形式のロジックは`docs/rules`以下に仕様書があります。
 
-**ファイル場所:** `src/utils/computeScore/`
+**ファイル場所:** `src/utils/online/computeScore/`（エントリは`computeOnlineScore.ts`）
 
 **対応ゲーム形式:**
 
-- normal, nomx, ny, swedish, backstream, z, aql, linear等
+- normal, nomx, ny, swedish, backstream, z, aql, linear等の17形式
 - 各形式は独立したファイルで実装
 - 共通インターフェースを使用して統一的に処理
+- テストは`src/utils/online/computeScore/__tests__/`にあり、`pnpm run test`で実行
 
 ## コーディング規約
 
@@ -220,20 +230,20 @@ src/
 - CSS Modulesは自動生成されたTypeScript定義を使用してください。
 - テストは原則としてVitestを使用してください。
 - 関数を定義する際は必ずJSDocを記述してください。また、関数の返り値やAPIの返り値は必ず`as const`を使用してください。
-- エラーを解消するためにESLintのルールを変更するのは禁止です。
+- エラーを解消するためにoxlintのルールを変更するのは禁止です。
 
 ### スタイリング規約
 
 - CSS ModulesはPostCSS + Mantine プリセット使用してください。
 - プロパティ順序はStylelintのrecess-orderに従ってください。
 - レスポンシブはモバイルファーストで実装してください。
-- 命名はkebab-caseで命名してください。
+- クラス名はsnake_caseで命名してください。
 
 ### ファイル作成・編集ルール
 
 1. 新しいコンポーネント作成時:
    - 既存コンポーネントのパターンを確認
-   - 同じディレクトリ内の命名規則に従う
+   - 同じディレクトリ内の命名規則に従う（`.ls-lint.yml`でチェックされます）
    - CSS Modulesファイルも合わせて作成
 
 2. ユーティリティ関数追加時:
@@ -241,27 +251,21 @@ src/
    - 型定義は`src/utils/types.ts`で管理
 
 3. ゲームロジック変更時:
-   - `src/utils/computeScore/`内の対応ファイルを編集
+   - `src/utils/online/computeScore/`内の対応ファイルを編集
    - テストファイルも合わせて更新
 
-### API Routes と Server Actions
+### API Routes（Hono）
 
-**オンライン機能はServer Actionsへ移行予定です。**
+データベースとのやり取りはすべてHonoのAPI Routesで実装します。
 
-- **ローカル機能**: API Routesで実装してください
-- **オンライン機能**: Server Actionsで実装してください（`src/actions/`以下）
-
-#### API Routes（ローカル機能用）
-
-- データベースとのやり取りが必要な場合は`src/server`以下に新たなエンドポイントを実装してください
 - API RoutesのルートはすべてHonoで管理します
 - エントリーポイントは`src/server/index.ts`で管理します
 - ルートを追加する際は`src/server/index.ts`に追加してください
 - コントローラーの実装は`src/server/controllers/`に追加してください
 - **バリデーションには必ず`zValidator`を使用**してください（リクエストボディ、クエリパラメータ両方）
 - **バリデーションスキーマは`src/models/`で定義**し、UpperCamelCaseで命名してください
-- データベースとのやり取りは`src/utils/cloud-db.ts`や`repositories`以下で行ってください
-- **APIクライアント**: クライアントサイドでは`apiClient`、サーバーサイドでは`createApiClientOnServer()`を使用してください。生のfetchは使用しないでください
+- データベースとのやり取りは`repositories`以下で行ってください
+- **APIクライアント**: クライアントサイドでは`createApiClient()`（`@/utils/hono/browser`）、サーバーサイドでは`createApiClientOnServer()`（`@/utils/hono/server`）を使用してください。生のfetchは使用しないでください
 
 **バリデーション実装例:**
 
@@ -276,14 +280,14 @@ const handler = factory.createHandlers(
     const query = c.req.valid("query");
     const body = c.req.valid("json");
     // 処理...
-  },
+  }
 );
 ```
 
 **Controllers構成ルール:**
 
 - `src/server/controllers/`以下のハンドラーは1ファイルにつき1個とします
-- 機能ごとにディレクトリを分割してください（`game/`, `player/`, `user/`, `auth/`など）
+- 機能ごとにディレクトリを分割してください（`game/`, `player/`, `user/`, `viewer/`など）
 - ファイル名はメソッドタイプ-機能名の形式で命名してください
   - 例: `game/get-list.ts`, `game/post-create.ts`, `game/get-detail.ts`, `game/patch-update.ts`
   - 例: `player/get-list.ts`, `player/post-create.ts`
@@ -293,80 +297,9 @@ const handler = factory.createHandlers(
 - **必ず`factory.createHandlers`を使用してください**: 既存の実装パターンに合わせて、すべてのハンドラーで`createFactory()`から生成したfactoryの`createHandlers`メソッドを使用してください
 - **既存ファイルとの統合を優先**: 新しい機能を実装する際は、新しいファイルを作成するのではなく、既存の同種ファイル（例：`models/player.ts`、`repositories/player.ts`）に機能を追加してください
 
-#### Server Actions（オンライン機能用）
-
-オンライン機能は`src/actions/`以下にServer Actionsとして実装してください。
-
-**ディレクトリ構成:**
-
-```
-src/actions/
-├── game/          # ゲーム関連アクション
-├── player/        # プレイヤー関連アクション
-├── quiz/          # クイズ関連アクション
-├── user/          # ユーザー関連アクション
-├── viewer/        # 観戦者関連アクション
-└── e2e/           # E2Eテスト用アクション
-```
-
-**実装ルール:**
-
-- 各ファイルの先頭に`"use server"`ディレクティブを記述してください
-- ファイル名はメソッドタイプ-機能名の形式で命名してください（例：`create-game.ts`, `update-player.ts`）
-- バリデーションには必ずZodスキーマを使用してください（`src/models/`で定義）
-- 認証が必要な場合は`getUser()`で認証確認してください
-- データベースとのやり取りは`repositories`以下の関数を使用してください
-- エラーハンドリングを適切に行い、エラーメッセージは日本語で返してください
-- 返り値の型は明示的に定義してください
-
-**実装例:**
-
-```typescript
-"use server";
-
-import { getUser } from "@/utils/auth/get-user";
-import { CreatePlayerSchema } from "@/models/player";
-import { createPlayer } from "@/server/repositories/player";
-
-/**
- * プレイヤーを作成する
- */
-export const createPlayerAction = async (data: unknown) => {
-  // 認証確認
-  const user = await getUser();
-  if (!user) {
-    return { success: false, error: "認証が必要です" } as const;
-  }
-
-  // バリデーション
-  const result = CreatePlayerSchema.safeParse(data);
-  if (!result.success) {
-    return { success: false, error: "入力データが不正です" } as const;
-  }
-
-  try {
-    // データベース操作
-    const player = await createPlayer(user.id, result.data);
-    return { success: true, data: player } as const;
-  } catch (error) {
-    console.error("Failed to create player:", error);
-    return { success: false, error: "プレイヤーの作成に失敗しました" } as const;
-  }
-};
-```
-
 ### Models管理
 
 サーバーサイドの型定義とスキーマ定義は`src/models/`で機能ごとに管理してください。
-
-**ファイル構成:**
-
-```
-src/models/
-├── game.ts            # ゲーム関連の型定義・スキーマ
-├── player.ts          # プレイヤー関連の型定義・スキーマ
-└── user-preference.ts # ユーザー設定関連の型定義・スキーマ
-```
 
 **使用ルール:**
 
@@ -384,23 +317,14 @@ src/models/
 - APIリクエストを行う際は`useTransition`を使用してローディング表示を行ってください。
 - ボタンを連打できないように`disabled`を設定してください。
 
-### オンライン機能の実装パターン
-
-オンライン機能（Turso DBとの連携）を実装する際の標準パターン：
-
-1. **サーバーサイド データ取得パターン**:
+### サーバーサイド データ取得パターン
 
 ```typescript
-const OnlinePlayerPage = async () => {
-  const user = await getUser();
-  if (!user) {
-    redirect("/sign-in");
-  }
-
+const PlayersPage = async () => {
   const apiClient = await createApiClientOnServer();
   let initialData: ApiDataType[] = [];
   try {
-    const response = await apiClient.endpoint.$get({ query: {} });
+    const response = await apiClient.players.$get({ query: {} });
     if (response.ok) {
       const data = await response.json();
       initialData = data.data.items || [];
@@ -409,21 +333,13 @@ const OnlinePlayerPage = async () => {
     console.error("Failed to fetch initial data:", error);
   }
 
-  return <OnlineComponent initialData={initialData} />;
+  return <PlayersComponent initialData={initialData} />;
 };
 ```
 
-2. **クライアント側API通信パターン**:
+※ `(authed)`グループ配下は layout が認証ガードするため、各ページでの`getUser()`チェックは不要です。
 
-```typescript
-// フロントエンド側ではapiClientを使用
-import apiClient from "@/utils/hono/browser";
-
-const response = await apiClient.endpoint.$get({ query: {} });
-const data = await response.json();
-```
-
-3. **型定義パターン**:
+### 型定義パターン
 
 ```typescript
 // APIレスポンス専用の型を定義（createdAt/updatedAtはstring）
@@ -435,7 +351,17 @@ export type ApiDataType = {
 };
 ```
 
-### AGENTS.md更新ルール
+## リポジトリ設定
+
+- **Node.js**: バージョンは`.node-version`（mise利用時は`mise.toml`）で固定。CIも`node-version-file`を参照
+- **フォーマット**: oxfmt（`.oxfmtrc.json`）。importソート・package.jsonのscriptsソート・JSDoc整形が有効
+- **Lint**: oxlint（`.oxlintrc.json`、type-aware）
+- **ファイル名規則**: ls-lint（`.ls-lint.yml`）
+- **未使用コード検出**: knip（`knip.json`）。未使用エクスポート・型は警告扱いでベースライン化中
+- **pre-commitフック**: lefthook（`lefthook.yml`）で lint:fix / format:fix / stylelint:fix / ls-lint を実行
+- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+
+## AGENTS.md更新ルール
 
 プロジェクト全体に影響する新しいルールや設定が決まった場合：
 

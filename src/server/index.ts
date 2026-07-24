@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
+import { auth } from "@/utils/auth/auth";
+
 import indexHandler from "./controllers";
 import deleteTestUserHandler from "./controllers/e2e/delete-test-user";
 import postTestLoginHandler from "./controllers/e2e/post-test-login";
@@ -35,8 +37,6 @@ import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
 import getViewerBoardDataHandler from "./controllers/viewer/get-board-data";
 
-import { auth } from "@/utils/auth/auth";
-
 // Hono RPCで型をつけるため、チェインさせる必要がある
 const app = new Hono()
   .use(
@@ -48,7 +48,7 @@ const app = new Hono()
           origin.endsWith("score-watcher.com") ||
           origin.endsWith("localhost:3000")
           ? origin
-          : "https://score-watcher.com";
+          : "https://plus.score-watcher.com";
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],

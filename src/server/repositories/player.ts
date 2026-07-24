@@ -1,6 +1,9 @@
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+import { DBClient } from "@/utils/drizzle/client";
+import { player, playerPlayerTag, playerTag } from "@/utils/drizzle/schema";
+
 import type {
   AddPlayerTagRequestType,
   ApiPlayerDataType,
@@ -13,12 +16,7 @@ import type {
   UpdatePlayerType,
 } from "@/models/player";
 
-import { DBClient } from "@/utils/drizzle/client";
-import { player, playerPlayerTag, playerTag } from "@/utils/drizzle/schema";
-
-/**
- * プレイヤーのタグ一覧を取得
- */
+/** プレイヤーのタグ一覧を取得 */
 const getPlayerTags = async (playerId: string): Promise<string[]> => {
   const tags = await DBClient.select({ tagName: playerTag.tagName })
     .from(playerPlayerTag)
@@ -34,9 +32,7 @@ const getPlayerTags = async (playerId: string): Promise<string[]> => {
   return tags.map((tag) => tag.tagName);
 };
 
-/**
- * プレイヤー一覧取得
- */
+/** プレイヤー一覧取得 */
 export const getPlayers = async (userId: string) => {
   const players = await DBClient.query.player.findMany({
     where: and(eq(player.userId, userId), isNull(player.deletedAt)),
@@ -63,9 +59,7 @@ export const getPlayers = async (userId: string) => {
   return mappedPlayers;
 };
 
-/**
- * プレイヤー一覧取得（ページネーション対応）
- */
+/** プレイヤー一覧取得（ページネーション対応） */
 export const getPlayersWithPagination = async (
   userId: string,
   limit = 50,
@@ -103,9 +97,7 @@ export const getPlayersWithPagination = async (
   } as const;
 };
 
-/**
- * プレイヤー詳細取得
- */
+/** プレイヤー詳細取得 */
 export const getPlayerById = async (
   playerId: string,
   userId: string
@@ -129,9 +121,7 @@ export const getPlayerById = async (
   } as const;
 };
 
-/**
- * 単一プレイヤー作成
- */
+/** 単一プレイヤー作成 */
 export const createSinglePlayer = async (
   playerData: CreatePlayerType,
   userId: string
@@ -150,9 +140,7 @@ export const createSinglePlayer = async (
   return playerId;
 };
 
-/**
- * プレイヤー作成（複数対応）
- */
+/** プレイヤー作成（複数対応） */
 export const createPlayer = async (
   playersData: CreatePlayerRequestType,
   userId: string
@@ -173,9 +161,7 @@ export const createPlayer = async (
   };
 };
 
-/**
- * 単一プレイヤー更新
- */
+/** 単一プレイヤー更新 */
 export const updateSinglePlayer = async (
   playerId: string,
   playerData: Omit<UpdatePlayerType, "id">,
@@ -198,9 +184,7 @@ export const updateSinglePlayer = async (
   return result.rowsAffected > 0;
 };
 
-/**
- * プレイヤー更新（複数対応）
- */
+/** プレイヤー更新（複数対応） */
 export const updatePlayer = async (
   playersData: UpdatePlayerRequestType,
   userId: string
@@ -218,9 +202,7 @@ export const updatePlayer = async (
   return { updatedCount };
 };
 
-/**
- * プレイヤー削除（複数対応）
- */
+/** プレイヤー削除（複数対応） */
 export const deletePlayer = async (playerIds: DeletePlayerRequestType, userId: string) => {
   const deletedPlayerIds: string[] = [];
 
@@ -240,9 +222,7 @@ export const deletePlayer = async (playerIds: DeletePlayerRequestType, userId: s
   return deletedPlayerIds;
 };
 
-/**
- * プレイヤーにタグを追加
- */
+/** プレイヤーにタグを追加 */
 export const addPlayerTag = async (
   playerId: string,
   tagData: AddPlayerTagRequestType,
@@ -298,9 +278,7 @@ export const addPlayerTag = async (
   return true;
 };
 
-/**
- * プレイヤーからタグを削除
- */
+/** プレイヤーからタグを削除 */
 export const removePlayerTag = async (
   playerId: string,
   tagData: RemovePlayerTagRequestType,

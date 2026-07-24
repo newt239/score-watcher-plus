@@ -7,9 +7,7 @@ import { addPlayerTag } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤータグ追加APIハンドラー
- */
+/** プレイヤータグ追加APIハンドラー */
 const handler = factory.createHandlers(zValidator("json", AddPlayerTagRequestSchema), async (c) => {
   const userId = await getUserId();
   if (!userId) {

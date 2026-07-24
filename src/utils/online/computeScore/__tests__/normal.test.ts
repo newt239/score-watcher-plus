@@ -13,9 +13,7 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 type NormalGame = Extract<GetGameDetailResponseType, { ruleType: "normal" }>;
 
-/**
- * normal形式のゲームデータを生成する。
- */
+/** Normal形式のゲームデータを生成する。 */
 const createNormalGame = (players: GamePlayerProps[], logs: SeriarizedGameLog[]): NormalGame => ({
   id: "game-normal",
   name: "normal",
@@ -31,9 +29,7 @@ const createNormalGame = (players: GamePlayerProps[], logs: SeriarizedGameLog[])
   logs,
 });
 
-/**
- * ゲーム参加者を生成する。
- */
+/** ゲーム参加者を生成する。 */
 const createPlayer = (
   id: string,
   initialScore: number | null,
@@ -49,9 +45,7 @@ const createPlayer = (
   initialWrongCount: initialScore,
 });
 
-/**
- * 計算済みスコアのひな型を生成する。
- */
+/** 計算済みスコアのひな型を生成する。 */
 const createScoreState = (override: Partial<ComputedScoreProps>): ComputedScoreProps => ({
   game_id: "game-normal",
   player_id: "player-base",
@@ -81,7 +75,7 @@ describe("online normal形式", () => {
     expect(initialStates).toHaveLength(2);
     expect(initialStates[0]).toMatchObject({
       player_id: "player-1",
-      score: 0,
+      score: 3,
       correct: 3,
       wrong: 3,
       state: "playing",

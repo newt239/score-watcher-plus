@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * AttackSurvival形式のスコア計算
- * 正解で他のプレイヤーのポイントを減らし、誤答で自分のポイントが減る
- */
+/** AttackSurvival形式のスコア計算 正解で他のプレイヤーのポイントを減らし、誤答で自分のポイントが減る */
 const computeAttackSurvival = (
   game: Extract<GetGameDetailResponseType, { ruleType: "attacksurvival" }>,
   playersState: ComputedScoreProps[],
@@ -22,8 +19,6 @@ const computeAttackSurvival = (
     playersState.map((s) => [s.player_id, { ...s }])
   );
 
-  let winCount = 0;
-
   logs.forEach((log, qn) => {
     const s = byId.get(log.playerId || "");
     if (!s) return;
@@ -35,39 +30,8 @@ const computeAttackSurvival = (
       s.score = newScore;
       s.last_correct = qn;
 
-      // 他のプレイヤーのポイントを減らす
-      for (const [otherId, otherState] of byId) {
-        if (otherId !== log.playerId && otherState.state === "playing") {
-          const otherNewScore = otherState.score + correctOther;
-          otherState.score = otherNewScore;
-
-          if (otherNewScore <= 0) {
-            otherState.state = "lose";
-          } else if (otherNewScore + wrongMe <= 0) {
-            otherState.reach_state = "lose";
-          }
-        }
-      }
-
-      // 正解者の状態確認
       if (newScore + wrongMe <= 0) {
         s.reach_state = "lose";
-      }
-
-      // 勝ち抜け判定: 上位3名が決まったら勝ち抜け
-      const currentLose = [...byId.values()].filter((p) => p.state === "lose").length;
-      const totalPlayers = byId.size;
-
-      if (totalPlayers - currentLose <= winThrough && winCount < winThrough) {
-        // スコア順で勝ち抜けを決める
-        const remainingPlayers = [...byId.values()]
-          .filter((p) => p.state === "playing")
-          .sort((a, b) => b.score - a.score);
-
-        for (let i = 0; i < Math.min(winThrough - winCount, remainingPlayers.length); i++) {
-          remainingPlayers[i].state = "win";
-          winCount++;
-        }
       }
     } else if (log.actionType === "wrong") {
       // 誤答者自身の処理
@@ -81,22 +45,38 @@ const computeAttackSurvival = (
       } else if (newScore + wrongMe <= 0) {
         s.reach_state = "lose";
       }
+    }
 
-      // 他のプレイヤーへの影響
+    // 他のプレイヤーへの影響（正解時: correct_other / 誤答時: wrong_other）
+    const otherDelta = log.actionType === "correct" ? correctOther : wrongOther;
+    if (log.actionType === "correct" || log.actionType === "wrong") {
       for (const [otherId, otherState] of byId) {
         if (otherId !== log.playerId && otherState.state === "playing") {
-          const otherNewScore = otherState.score + wrongOther;
-          otherState.score = otherNewScore;
+          const otherNewScore = otherState.score + otherDelta;
 
           if (otherNewScore <= 0) {
+            otherState.score = 0;
             otherState.state = "lose";
-          } else if (otherNewScore + wrongMe <= 0) {
-            otherState.reach_state = "lose";
+          } else {
+            otherState.score = otherNewScore;
+            if (otherNewScore + correctOther <= 0 || otherNewScore + wrongMe <= 0) {
+              otherState.reach_state = "lose";
+            }
           }
         }
       }
     }
   });
+
+  // 生き残りが勝ち抜け人数以下になった場合、生き残っているプレイヤーを勝ち抜けとする
+  const playingCount = [...byId.values()].filter((p) => p.state === "playing").length;
+  if (winThrough && playingCount <= winThrough) {
+    for (const state of byId.values()) {
+      if (state.state === "playing") {
+        state.state = "win";
+      }
+    }
+  }
 
   const scores = [...byId.values()];
   const playerOrderList = getSortedPlayerOrderListForOnline(scores);

@@ -8,9 +8,7 @@ import { copyPlayersFromGame } from "@/server/repositories/game";
 
 const factory = createFactory();
 
-/**
- * 既存ゲームからプレイヤーをコピー
- */
+/** 既存ゲームからプレイヤーをコピー */
 const handler = factory.createHandlers(
   zValidator("json", CopyPlayersFromGameRequestSchema),
   zValidator("param", z.object({ game_id: z.string().min(1) })),

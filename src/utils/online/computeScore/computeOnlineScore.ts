@@ -5,6 +5,7 @@ import computeBackstream from "./backstream";
 import computeDivide from "./divide";
 import computeEndlessChance from "./endless-chance";
 import computeFreezex from "./freezex";
+import { getInitialPlayersStateForOnline } from "./index";
 import computeNbyn from "./nbyn";
 import computeNomr from "./nomr";
 import computeNomx from "./nomx";
@@ -17,8 +18,6 @@ import computeSwedish10 from "./swedish10";
 import computeVariables from "./variables";
 import computeZ from "./z";
 
-import { getInitialPlayersStateForOnline } from "./index";
-
 import type { GamePlayerProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
@@ -29,10 +28,7 @@ type WinPlayerProps = {
   text: string;
 };
 
-/**
- * オンライン版のスコア計算（全形式対応）
- * ローカル版と同じく17種類のゲーム形式に対応
- */
+/** オンライン版のスコア計算（全形式対応） ローカル版と同じく17種類のゲーム形式に対応 */
 export const computeOnlineScore = (
   game: GetGameDetailResponseType,
   players: GamePlayerProps[],

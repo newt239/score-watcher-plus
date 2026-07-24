@@ -3,9 +3,7 @@ import { deleteFromKV, getFromKV, putToKV } from "./cloudflare-kv";
 
 import type { GetViewerBoardDataResponseType } from "@/models/game";
 
-/**
- * ボードデータをキャッシュに保存
- */
+/** ボードデータをキャッシュに保存 */
 export const cacheBoardData = async (
   gameId: string,
   boardData: GetViewerBoardDataResponseType
@@ -21,9 +19,7 @@ export const cacheBoardData = async (
   }
 };
 
-/**
- * キャッシュからボードデータを取得
- */
+/** キャッシュからボードデータを取得 */
 export const getCachedBoardData = async (
   gameId: string
 ): Promise<GetViewerBoardDataResponseType | null> => {
@@ -42,9 +38,7 @@ export const getCachedBoardData = async (
   }
 };
 
-/**
- * ボードデータのキャッシュを削除
- */
+/** ボードデータのキャッシュを削除 */
 export const invalidateBoardCache = async (gameId: string): Promise<boolean> => {
   try {
     const cacheKey = getBoardCacheKey(gameId);
@@ -55,9 +49,7 @@ export const invalidateBoardCache = async (gameId: string): Promise<boolean> => 
   }
 };
 
-/**
- * ゲームが公開かどうかをチェック
- */
+/** ゲームが公開かどうかをチェック */
 export const isGamePublic = async (_gameId: string): Promise<boolean> => {
   // TODO: 実際の実装では、ゲームテーブルから is_public を確認する
   // 現在は仮の実装

@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+
+import { parseResponse } from "hono/client";
+import { notFound } from "next/navigation";
+
+import { createApiClientOnServer } from "@/utils/hono/server";
+
+import ManageQuiz from "./_components/ManageQuiz";
+
+export const metadata: Metadata = {
+  title: "クイズ問題管理",
+  alternates: {
+    canonical: "https://plus.score-watcher.com/quizes",
+  },
+};
+
+const OnlineQuizPage = async () => {
+  const apiClient = await createApiClientOnServer();
+
+  const initialQuizes = await parseResponse(apiClient.quizes.$get({ query: {} }));
+  if ("error" in initialQuizes) {
+    return notFound();
+  }
+
+  return <ManageQuiz initialQuizes={initialQuizes.data.quizes} />;
+};
+
+export default OnlineQuizPage;

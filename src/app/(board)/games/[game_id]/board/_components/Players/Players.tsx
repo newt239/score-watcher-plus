@@ -3,38 +3,58 @@
 import { Flex } from "@mantine/core";
 
 import Player from "../Player/Player";
-
 import classes from "./Players.module.css";
 
-import type { ComputedScoreProps, GamePropsUnion, PlayerDBProps } from "@/utils/types";
+import type { ComputedScoreProps, GamePlayerProps, LogDBProps, RuleNames } from "@/models/game";
+import type { UserPreferencesType } from "@/models/user-preference";
 
-type Props = {
-  game: GamePropsUnion;
-  scores: ComputedScoreProps[];
-  players: PlayerDBProps[];
-  currentProfile: string;
-  show_header: boolean;
+type OnlineGame = {
+  id: string;
+  name: string;
+  ruleType: RuleNames;
+  win_point?: number; // nbyn形式で使用
 };
 
-const Players: React.FC<Props> = ({ game, scores, players, currentProfile, show_header }) => {
+type PlayersProps = {
+  game: OnlineGame;
+  scores: ComputedScoreProps[];
+  players: GamePlayerProps[];
+  isPending: boolean;
+  onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
+  preferences: UserPreferencesType | null;
+};
+
+/** オンライン版のプレイヤー一覧表示コンポーネント ローカル版のPlayersコンポーネントと同等の機能を提供 */
+const Players: React.FC<PlayersProps> = ({
+  game,
+  scores,
+  players,
+  isPending,
+  onAddLog,
+  preferences,
+}) => {
   return (
     <Flex
       className={classes.players}
       id="players-area"
-      data-showq={!!game.quiz}
-      data-showheader={show_header}
+      data-showq={false} // オンライン版では問題セット機能がないためfalse
+      data-showheader={preferences?.showBoardHeader ?? true}
     >
       {players.map((player, i) => (
         <Player
-          currentProfile={currentProfile}
-          game_id={game.id}
+          game={game}
           index={i}
-          key={i}
+          key={`online-player-${i}-${player.id}`}
           player={player}
-          score={scores.find((score) => score.game_id === game.id && score.player_id === player.id)}
+          score={scores.find((score) => score.player_id === player.id)}
+          isPending={isPending}
+          onAddLog={onAddLog}
+          preferences={preferences}
+          totalPlayers={players.length}
         />
       ))}
     </Flex>
   );
 };
+
 export default Players;

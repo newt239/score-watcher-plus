@@ -10,9 +10,7 @@ import { getGameOptionById, updateGameOption } from "@/server/repositories/game"
 
 const factory = createFactory();
 
-/**
- * ゲームオプション更新エンドポイント
- */
+/** ゲームオプション更新エンドポイント */
 export default factory.createHandlers(
   zValidator("param", UpdateGameOptionsRequestParamSchema),
   zValidator("json", UpdateGameOptionsRequestJsonSchema),

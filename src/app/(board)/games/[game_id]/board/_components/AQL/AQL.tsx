@@ -3,16 +3,15 @@
 import { Box, Flex } from "@mantine/core";
 
 import AQLPlayer from "../AQLPlayer/AQLPlayer";
-
 import classes from "./AQL.module.css";
 
-import type { ComputedScoreProps, GamePropsUnion, PlayerDBProps } from "@/utils/types";
+import type { ComputedScoreProps, GamePlayerProps, LogDBProps } from "@/models/game";
 
-type Props = {
-  game: GamePropsUnion;
+type AQLProps = {
   scores: ComputedScoreProps[];
-  players: PlayerDBProps[];
-  currentProfile: string;
+  players: GamePlayerProps[];
+  isPending: boolean;
+  onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   team_name: {
     left_team: string;
     right_team: string;
@@ -20,23 +19,21 @@ type Props = {
   show_header: boolean;
 };
 
-const AQL: React.FC<Props> = ({
-  game,
+const AQL: React.FC<AQLProps> = ({
   scores,
   players,
-  currentProfile,
+  isPending,
+  onAddLog,
   team_name,
   show_header,
 }) => {
   const playerScoreList = players
     .map((player) => {
-      const score = scores.find(
-        (score) => score.game_id === game.id && score.player_id === player.id
-      );
+      const score = scores.find((score) => score.player_id === player.id);
       return { player, score };
     })
     .filter((item) => item.score !== undefined) as {
-    player: PlayerDBProps;
+    player: GamePlayerProps;
     score: ComputedScoreProps;
   }[];
 
@@ -71,7 +68,7 @@ const AQL: React.FC<Props> = ({
     <Flex
       className={classes.aql}
       id="players-area"
-      data-showq={!!game.quiz}
+      data-showq={false}
       data-showheader={show_header}
     >
       <Flex className={classes.team} data-state={leftTeamState}>
@@ -84,13 +81,13 @@ const AQL: React.FC<Props> = ({
         <Flex className={classes.players}>
           {playerScoreList.slice(0, 5).map((item, i) => (
             <AQLPlayer
-              currentProfile={currentProfile}
-              game_id={game.id}
               index={i}
               key={i}
               player={item.player}
               score={item.score}
-              is_incapacity={item.score.is_incapacity}
+              isIncapacity={item.score.is_incapacity}
+              isPending={isPending}
+              onAddLog={onAddLog}
             />
           ))}
         </Flex>
@@ -105,13 +102,13 @@ const AQL: React.FC<Props> = ({
         <Flex className={classes.players}>
           {playerScoreList.slice(5, 10).map((item, i) => (
             <AQLPlayer
-              currentProfile={currentProfile}
-              game_id={game.id}
               index={i}
               key={i}
               player={item.player}
               score={item.score}
-              is_incapacity={item.score.is_incapacity}
+              isIncapacity={item.score.is_incapacity}
+              isPending={isPending}
+              onAddLog={onAddLog}
             />
           ))}
         </Flex>

@@ -1,0 +1,42 @@
+ls:
+  .dir: kebab-case | regex:^\..+$
+  .ts: kebab-case | regex:^[a-z0-9.-]+$
+  .mjs: kebab-case
+  .json: kebab-case
+  .yml: kebab-case
+  .md: kebab-case | SCREAMING_SNAKE_CASE
+  .jsx: kebab-case
+
+  src:
+    .dir: kebab-case | camelCase | snake_case | regex:^[A-Z][A-Za-z0-9]*$ | regex:^\(.+\)$ | regex:^\[.+\]$ | regex:^_.+$
+    .ts: kebab-case | camelCase | regex:^[A-Z][A-Za-z0-9]*$
+    .tsx: kebab-case | camelCase | regex:^[A-Z][A-Za-z0-9]*$
+    .module.css: kebab-case | regex:^[A-Z][A-Za-z0-9]*$
+    .css: kebab-case | regex:^[A-Z][A-Za-z0-9]*$
+    .test.ts: kebab-case | camelCase
+    .jsx: kebab-case
+
+  tests:
+    .dir: kebab-case
+    .ts: kebab-case
+    .spec.ts: kebab-case
+
+  drizzle:
+    .sql: snake_case
+
+ignore:
+  - generated
+  - node_modules
+  - .git
+  - .next
+  - .claude
+  - .vscode
+  - .ls-lint.yml
+  - .oxlintrc.json
+  - .oxfmtrc.json
+  - .stylelintrc
+  - drizzle/meta
+  - public
+  - html-report
+  - playwright-report
+  - test-results

@@ -5,9 +5,7 @@ import { getPlayerById } from "@/server/repositories/player";
 
 const factory = createFactory();
 
-/**
- * プレイヤー詳細取得APIハンドラー
- */
+/** プレイヤー詳細取得APIハンドラー */
 const handler = factory.createHandlers(async (c) => {
   const userId = await getUserId();
   if (!userId) {

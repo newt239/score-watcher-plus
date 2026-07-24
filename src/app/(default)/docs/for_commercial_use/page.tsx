@@ -7,7 +7,7 @@ import Link from "@/components/Link";
 export const metadata: Metadata = {
   title: "商用利用について",
   alternates: {
-    canonical: "https://score-watcher.com/docs/for_commercial_use",
+    canonical: "https://plus.score-watcher.com/docs/for_commercial_use",
   },
 };
 

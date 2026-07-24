@@ -1,135 +1,147 @@
 "use client";
 
 import { Flex } from "@mantine/core";
-import { cdate } from "cdate";
-import { useLiveQuery } from "dexie-react-hooks";
-import { nanoid } from "nanoid";
 
 import PlayerScoreButton from "../PlayerScoreButton/PlayerScoreButton";
-
 import classes from "./PlayerScore.module.css";
 
-import type { ComputedScoreProps, GamePropsUnion } from "@/utils/types";
+import type { ComputedScoreProps, LogDBProps, RuleNames } from "@/models/game";
+import type { UserPreferencesType } from "@/models/user-preference";
 
-import db from "@/utils/db";
-import { numberSign } from "@/utils/functions";
-
-type Props = {
-  game: GamePropsUnion;
-  player: ComputedScoreProps;
-  currentProfile: string;
+type OnlineGame = {
+  id: string;
+  name: string;
+  ruleType: RuleNames;
+  win_point?: number; // nbyn形式で使用
 };
 
-const PlayerScore: React.FC<Props> = ({ game, player, currentProfile }) => {
-  const logs = useLiveQuery(
-    () => db(currentProfile).logs.where({ game_id: game.id, available: 1 }).sortBy("timestamp"),
-    []
-  );
+type PlayerScoreProps = {
+  game: OnlineGame;
+  player: ComputedScoreProps;
+  isPending: boolean;
+  onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
+  preferences: UserPreferencesType | null;
+};
 
+const PlayerScore: React.FC<PlayerScoreProps> = ({
+  game,
+  player,
+  isPending,
+  onAddLog,
+  preferences,
+}) => {
   const props = {
-    game_id: game.id,
-    player_id: player.player_id,
-    editable: game.editable,
+    playerId: player.player_id,
+    isPending,
+    onAddLog,
   };
 
-  if (logs === undefined) return null;
+  // 設定に基づいてnumberSignを実行するヘルパー関数
+  const getNumberSign = (type: "correct" | "wrong" | "pt", score?: number) => {
+    const showSignString = preferences?.showSignString ?? true;
+    const wrongNumber = preferences?.wrongNumber ?? true;
+
+    if (typeof score === "undefined") {
+      switch (type) {
+        case "correct":
+          return "○";
+        case "wrong":
+          return "✕";
+        case "pt":
+          return "pt";
+        default:
+          return "";
+      }
+    }
+
+    switch (type) {
+      case "correct":
+        return showSignString ? `○${score}` : `${score}`;
+      case "wrong":
+        if (wrongNumber && score <= 4) {
+          return score === 0 ? "・" : "✕".repeat(score);
+        }
+        return showSignString ? `✕${score}` : `${score}`;
+      case "pt":
+        return showSignString ? `${score}pt` : `${score}`;
+      default:
+        return `${score}`;
+    }
+  };
 
   return (
     <Flex className={classes.player_score}>
-      {game.rule === "normal" && (
-        <PlayerScoreButton currentProfile={currentProfile} color="red" {...props}>
-          {numberSign("pt", player.score)}
+      {game.ruleType === "normal" && (
+        <PlayerScoreButton color="red" {...props}>
+          {getNumberSign("pt", player.score)}
         </PlayerScoreButton>
       )}
-      {game.rule === "nomx" && (
+      {game.ruleType === "nomx" && (
         <>
-          <PlayerScoreButton currentProfile={currentProfile} color="red" {...props}>
-            {player.state === "win" ? player.text : numberSign("correct", player.correct)}
+          <PlayerScoreButton color="red" {...props}>
+            {player.state === "win" ? player.text : getNumberSign("correct", player.correct)}
           </PlayerScoreButton>
-          <PlayerScoreButton currentProfile={currentProfile} color="blue" {...props}>
-            {player.state === "lose" ? player.text : numberSign("wrong", player.wrong)}
+          <PlayerScoreButton color="blue" {...props}>
+            {player.state === "lose" ? player.text : getNumberSign("wrong", player.wrong)}
           </PlayerScoreButton>
         </>
       )}
-      {game.rule === "nomx-ad" && (
+      {game.ruleType === "ny" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
-            {player.text}
-          </PlayerScoreButton>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color="red"
-            filled={player.stage === 2}
-            {...props}
-          >
-            {numberSign("correct", player.correct)}
-          </PlayerScoreButton>
-          <PlayerScoreButton currentProfile={currentProfile} color="blue" {...props}>
-            {numberSign("wrong", player.wrong)}
-          </PlayerScoreButton>
-        </>
-      )}
-      {game.rule === "ny" && (
-        <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "nomr" && (
+      {game.ruleType === "nomr" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.is_incapacity ? "blue" : "green"}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.is_incapacity ? "blue" : "green"} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
             <PlayerScoreButton
-              currentProfile={currentProfile}
               color={player.is_incapacity ? "gray" : "red"}
               compact
               disabled={player.is_incapacity}
               {...props}
             >
-              {numberSign("correct", player.correct)}
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
             <PlayerScoreButton
-              currentProfile={currentProfile}
               color={player.is_incapacity ? "gray" : "blue"}
               compact
               disabled={player.is_incapacity}
               {...props}
             >
-              {numberSign("wrong", player.wrong)}
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "nbyn" && (
+      {game.ruleType === "nomx-ad" && (
+        <>
+          <PlayerScoreButton color={player.state} disabled {...props}>
+            {player.text}
+          </PlayerScoreButton>
+          <PlayerScoreButton color="red" filled={player.stage === 2} {...props}>
+            {getNumberSign("correct", player.correct)}
+          </PlayerScoreButton>
+          <PlayerScoreButton color="blue" {...props}>
+            {getNumberSign("wrong", player.wrong)}
+          </PlayerScoreButton>
+        </>
+      )}
+      {game.ruleType === "nbyn" && (
         <>
           <PlayerScoreButton
-            currentProfile={currentProfile}
             color={player.state}
             disabled
             filled={player.state === "playing"}
@@ -137,164 +149,115 @@ const PlayerScore: React.FC<Props> = ({ game, player, currentProfile }) => {
           >
             {player.text}
           </PlayerScoreButton>
-          <PlayerScoreButton currentProfile={currentProfile} color="green" disabled {...props}>
-            {`${player.correct}✕${game.win_point! - player.wrong}`}
+          <PlayerScoreButton color="green" disabled {...props}>
+            {`${player.correct}✕${(game.win_point || 7) - player.wrong}`}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "nupdown" && (
+      {game.ruleType === "nupdown" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "divide" && (
+      {game.ruleType === "divide" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "swedish10" && (
+      {game.ruleType === "swedish10" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton
-              currentProfile={currentProfile}
-              color="red"
-              compact
-              disabled={player.state === "lose"}
-              {...props}
-            >
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact disabled={player.state === "lose"} {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton
-              currentProfile={currentProfile}
-              color="blue"
-              compact
-              disabled={player.state === "lose"}
-              {...props}
-            >
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact disabled={player.state === "lose"} {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "backstream" && (
+      {game.ruleType === "backstream" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "attacksurvival" && (
+      {game.ruleType === "attacksurvival" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "squarex" && (
+      {game.ruleType === "squarex" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color="green"
-            disabled
-            filled
-            {...props}
-          >
+          <PlayerScoreButton color="green" disabled filled {...props}>
             {`${player.odd_score}✕${player.even_score}`}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "z" && (
+      {game.ruleType === "z" && (
         <>
           <PlayerScoreButton
-            currentProfile={currentProfile}
             color={player.text === "休" ? "blue" : player.state}
             disabled
             filled={player.text === "休"}
@@ -304,140 +267,74 @@ const PlayerScore: React.FC<Props> = ({ game, player, currentProfile }) => {
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
             <PlayerScoreButton
-              currentProfile={currentProfile}
               color={player.text === "休" ? "gray" : "red"}
               compact
               disabled={player.text === "休"}
               {...props}
             >
-              {numberSign("correct", player.correct)}
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
             <PlayerScoreButton
-              currentProfile={currentProfile}
               color={player.text === "休" ? "gray" : "blue"}
               compact
               disabled={player.text === "休"}
               {...props}
             >
-              {numberSign("wrong", player.wrong)}
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
         </>
       )}
-      {game.rule === "freezex" && (
+      {game.ruleType === "freezex" && (
         <>
           <PlayerScoreButton
-            currentProfile={currentProfile}
             color={player.is_incapacity || player.text.endsWith("休") ? "gray" : "red"}
             {...props}
           >
             {player.text}
           </PlayerScoreButton>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color="blue"
-            disabled={player.is_incapacity}
-            {...props}
-          >
-            {numberSign("wrong", player.wrong)}
+          <PlayerScoreButton color="blue" disabled={player.is_incapacity} {...props}>
+            {getNumberSign("wrong", player.wrong)}
           </PlayerScoreButton>
         </>
       )}
-      {game.rule === "endless-chance" && (
+      {game.ruleType === "endless-chance" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            disabled={player.is_incapacity}
-            color="red"
-            {...props}
-          >
-            {player.state === "win" ? player.text : numberSign("correct", player.correct)}
+          <PlayerScoreButton disabled={player.is_incapacity} color="red" {...props}>
+            {player.state === "win" ? player.text : getNumberSign("correct", player.correct)}
           </PlayerScoreButton>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color="blue"
-            disabled={player.is_incapacity}
-            onClick={async () => {
-              if (logs.length > 0) {
-                const last_log = logs[logs.length - 1];
-                if (last_log.variant === "multiple_wrong") {
-                  if (last_log.player_id.includes(player.player_id)) {
-                    const new_player_id = last_log.player_id
-                      .replace(`,${player.player_id}`, "")
-                      .replace(player.player_id, "");
-                    if (new_player_id === "") {
-                      await db(currentProfile).logs.update(last_log.id, {
-                        available: 0,
-                      });
-                    } else {
-                      await db(currentProfile).logs.update(last_log.id, {
-                        timestamp: cdate().text(),
-                        player_id: new_player_id,
-                      });
-                    }
-                  } else {
-                    await db(currentProfile).logs.update(last_log.id, {
-                      timestamp: cdate().text(),
-                      player_id: `${last_log.player_id},${player.player_id}`,
-                    });
-                  }
-                } else {
-                  await db(currentProfile).logs.put({
-                    id: nanoid(),
-                    game_id: game.id,
-                    player_id: player.player_id,
-                    variant: "multiple_wrong",
-                    system: 0,
-                    timestamp: cdate().text(),
-                    available: 1,
-                  });
-                }
-              } else {
-                await db(currentProfile).logs.put({
-                  id: nanoid(),
-                  game_id: game.id,
-                  player_id: player.player_id,
-                  variant: "multiple_wrong",
-                  system: 0,
-                  timestamp: cdate().text(),
-                  available: 1,
-                });
-              }
-            }}
-            {...props}
-          >
+          <PlayerScoreButton color="blue" disabled={player.is_incapacity} {...props}>
             {player.state === "lose" || player.is_incapacity
               ? player.text
-              : numberSign("wrong", player.wrong)}
+              : getNumberSign("wrong", player.wrong)}
           </PlayerScoreButton>
         </>
       )}
-      {game.rule === "variables" && (
+      {game.ruleType === "variables" && (
         <>
-          <PlayerScoreButton
-            currentProfile={currentProfile}
-            color={player.state}
-            disabled
-            {...props}
-          >
+          <PlayerScoreButton color={player.state} disabled {...props}>
             {player.text}
           </PlayerScoreButton>
           <Flex className={classes.player_score_pair}>
-            <PlayerScoreButton currentProfile={currentProfile} color="red" compact {...props}>
-              {numberSign("correct", player.correct)}
+            <PlayerScoreButton color="red" compact {...props}>
+              {getNumberSign("correct", player.correct)}
             </PlayerScoreButton>
-            <PlayerScoreButton currentProfile={currentProfile} color="blue" compact {...props}>
-              {numberSign("wrong", player.wrong)}
+            <PlayerScoreButton color="blue" compact {...props}>
+              {getNumberSign("wrong", player.wrong)}
             </PlayerScoreButton>
           </Flex>
-          <PlayerScoreButton currentProfile={currentProfile} color="green" disabled {...props}>
-            {`+${
-              game.players.find((gamePlayer) => gamePlayer.id === player.player_id)
-                ?.base_correct_point || 1
-            } / -${
-              (game.players.find((gamePlayer) => gamePlayer.id === player.player_id)
-                ?.base_correct_point || 1) * 2
-            }`}
+          <PlayerScoreButton color="green" disabled {...props}>
+            {/* variables形式の場合、プレイヤー固有の設定を表示する必要がありますが、
+                オンライン版では実装が複雑なため、プレースホルダーを表示 */}
+            {`+1 / -1`}
+          </PlayerScoreButton>
+        </>
+      )}
+      {game.ruleType === "aql" && (
+        <>
+          {/* AQL形式は専用のAQLコンポーネントで処理されるため、ここでは基本的な表示のみ */}
+          <PlayerScoreButton color={player.state} disabled {...props}>
+            {player.text}
           </PlayerScoreButton>
         </>
       )}

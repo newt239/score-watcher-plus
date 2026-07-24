@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * NewYork形式のスコア計算
- * 正答で+1、誤答で-1、目標ポイントに到達で勝ち抜け
- */
+/** NewYork形式のスコア計算 正答で+1、誤答で-1、目標ポイントに到達で勝ち抜け */
 const computeNy = (
   game: Extract<GetGameDetailResponseType, { ruleType: "ny" }>,
   playersState: ComputedScoreProps[],

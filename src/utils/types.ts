@@ -1,7 +1,3 @@
-import type { Dexie, Table } from "dexie";
-
-export type DexieDatabase = { [P in keyof Dexie]: Dexie[P] };
-
 export type RuleNames =
   | "normal"
   | "nomx"
@@ -82,43 +78,7 @@ export type PlayerDBProps = {
   tags: string[];
 };
 
-export type Variants =
-  | "correct"
-  | "wrong"
-  | "through"
-  | "mutiple_correct"
-  | "multiple_wrong"
-  | "skip"
-  | "blank";
-
-export type LogDBProps = {
-  id: string;
-  game_id: string;
-  player_id: string;
-  variant: Variants;
-  system: 0 | 1;
-  timestamp: string;
-  available: 0 | 1;
-};
-
 export type States = "win" | "lose" | "playing";
-export type ComputedScoreProps = {
-  game_id: string;
-  player_id: string;
-  state: States;
-  reach_state: States;
-  score: number;
-  correct: number; // 正解数
-  wrong: number; // 誤答数
-  last_correct: number; // 最後に正解した問題番号
-  last_wrong: number; // 最後に誤答した問題番号
-  odd_score: number; // 奇数問目のスコア
-  even_score: number; // 偶数問目のスコア
-  stage: number;
-  is_incapacity: boolean;
-  order: number; // プレイヤー同士の評価順
-  text: string; // 画面上に表示するための文字
-};
 
 export type QuizDBProps = {
   id: string;
@@ -126,29 +86,4 @@ export type QuizDBProps = {
   q: string;
   a: string;
   set_name: string;
-};
-
-export interface ScoreWatcherDBTables extends DexieDatabase {
-  games: Table<GamePropsUnion>;
-  players: Table<PlayerDBProps>;
-  logs: Table<LogDBProps>;
-  quizes: Table<QuizDBProps>;
-}
-
-export type WinPlayerProps = {
-  player_id: string;
-  name?: string;
-  text: string;
-};
-
-export type AQLGamePropsUnion = {
-  id: string;
-  name: string;
-  left_team: string;
-  right_team: string;
-  quiz: {
-    set_name: string;
-    offset: number;
-  };
-  last_open: string;
 };

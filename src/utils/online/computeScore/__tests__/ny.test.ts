@@ -12,9 +12,7 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 type NyGame = Extract<GetGameDetailResponseType, { ruleType: "ny" }>;
 
-/**
- * ny形式のゲームデータを生成する。
- */
+/** Ny形式のゲームデータを生成する。 */
 const createNyGame = (
   players: GamePlayerProps[],
   logs: SeriarizedGameLog[],
@@ -39,9 +37,7 @@ const createNyGame = (
   logs,
 });
 
-/**
- * ゲーム参加者を生成する。
- */
+/** ゲーム参加者を生成する。 */
 const createPlayer = (
   id: string,
   initialScore: number | null,
@@ -57,9 +53,7 @@ const createPlayer = (
   initialWrongCount: initialScore,
 });
 
-/**
- * 計算済みスコアを生成する。
- */
+/** 計算済みスコアを生成する。 */
 const createScoreState = (override: Partial<ComputedScoreProps>): ComputedScoreProps => ({
   game_id: "game-ny",
   player_id: "player-base",

@@ -7,9 +7,7 @@ import { deleteQuiz } from "@/server/repositories/quiz";
 
 const factory = createFactory();
 
-/**
- * クイズ問題削除
- */
+/** クイズ問題削除 */
 const handler = factory.createHandlers(zValidator("json", DeleteQuizRequestSchema), async (c) => {
   try {
     const userId = await getUserId();

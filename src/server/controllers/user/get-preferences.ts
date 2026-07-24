@@ -5,9 +5,7 @@ import { ensureUserPreferences, getUserPreferences } from "@/server/repositories
 
 const factory = createFactory();
 
-/**
- * ユーザー設定取得
- */
+/** ユーザー設定取得 */
 const handler = factory.createHandlers(async (c) => {
   try {
     const userId = await getUserId();

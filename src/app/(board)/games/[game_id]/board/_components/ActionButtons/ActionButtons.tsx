@@ -1,107 +1,59 @@
 "use client";
 
-import { Box, Button, Flex, Group, Tooltip } from "@mantine/core";
+import { useEffect, useState } from "react";
+
+import { Button, Group, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { sendGAEvent } from "@next/third-parties/google";
 import {
   IconAdjustmentsHorizontal,
   IconArrowBackUp,
   IconBalloon,
   IconComet,
   IconMaximize,
-  IconSquare,
-  IconSquareCheck,
 } from "@tabler/icons-react";
-import { cdate } from "cdate";
-import { nanoid } from "nanoid";
-
-import PreferenceDrawer from "../PreferenceDrawer";
-
-import classes from "./ActionButtons.module.css";
-
-import type { GamePropsUnion, LogDBProps } from "@/utils/types";
 
 import ButtonLink from "@/components/ButtonLink";
-import db from "@/utils/db";
 
-type Props = {
-  game: GamePropsUnion;
-  logs: LogDBProps[];
-  currentProfile: string;
-  skipSuggest: boolean;
+import PreferenceDrawer from "../PreferenceDrawer/PreferenceDrawer";
+import classes from "./ActionButtons.module.css";
+
+import type { RuleNames } from "@/models/game";
+import type { UserPreferencesType } from "@/models/user-preference";
+
+type ActionButtonsProps = {
+  game: { id: string; name: string; ruleType: RuleNames };
+  logsLength: number;
+  onUndo: () => void;
+  onThrough: () => void;
+  userId: string;
+  preferences: UserPreferencesType | null;
 };
 
-const ActionButtons: React.FC<Props> = ({ game, logs, currentProfile, skipSuggest }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({
+  game,
+  logsLength,
+  onUndo,
+  onThrough,
+  userId,
+  preferences,
+}) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [isFullscreenEnabled, setIsFullscreenEnabled] = useState(false);
+
+  useEffect(() => {
+    // クライアントサイドでのみフルスクリーン機能の有効性をチェック
+    setIsFullscreenEnabled(typeof document !== "undefined" && document.fullscreenEnabled);
+  }, []);
 
   return (
     <>
-      <Flex className={classes.action_buttons_container}>
-        {skipSuggest && (
-          <Flex className={classes.skip_suggest}>
-            <Box>すべてのプレイヤーが休みの状態です。1問スルーしますか？</Box>
-            <Flex gap="sm">
-              <Button
-                color="blue"
-                onClick={() =>
-                  db(currentProfile).logs.put({
-                    id: nanoid(),
-                    game_id: game.id,
-                    player_id: "-",
-                    variant: "through",
-                    system: 0,
-                    timestamp: cdate().text(),
-                    available: 1,
-                  })
-                }
-                size="sm"
-              >
-                スルー
-              </Button>
-              <Box visibleFrom="md">
-                <Tooltip label="問題番号が進みますが、問題は更新されません。">
-                  <Button
-                    onClick={() =>
-                      db(currentProfile).logs.put({
-                        id: nanoid(),
-                        game_id: game.id,
-                        player_id: "-",
-                        variant: "skip",
-                        system: 0,
-                        timestamp: cdate().text(),
-                        available: 1,
-                      })
-                    }
-                    size="sm"
-                  >
-                    スキップ
-                  </Button>
-                </Tooltip>
-              </Box>
-            </Flex>
-          </Flex>
-        )}
+      <ScrollArea w="100%">
         <Group justify="flex-end" p="xs" gap="xs" className={classes.action_button_list}>
           <Button
             size="xs"
             variant="default"
             leftSection={<IconComet size={20} />}
-            disabled={game.editable}
-            onClick={async () => {
-              try {
-                await db(currentProfile).logs.put({
-                  id: nanoid(),
-                  game_id: game.id,
-                  player_id: "-",
-                  variant: "through",
-                  system: 0,
-                  timestamp: cdate().text(),
-                  available: 1,
-                });
-              } catch (e) {
-                console.log(e);
-              }
-            }}
+            onClick={onThrough}
           >
             スルー
           </Button>
@@ -109,56 +61,18 @@ const ActionButtons: React.FC<Props> = ({ game, logs, currentProfile, skipSugges
             size="xs"
             variant="default"
             leftSection={<IconArrowBackUp size={20} />}
-            disabled={logs.length === 0 || game.editable}
-            onClick={async () => {
-              if (logs.length !== 0) {
-                sendGAEvent({
-                  event: "undo_log",
-                  value: game.rule,
-                });
-                await db(currentProfile).logs.update(logs[logs.length - 1].id, {
-                  available: 0,
-                });
-              }
-            }}
+            disabled={logsLength === 0}
+            onClick={onUndo}
           >
             一つ戻す
           </Button>
-          {game.rule !== "aql" && (
-            <Button
-              visibleFrom="md"
-              size="xs"
-              variant="default"
-              leftSection={game.editable ? <IconSquareCheck size={20} /> : <IconSquare size={20} />}
-              onClick={async () => {
-                try {
-                  await db(currentProfile).games.put({
-                    ...game,
-                    editable: !game.editable,
-                  });
-                  sendGAEvent({
-                    event: "switch_editable",
-                    value: game.rule,
-                  });
-                } catch (e) {
-                  console.log(e);
-                }
-              }}
-            >
-              スコアの手動更新
-            </Button>
-          )}
-          {document.fullscreenEnabled && (
+          {isFullscreenEnabled && (
             <Button
               visibleFrom="md"
               size="xs"
               variant="default"
               leftSection={<IconMaximize size={20} />}
               onClick={() => {
-                sendGAEvent({
-                  event: "switch_fullscreen",
-                  value: game.rule,
-                });
                 if (document.fullscreenElement) {
                   document.exitFullscreen();
                 } else {
@@ -186,8 +100,13 @@ const ActionButtons: React.FC<Props> = ({ game, logs, currentProfile, skipSugges
             ゲーム設定
           </ButtonLink>
         </Group>
-      </Flex>
-      <PreferenceDrawer isOpen={opened} onClose={close} />
+      </ScrollArea>
+      <PreferenceDrawer
+        isOpen={opened}
+        onClose={close}
+        userId={userId}
+        initialPreferences={preferences}
+      />
     </>
   );
 };

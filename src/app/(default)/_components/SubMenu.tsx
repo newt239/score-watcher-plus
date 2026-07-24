@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import { Flex } from "@mantine/core";
 import {
   IconHelp,
@@ -10,10 +8,10 @@ import {
   IconList,
   IconListDetails,
   IconQuestionMark,
-  IconSettings,
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
+import { usePathname } from "next/navigation";
 
 import ButtonLink from "@/components/ButtonLink";
 
@@ -24,34 +22,13 @@ type AuthUser = {
   image?: string | null;
 };
 
-/**
- * ログイン状態に応じてリンクリストを生成する
- */
-const getLinkList = (
-  isLoggedIn: boolean
-): { text: string; path: string; icon: React.ReactNode }[] => [
+/** リンクリストを生成する */
+const getLinkList = (): { text: string; path: string; icon: React.ReactNode }[] => [
   { path: "/", text: "ホーム", icon: <IconHome /> },
-  {
-    path: isLoggedIn ? "/online/rules" : "/rules",
-    text: "形式一覧",
-    icon: <IconListDetails />,
-  },
-  {
-    path: isLoggedIn ? "/online/games" : "/games",
-    text: "作成したゲーム",
-    icon: <IconList />,
-  },
-  {
-    path: isLoggedIn ? "/online/players" : "/players",
-    text: "プレイヤー管理",
-    icon: <IconUsers />,
-  },
-  {
-    path: isLoggedIn ? "/online/quizes" : "/quizes",
-    text: "問題管理",
-    icon: <IconQuestionMark />,
-  },
-  { path: "/option", text: "アプリ設定", icon: <IconSettings /> },
+  { path: "/rules", text: "形式一覧", icon: <IconListDetails /> },
+  { path: "/games", text: "作成したゲーム", icon: <IconList /> },
+  { path: "/players", text: "プレイヤー管理", icon: <IconUsers /> },
+  { path: "/quizes", text: "問題管理", icon: <IconQuestionMark /> },
   { path: "/docs", text: "アプリ情報", icon: <IconInfoCircle /> },
   {
     path: "https://docs.score-watcher.com/",
@@ -66,7 +43,7 @@ type SubMenuProps = {
 
 const SubMenu: React.FC<SubMenuProps> = ({ user }) => {
   const pathname = usePathname();
-  const linkList = getLinkList(!!user);
+  const linkList = getLinkList();
 
   return (
     <Flex direction="column">

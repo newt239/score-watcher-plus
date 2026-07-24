@@ -1,195 +1,203 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
-import { Box } from "@mantine/core";
-import { useLocalStorage, useWindowEvent } from "@mantine/hooks";
-import { cdate } from "cdate";
-import { useLiveQuery } from "dexie-react-hooks";
-import { nanoid } from "nanoid";
+import { Box, Button, Flex, Text, Tooltip } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconX } from "@tabler/icons-react";
+import { parseResponse } from "hono/client";
 
-import AQL from "../AQL/AQL";
+import createApiClient from "@/utils/hono/browser";
+import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineScore";
+
 import ActionButtons from "../ActionButtons/ActionButtons";
+import AQL from "../AQL/AQL";
 import BoardHeader from "../BoardHeader/BoardHeader";
 import GameLogs from "../GameLogs/GameLogs";
 import Players from "../Players/Players";
 import WinModal from "../WinModal/WinModal";
-
 import classes from "./Board.module.css";
 
-import type { ComputedScoreProps, PlayerDBProps } from "@/utils/types";
+import type {
+  GamePlayerProps,
+  GetGameDetailResponseType,
+  LogDBProps,
+  OnlineUserType,
+} from "@/models/game";
+import type { UserPreferencesType } from "@/models/user-preference";
+import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-import NotFound from "@/app/(default)/_components/NotFound";
-import computeScore from "@/utils/computeScore";
-import db from "@/utils/db";
-import { getRuleStringByType } from "@/utils/rules";
-
-type Props = {
-  game_id: string;
-  current_profile: string;
+type BoardProps = {
+  gameId: string;
+  user: OnlineUserType | null;
+  initialGame: GetGameDetailResponseType;
+  initialPreferences: UserPreferencesType | null;
 };
 
-const Board: React.FC<Props> = ({ game_id, current_profile }) => {
-  const game = useLiveQuery(() => db(current_profile).games.get(game_id as string));
-  const logs = useLiveQuery(
-    () =>
-      db(current_profile)
-        .logs.where({ game_id: game_id as string, available: 1 })
-        .sortBy("timestamp"),
-    []
-  );
-  const [scores, setScores] = useState<ComputedScoreProps[]>([]);
-  const playerList = useLiveQuery(() => db(current_profile).players.toArray(), []);
-  const [players, setPlayers] = useState<PlayerDBProps[]>([]);
+const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPreferences }) => {
+  const [players] = useState<GamePlayerProps[]>(initialGame.players);
+  const [logs, setLogs] = useState<SeriarizedGameLog[]>(initialGame.logs);
+  const [isPending, startTransition] = useTransition();
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
   const [skipSuggest, setSkipSuggest] = useState(false);
 
-  const [showHeader] = useLocalStorage({
-    key: "showBoardHeader",
-    defaultValue: true,
-  });
+  // サーバーから取得した設定を使用
+  const [preferences] = useState<UserPreferencesType | null>(initialPreferences);
 
-  useEffect(() => {
-    db(current_profile).games.update(game_id as string, {
-      last_open: cdate().text(),
-    });
-  }, []);
-
-  useEffect(() => {
-    if (game) {
-      document.title = `${game.name} | Score Watcher`;
-    }
-  }, [game]);
-
-  useEffect(() => {
-    if (playerList) {
-      const gamePlayers = (
-        game?.players.map((gamePlayer) =>
-          playerList.find((player) => player.id === gamePlayer.id)
-        ) || []
-      )
-        // undefined が消えてくれないのでタイプガードを使う
-        // https://qiita.com/suin/items/cda9af4f4f1c53c05c6f
-        .filter((v): v is PlayerDBProps => v !== undefined);
-      setPlayers(gamePlayers);
-    }
-  }, [playerList, game]);
-
-  const [winThroughPlayer, setWinThroughPlayer] = useState<{
+  // 勝ち抜けモーダル制御
+  const [winTroughPlayer, setWinTroughPlayer] = useState<{
     name: string;
     text: string;
-  }>({ name: "", text: "" });
+  }>({
+    name: "",
+    text: "",
+  });
 
-  useEffect(() => {
-    if (logs) {
-      const executeComputeScore = async () => {
-        const { data: result } = await computeScore(game_id as string, current_profile);
-        setScores(result.scores);
-        if (result.win_players.length > 0) {
-          if (result.win_players[0].name) {
-            setWinThroughPlayer({
-              name: result.win_players[0].name,
-              text: result.win_players[0].text,
-            });
-          }
-        }
-        const playingPlayers = result.scores.filter((score) => score.state === "playing");
-        // 全員が不正解になったときスキップサジェストを出す
-        if (
-          (logs.at(-1)?.variant === "multiple_wrong" &&
-            logs.at(-1)?.player_id.split(",").length === playingPlayers.length) ||
-          // N◯M休を利用している場合
-          (playingPlayers.length > 0 && playingPlayers.length === result.incapacity_players.length)
-        ) {
-          setSkipSuggest(true);
-        } else {
-          setSkipSuggest(false);
-        }
-      };
-      executeComputeScore();
+  const apiClient = createApiClient();
+
+  const { scores } = computeOnlineScore(initialGame, players, logs);
+
+  const refreshLogs = useCallback(async () => {
+    const res = await parseResponse(
+      apiClient.games[":gameId"].logs.$get({
+        param: { gameId },
+      })
+    );
+    if ("error" in res) {
+      console.error("Failed to fetch logs:", res.error);
+      return;
     }
-  }, [logs]);
+    setLogs(res.logs);
+  }, [gameId]);
 
-  useWindowEvent("keydown", async (event) => {
-    // TODO: incapacity状態のプレイヤーに対してショートカットキーによるアクションを追加できないようにする
-    if (window.location.pathname.endsWith("board") && game && !game.editable) {
+  const addLog = useCallback(
+    async (playerId: string, actionType: LogDBProps["variant"]) => {
+      startTransition(async () => {
+        await parseResponse(
+          apiClient.games.logs.$post({
+            json: {
+              gameId,
+              playerId,
+              actionType,
+              isSystemAction: false,
+            },
+          })
+        );
+        await refreshLogs();
+      });
+    },
+    [gameId, refreshLogs]
+  );
+
+  const addThrough = useCallback(() => {
+    addLog("-", "through");
+  }, [addLog]);
+
+  const undo = useCallback(async () => {
+    const last = logs[logs.length - 1];
+    if (!last) return;
+    startTransition(async () => {
+      try {
+        await parseResponse(
+          apiClient.games.logs[":logId"].$delete({
+            param: { logId: String(last.id) },
+          })
+        );
+        await refreshLogs();
+      } catch (e) {
+        console.error("Failed to undo log:", e);
+        notifications.show({
+          title: "エラー",
+          message: "操作の取り消しに失敗しました",
+          color: "red",
+        });
+      }
+    });
+  }, [logs, refreshLogs]);
+
+  // キーボードショートカット
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (!initialGame) return;
       if (event.code.startsWith("Digit") || event.code.startsWith("Numpad")) {
-        const playerIndex = event.code[0] === "D" ? Number(event.code[5]) : Number(event.code[6]);
-        if (
-          typeof playerIndex === "number" &&
-          !isNaN(playerIndex) &&
-          playerIndex <= players.length
-        ) {
-          if (playerIndex === 0 && players.length >= 10) {
-            await db(current_profile).logs.put({
-              id: nanoid(),
-              game_id: game.id,
-              player_id: players[9].id,
-              variant: event.shiftKey ? "wrong" : "correct",
-              system: 0,
-              timestamp: cdate().text(),
-              available: 1,
-            });
-          } else if (playerIndex > 0) {
-            await db(current_profile).logs.put({
-              id: nanoid(),
-              game_id: game.id,
-              player_id: players[playerIndex - 1].id,
-              variant: event.shiftKey ? "wrong" : "correct",
-              system: 0,
-              timestamp: cdate().text(),
-              available: 1,
-            });
-          }
-        }
-      } else if (["Minus", "Equal", "IntlYen"].includes(event.code)) {
-        const playerIndex = ["Minus", "Equal", "IntlYen"].indexOf(event.code) + 10;
-        if (
-          typeof playerIndex === "number" &&
-          !isNaN(playerIndex) &&
-          playerIndex <= players.length
-        ) {
-          if (playerIndex <= players.length) {
-            await db(current_profile).logs.put({
-              id: nanoid(),
-              game_id: game.id,
-              player_id: players[playerIndex].id,
-              variant: event.shiftKey ? "wrong" : "correct",
-              system: 0,
-              timestamp: cdate().text(),
-              available: 1,
-            });
+        const code = event.code.startsWith("Digit") ? event.code[5] : event.code[6];
+        const idx = Number(code);
+        if (!Number.isNaN(idx) && players.length > 0) {
+          let player = players[idx - 1];
+          if (idx === 0 && players.length >= 10) player = players[9];
+          if (player) {
+            addLog(player.id, event.shiftKey ? "wrong" : "correct");
           }
         }
       } else if (
         event.code === "Comma" ||
-        (event.code === "KeyZ" && event.ctrlKey) ||
-        (event.code === "KeyZ" && event.metaKey)
+        (event.code === "KeyZ" && (event.ctrlKey || event.metaKey))
       ) {
-        if (logs && logs.length !== 0) {
-          await db(current_profile).logs.update(logs[logs.length - 1].id, {
-            available: 0,
-          });
-        }
+        undo();
       } else if (event.code === "Period") {
-        await db(current_profile).logs.put({
-          id: nanoid(),
-          game_id: game.id,
-          player_id: "-",
-          variant: "through",
-          system: 0,
-          timestamp: cdate().text(),
-          available: 1,
-        });
+        addLog("-", "through");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [players, addLog, undo, initialGame]);
+
+  // useEffectを先に定義
+  useEffect(() => {
+    if (!initialGame || !players.length) return;
+
+    const { winPlayers } = computeOnlineScore(initialGame, players, logs);
+
+    if (winPlayers && winPlayers.length > 0) {
+      const first = winPlayers[0];
+      const player = players.find((p) => p.id === first.player_id);
+      if (player?.name) {
+        setWinTroughPlayer({ name: player.name, text: first.text });
       }
     }
-  });
 
-  if (!game || game.players.length === 0 || !logs) return <NotFound />;
+    // スキップサジェスト判定
+    const playingPlayers = scores.filter((s) => s.state === "playing");
+    const incapacityPlayers = scores.filter((s) => s.state === "playing" && s.is_incapacity);
+    const last = logs[logs.length - 1];
+    if (!last) return;
+
+    const allWrong =
+      last.actionType === "multiple_wrong" &&
+      typeof last.playerId === "string" &&
+      last.playerId.split(",").length === playingPlayers.length;
+    const allRest = playingPlayers.length > 0 && playingPlayers.length === incapacityPlayers.length;
+
+    if (allWrong || allRest) {
+      setSkipSuggest(true);
+    } else {
+      setSkipSuggest(false);
+    }
+  }, [logs, initialGame, players]);
+
+  if (!user) {
+    return (
+      <Box className={classes.error}>
+        <Text>サインインが必要です</Text>
+      </Box>
+    );
+  }
 
   return (
     <>
-      <BoardHeader game={game} logs={logs} currentProfile={current_profile} />
-      {game.rule === "squarex" && (
+      <BoardHeader
+        game={{
+          id: initialGame.id,
+          name: initialGame.name,
+          ruleType: initialGame.ruleType,
+        }}
+        logsLength={logs.length}
+        onUndo={undo}
+        onThrough={addThrough}
+        preferences={preferences}
+        userId={user.id}
+      />
+      {initialGame.ruleType === "squarex" && (
         <Box
           className={classes.squarex_bar}
           style={{
@@ -198,36 +206,76 @@ const Board: React.FC<Props> = ({ game_id, current_profile }) => {
           }}
         />
       )}
-      {game.rule === "aql" ? (
+      {initialGame.ruleType === "aql" ? (
         <AQL
-          players={players}
           scores={scores}
-          game={game}
-          currentProfile={current_profile}
-          team_name={game.options}
-          show_header={showHeader}
+          players={players}
+          isPending={isPending}
+          onAddLog={addLog}
+          team_name={{
+            left_team: initialGame.option.left_team ?? "",
+            right_team: initialGame.option.right_team ?? "",
+          }}
+          show_header={preferences?.showBoardHeader ?? true}
         />
       ) : (
         <Players
-          game={game}
+          game={initialGame}
           scores={scores}
           players={players}
-          currentProfile={current_profile}
-          show_header={showHeader}
+          isPending={isPending}
+          onAddLog={addLog}
+          preferences={preferences}
         />
       )}
+
       <ActionButtons
-        game={game}
+        game={initialGame}
+        logsLength={logs.length}
+        onUndo={undo}
+        onThrough={addThrough}
+        userId={user.id}
+        preferences={preferences}
+      />
+
+      <GameLogs
         logs={logs}
-        currentProfile={current_profile}
-        skipSuggest={skipSuggest}
+        players={players}
+        order={order}
+        onToggleOrder={() => setOrder((o) => (o === "asc" ? "desc" : "asc"))}
       />
-      <GameLogs logs={logs} players={players} quiz={game.quiz} currentProfile={current_profile} />
+
       <WinModal
-        onClose={() => setWinThroughPlayer({ name: "", text: "" })}
-        roundName={getRuleStringByType(game)}
-        winTroughPlayer={winThroughPlayer}
+        onClose={() => setWinTroughPlayer({ name: "", text: "" })}
+        winTroughPlayer={winTroughPlayer}
+        roundName=""
       />
+
+      {skipSuggest && (
+        <Flex className={classes.skip_suggest}>
+          <Box>すべてのプレイヤーが休みの状態です。1問スルーしますか？</Box>
+          <Flex gap="sm">
+            <Button color="blue" onClick={() => addLog("-", "through")} size="sm">
+              スルー
+            </Button>
+            <Box visibleFrom="md">
+              <Tooltip label="問題番号が進みますが、問題は更新されません。">
+                <Button onClick={() => addLog("-", "skip")} size="sm">
+                  スキップ
+                </Button>
+              </Tooltip>
+            </Box>
+            <Button
+              leftSection={<IconX />}
+              onClick={() => setSkipSuggest(false)}
+              size="sm"
+              color="red"
+            >
+              閉じる
+            </Button>
+          </Flex>
+        </Flex>
+      )}
     </>
   );
 };

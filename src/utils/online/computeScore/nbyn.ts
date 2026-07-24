@@ -3,11 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * NbyN形式のスコア計算
- * 正答数と誤答数の積を競う形式
- * 積がNの2乗に達したら勝ち抜け
- */
+/** NbyN形式のスコア計算 正答数と誤答数の積を競う形式 積がNの2乗に達したら勝ち抜け */
 const computeNbyn = (
   game: Extract<GetGameDetailResponseType, { ruleType: "nbyn" }>,
   playersState: ComputedScoreProps[],

@@ -3,10 +3,7 @@ import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/**
- * Z形式のスコア計算
- * 5つのステージをクリアしていく形式
- */
+/** Z形式のスコア計算 5つのステージをクリアしていく形式 */
 const computeZ = (
   game: Extract<GetGameDetailResponseType, { ruleType: "z" }>,
   playersState: ComputedScoreProps[],

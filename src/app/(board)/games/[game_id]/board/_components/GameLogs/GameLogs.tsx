@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Group, Table, Text } from "@mantine/core";
 import { IconCheck, IconCopy, IconSortAscending, IconSortDescending } from "@tabler/icons-react";
@@ -8,30 +8,26 @@ import { cdate } from "cdate";
 
 import classes from "./GameLogs.module.css";
 
-import type { LogDBProps, QuizDBProps } from "@/utils/types";
+import type { GamePlayerProps } from "@/models/game";
+import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-import db from "@/utils/db";
-
-type Props = {
-  players: { id: string; name: string }[];
-  logs: LogDBProps[];
-  quiz: { set_name: string; offset: number } | undefined;
-  currentProfile: string;
+type GameLogsProps = {
+  logs: SeriarizedGameLog[];
+  players: GamePlayerProps[];
+  order: "asc" | "desc";
+  onToggleOrder: () => void;
 };
 
-const GameLogs: React.FC<Props> = ({ players, logs, quiz, currentProfile }) => {
-  const [quizList, setQuizList] = useState<QuizDBProps[]>([]);
+const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder }) => {
   const [copied, setCopied] = useState<boolean>(false);
-  const [reverse, setReverse] = useState<boolean>(true);
 
-  useEffect(() => {
-    const getQuizes = async () => {
-      if (quiz) {
-        setQuizList(await db(currentProfile).quizes.where({ set_name: quiz.set_name }).sortBy("n"));
-      }
-    };
-    getQuizes();
-  }, [quiz]);
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => log.actionType !== "multiple_wrong");
+  }, [logs]);
+
+  const shownLogs = useMemo(() => {
+    return order === "asc" ? filteredLogs : [...filteredLogs].reverse();
+  }, [filteredLogs, order]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,8 +36,31 @@ const GameLogs: React.FC<Props> = ({ players, logs, quiz, currentProfile }) => {
     return () => clearTimeout(timer);
   }, [copied]);
 
-  const containSkipLog = logs.some((log) => log.variant === "skip");
-  const filterdLogs = logs.filter((log) => log.variant !== "multiple_wrong");
+  const copyAsHTML = async () => {
+    const logsWithTableFormat = `<table><tbody>${shownLogs
+      .map((log, qn) => {
+        const player = players.find((p) => p.id === log.playerId);
+        return `
+        <tr>
+          <td>${order === "desc" ? filteredLogs.length - qn : qn + 1}.</td>
+          <td>${player ? player.name : log.actionType === "through" ? "(スルー)" : "-"}</td>
+          <td>${log.actionType === "correct" ? "o" : log.actionType === "wrong" ? "x" : "-"}</td>
+          <td>${cdate(log.timestamp || new Date().toISOString()).format("YYYY/MM/DD HH:mm:ss")}</td>
+        </tr>`;
+      })
+      .join("")}
+    </tbody></table>`;
+
+    try {
+      const blob = new Blob([logsWithTableFormat], {
+        type: "text/html",
+      });
+      await window.navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+      setCopied(true);
+    } catch (e) {
+      console.error("Failed to copy logs html:", e);
+    }
+  };
 
   return (
     <Box className={classes.game_logs}>
@@ -50,84 +69,47 @@ const GameLogs: React.FC<Props> = ({ players, logs, quiz, currentProfile }) => {
         <Group>
           <Button
             size="xs"
-            onClick={() => {
-              const logsWithTableFormat = `<table><tbody>${(reverse
-                ? filterdLogs.slice().reverse()
-                : filterdLogs
-              ).map((log, qn) => {
-                const player = players.find((p) => p.id === log.player_id);
-                return `
-                <tr>
-                  <td>${reverse ? filterdLogs.length - qn : qn + 1}.</td>
-                  <td>${player ? player.name : log.variant === "through" ? "(スルー)" : "-"}</td>
-                  <td>${log.variant === "correct" ? "o" : log.variant === "wrong" ? "x" : "-"}</td>
-                  <td>${cdate(log.timestamp).format("YYYY/MM/DD HH:mm:ss")}</td>
-                  ${
-                    !containSkipLog && quizList.length > qn
-                      ? `
-                    <td>${quizList[reverse ? filterdLogs.length - qn - 1 : qn]?.q}</td>
-                    <td>${quizList[reverse ? filterdLogs.length - qn - 1 : qn]?.a}</td>
-                  `
-                      : ""
-                  }
-                </tr>`;
-              })}
-            </tbody></table>`;
-              const blob = new Blob([logsWithTableFormat], {
-                type: "text/html",
-              });
-              window.navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-              setCopied(true);
-            }}
+            onClick={copyAsHTML}
             leftSection={copied ? <IconCheck size={20} /> : <IconCopy size={20} />}
           >
             コピーする
           </Button>
           <Button
             leftSection={
-              reverse ? <IconSortAscending size={20} /> : <IconSortDescending size={20} />
+              order === "desc" ? <IconSortAscending size={20} /> : <IconSortDescending size={20} />
             }
-            onClick={() => setReverse((v) => !v)}
+            onClick={onToggleOrder}
             size="xs"
           >
-            {reverse ? "降順" : "昇順"}
+            {order === "desc" ? "降順" : "昇順"}
           </Button>
         </Group>
       </Group>
-      {filterdLogs.length !== 0 ? (
+      {filteredLogs.length !== 0 ? (
         <Table.ScrollContainer minWidth={1000}>
           <Table highlightOnHover>
             <Table.Tbody>
-              {
-                // https://qiita.com/seltzer/items/2f9ee13cf085966f1a4c
-                (reverse ? filterdLogs.slice().reverse() : filterdLogs).map((log, qn) => {
-                  const player = players.find((p) => p.id === log.player_id);
-                  return (
-                    <Table.Tr key={log.id}>
-                      <Table.Td>{reverse ? filterdLogs.length - qn : qn + 1}.</Table.Td>
-                      <Table.Td>
-                        {player ? player.name : log.variant === "through" ? "(スルー)" : "-"}
-                      </Table.Td>
-                      <Table.Td>
-                        {log.variant === "correct" ? "o" : log.variant === "wrong" ? "x" : "-"}
-                      </Table.Td>
-                      <Table.Td title={cdate(log.timestamp).format("YYYY年MM月DD日 HH時mm分ss秒")}>
-                        {cdate(log.timestamp).format("HH:mm:ss")}
-                      </Table.Td>
-                      {!containSkipLog && quizList.length > qn && (
-                        <>
-                          <Table.Td>
-                            {quizList[reverse ? filterdLogs.length - qn - 1 : qn]?.q}
-                          </Table.Td>
-                          <Table.Td>
-                            {quizList[reverse ? filterdLogs.length - qn - 1 : qn]?.a}
-                          </Table.Td>
-                        </>
+              {shownLogs.map((log, qn) => {
+                const player = players.find((p) => p.id === log.playerId);
+                return (
+                  <Table.Tr key={log.id}>
+                    <Table.Td>{order === "desc" ? filteredLogs.length - qn : qn + 1}.</Table.Td>
+                    <Table.Td>
+                      {player ? player.name : log.actionType === "through" ? "(スルー)" : "-"}
+                    </Table.Td>
+                    <Table.Td>
+                      {log.actionType === "correct" ? "o" : log.actionType === "wrong" ? "x" : "-"}
+                    </Table.Td>
+                    <Table.Td
+                      title={cdate(log.timestamp || new Date().toISOString()).format(
+                        "YYYY年MM月DD日 HH時mm分ss秒"
                       )}
-                    </Table.Tr>
-                  );
-                })
-              }
+                    >
+                      {cdate(log.timestamp || new Date().toISOString()).format("HH:mm:ss")}
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>

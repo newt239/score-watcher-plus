@@ -13,11 +13,12 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 type AttackSurvivalGame = Extract<GetGameDetailResponseType, { ruleType: "attacksurvival" }>;
 
 /**
- * attacksurvival形式のゲームデータを生成する。
+ * Attacksurvival形式のゲームデータを生成する。
+ *
  * @param players ゲームに参加するプレイヤー一覧
  * @param logs 適用するゲームログ
  * @param option オプション設定
- * @returns attacksurvival形式のゲーム設定
+ * @returns Attacksurvival形式のゲーム設定
  */
 const createAttackSurvivalGame = (
   players: GamePlayerProps[],
@@ -40,14 +41,15 @@ const createAttackSurvivalGame = (
 
 /**
  * ゲーム参加者を生成する。
+ *
  * @param id プレイヤーID
- * @param initialScore 初期スコア
+ * @param initialCorrectCount 個人の初期値（持ち点への加算分）
  * @param displayOrder 表示順
  * @returns プレイヤー設定
  */
 const createPlayer = (
   id: string,
-  initialScore: number | null,
+  initialCorrectCount: number | null,
   displayOrder: number
 ): GamePlayerProps => ({
   id,
@@ -55,13 +57,14 @@ const createPlayer = (
   description: "",
   affiliation: "",
   displayOrder,
-  initialScore,
-  initialCorrectCount: initialScore,
-  initialWrongCount: initialScore,
+  initialScore: 0,
+  initialCorrectCount,
+  initialWrongCount: 0,
 });
 
 /**
  * 計算済みスコアを生成する。
+ *
  * @param override 上書きするスコア情報
  * @returns 計算済みスコア
  */
@@ -95,7 +98,7 @@ describe("online attacksurvival形式", () => {
     limit: undefined,
   };
 
-  it("初期状態でスコアがwin_throughとinitialScoreの合算になる", () => {
+  it("初期状態でスコアが持ち点(win_point)と個人初期値の合算になる", () => {
     const players = [createPlayer("player-1", 3, 0), createPlayer("player-2", 1, 1)];
     const game = createAttackSurvivalGame(players, [], baseOption);
 
@@ -104,19 +107,19 @@ describe("online attacksurvival形式", () => {
     expect(initialStates).toMatchObject([
       {
         player_id: "player-1",
-        score: 4,
+        score: 18,
         correct: 0,
         wrong: 0,
       },
       {
         player_id: "player-2",
-        score: 2,
+        score: 16,
         correct: 0,
         wrong: 0,
       },
     ]);
-    expect(generateScoreText(initialStates[0], 0)).toBe("4");
-    expect(generateScoreText(initialStates[1], 1)).toBe("2");
+    expect(generateScoreText(initialStates[0], 0)).toBe("18");
+    expect(generateScoreText(initialStates[1], 1)).toBe("16");
   });
 
   it("スコアと勝敗状態を優先して並び替える", () => {
@@ -150,7 +153,12 @@ describe("online attacksurvival形式", () => {
   });
 
   it("正解が他プレイヤーのスコアに影響し勝者を決定する", () => {
-    const players = [createPlayer("player-1", 3, 0), createPlayer("player-2", 2, 1)];
+    const option: AttackSurvivalGame["option"] = {
+      ...baseOption,
+      win_point: 5,
+      win_through: 1,
+    };
+    const players = [createPlayer("player-1", 0, 0), createPlayer("player-2", 0, 1)];
     const logs: SeriarizedGameLog[] = [
       {
         id: "log-1",
@@ -164,23 +172,36 @@ describe("online attacksurvival形式", () => {
         deletedAt: null,
         userId: "user-1",
       },
+      {
+        id: "log-2",
+        gameId: "game-attacksurvival",
+        playerId: "player-1",
+        questionNumber: 1,
+        actionType: "correct",
+        scoreChange: 0,
+        timestamp: "2024-01-01T00:00:02.000Z",
+        isSystemAction: false,
+        deletedAt: null,
+        userId: "user-1",
+      },
     ];
 
-    const game = createAttackSurvivalGame(players, logs, baseOption);
+    const game = createAttackSurvivalGame(players, logs, option);
     const initialStates = getInitialPlayersStateForOnline(game);
     const result = computeAttackSurvival(game, initialStates, logs);
 
     const player1 = result.scores.find((s) => s.player_id === "player-1");
     const player2 = result.scores.find((s) => s.player_id === "player-2");
 
+    // p1: 5 +2 +2 = 9 / p2: 5 -3 -3 = -1 → 0にクランプされて失格 → 残り1人でp1勝ち抜け
     expect(player1).toMatchObject({
-      score: 6,
+      score: 9,
       state: "win",
-      correct: 1,
+      correct: 2,
       text: "1st",
     });
     expect(player2).toMatchObject({
-      score: -1,
+      score: 0,
       state: "lose",
       text: "LOSE",
     });

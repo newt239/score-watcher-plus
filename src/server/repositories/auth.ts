@@ -1,6 +1,5 @@
-import { headers } from "next/headers";
-
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 
 import { auth } from "@/utils/auth/auth";
 import { DBClient, session, user } from "@/utils/drizzle/client";
@@ -25,18 +24,14 @@ export const getUserId = async () => {
   return session.user.id;
 };
 
-/**
- * メールアドレスでユーザーを取得
- */
+/** メールアドレスでユーザーを取得 */
 export async function getUserByEmail(email: string) {
   const result = await DBClient.select().from(user).where(eq(user.email, email)).limit(1);
 
   return result[0] || null;
 }
 
-/**
- * テスト用ユーザーを作成
- */
+/** テスト用ユーザーを作成 */
 export async function createTestUser(userData: {
   email: string;
   name: string;
@@ -56,9 +51,7 @@ export async function createTestUser(userData: {
   return newUser;
 }
 
-/**
- * セッションを作成
- */
+/** セッションを作成 */
 export async function createSession(userId: string) {
   const sessionId = crypto.randomUUID();
   const token = crypto.randomUUID();

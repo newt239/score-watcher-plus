@@ -1,10 +1,6 @@
-/**
- * Cloudflare KV操作ラッパー
- */
+/** Cloudflare KV操作ラッパー */
 
-/**
- * Cloudflare KVからデータを取得
- */
+/** Cloudflare KVからデータを取得 */
 export const getFromKV = async (key: string): Promise<string | null> => {
   try {
     const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;
@@ -41,9 +37,7 @@ export const getFromKV = async (key: string): Promise<string | null> => {
   }
 };
 
-/**
- * Cloudflare KVにデータを保存
- */
+/** Cloudflare KVにデータを保存 */
 export const putToKV = async (key: string, value: string, ttl?: number): Promise<boolean> => {
   try {
     const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;
@@ -82,9 +76,7 @@ export const putToKV = async (key: string, value: string, ttl?: number): Promise
   }
 };
 
-/**
- * Cloudflare KVからデータを削除
- */
+/** Cloudflare KVからデータを削除 */
 export const deleteFromKV = async (key: string): Promise<boolean> => {
   try {
     const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;

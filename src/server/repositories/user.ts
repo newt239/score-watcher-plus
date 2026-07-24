@@ -1,14 +1,15 @@
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
-import type { UpdateUserPreferencesRequestType } from "@/models/user-preference";
-
 import { defaultUserPreferences } from "@/models/user-preference";
 import { DBClient } from "@/utils/drizzle/client";
 import { userPreference } from "@/utils/drizzle/schema";
 
+import type { UpdateUserPreferencesRequestType } from "@/models/user-preference";
+
 /**
  * ユーザー設定を取得
+ *
  * @param userId ユーザーID
  * @returns ユーザー設定または null
  */
@@ -42,6 +43,7 @@ export const findUserPreferencesByUserId = async (userId: string) => {
 
 /**
  * ユーザー設定を取得（存在しない場合はデフォルト値を返す）
+ *
  * @param userId ユーザーID
  * @returns ユーザー設定
  */
@@ -57,6 +59,7 @@ export const getUserPreferences = async (userId: string) => {
 
 /**
  * ユーザー設定を更新
+ *
  * @param userId ユーザーID
  * @param updates 更新データ
  * @returns 更新成功の真偽値
@@ -82,6 +85,7 @@ export const updateUserPreferencesByUserId = async (
 
 /**
  * ユーザー設定が存在するかチェック
+ *
  * @param userId ユーザーID
  * @returns 存在する場合true
  */
@@ -101,6 +105,7 @@ export const existsUserPreferencesByUserId = async (userId: string) => {
 
 /**
  * ユーザー設定が存在しない場合、デフォルト値で新規作成する
+ *
  * @param userId ユーザーID
  * @returns 作成されたかどうかの真偽値
  */

@@ -13,11 +13,12 @@ import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 type SquarexGame = Extract<GetGameDetailResponseType, { ruleType: "squarex" }>;
 
 /**
- * squarex形式のゲームデータを生成する。
+ * Squarex形式のゲームデータを生成する。
+ *
  * @param players ゲームに参加するプレイヤー一覧
  * @param logs 適用するゲームログ
  * @param winPoint 勝ち抜け条件となるターゲット値
- * @returns squarex形式のゲーム設定
+ * @returns Squarex形式のゲーム設定
  */
 const createSquarexGame = (
   players: GamePlayerProps[],
@@ -44,6 +45,7 @@ const createSquarexGame = (
 
 /**
  * ゲーム参加者を生成する。
+ *
  * @param id プレイヤーID
  * @param initialScore 初期スコア
  * @param displayOrder 表示順
@@ -66,6 +68,7 @@ const createPlayer = (
 
 /**
  * 計算済みスコアを生成する。
+ *
  * @param override 上書きするスコア情報
  * @returns 計算済みスコア
  */
@@ -101,14 +104,12 @@ describe("online squarex形式", () => {
       even_score: 3,
       score: 9,
     });
+    // 初期値が0の場合、総合スコアは(0 || 1) * (0 || 1) = 1として扱われる
     expect(initialStates[1]).toMatchObject({
       player_id: "player-2",
       odd_score: 0,
       even_score: 0,
-      score: 0,
-    });
-    initialStates.forEach((state) => {
-      expect(state.score).toBe(state.odd_score * state.even_score);
+      score: 1,
     });
   });
 

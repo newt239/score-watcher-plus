@@ -1,33 +1,31 @@
+/* OnlinePlayerScore.module.css - ローカル版PlayerScore.module.cssと同等 */
+
 .player_score {
   display: flex;
-  flex-grow: 1;
   flex-direction: row;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-around;
+  gap: 0.5rem;
+  align-items: stretch;
+  justify-content: center;
   width: 100%;
-  padding: 0 1rem;
-  background-color: var(--mantine-color-body);
-
-  @media (width >= 36em) {
-    justify-content: space-between;
-    width: auto;
-  }
+  height: 100%;
+  min-height: 4rem;
 
   @media (width >= 62em) {
-    flex-grow: 0;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem 0;
+    gap: 0.25rem;
+    min-height: 8rem;
   }
 }
 
 .player_score_pair {
   display: flex;
-  gap: 1rem;
+  flex-direction: row;
+  gap: 0.25rem;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
 
   @media (width >= 62em) {
-    gap: 0;
-    width: 100%;
+    flex-direction: column;
   }
 }
