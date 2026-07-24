@@ -54,3 +54,6 @@ next-env.d.ts
 /playwright/.cache/
 tests/temp/
 html-report/
+
+# css-modules-kit生成物
+generated/

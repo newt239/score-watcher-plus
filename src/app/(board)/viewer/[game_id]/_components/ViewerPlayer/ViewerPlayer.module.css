@@ -1,4 +1,4 @@
-.player-card {
+.player_card {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9,20 +9,20 @@
   border-radius: 8px;
 }
 
-.player-info {
+.player_info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.player-score {
+.player_score {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: flex-end;
 }
 
-.player-stats {
+.player_stats {
   display: flex;
   gap: 1rem;
 }

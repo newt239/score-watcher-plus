@@ -25,6 +25,7 @@ ls:
     .sql: snake_case
 
 ignore:
+  - generated
   - node_modules
   - .git
   - .next

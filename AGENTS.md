@@ -89,7 +89,7 @@ https://react.dev/learn/you-might-not-need-an-effect
 
 UIコンポーネントライブラリの一つである**Mantine**を使用します。新しいUIを実装する際はまずMantineのコンポーネントの使用を検討してください。
 
-デザインのカスタマイズは**CSS Modules**を使用してください。**Tailwind CSSは使用禁止**とします。クラス名はkebab-caseで命名してください。
+デザインのカスタマイズは**CSS Modules**を使用してください。**Tailwind CSSは使用禁止**とします。クラス名はsnake_caseで命名してください（css-modules-kit がJavaScript識別子として扱えない名前をサポートしないため、kebab-caseは使用禁止）。
 
 ### データベース
 
@@ -237,7 +237,7 @@ src/
 - CSS ModulesはPostCSS + Mantine プリセット使用してください。
 - プロパティ順序はStylelintのrecess-orderに従ってください。
 - レスポンシブはモバイルファーストで実装してください。
-- 命名はkebab-caseで命名してください。
+- クラス名はsnake_caseで命名してください。
 
 ### ファイル作成・編集ルール
 
