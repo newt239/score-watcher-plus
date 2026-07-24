@@ -71,7 +71,15 @@ export const buildBoardData = (gameData: GameWithRelations): GetViewerBoardDataR
       createdAt: gameData.createdAt?.toISOString(),
       updatedAt: gameData.updatedAt?.toISOString(),
     },
-    players: scores,
+    // 観戦画面ではプレイヤー名を表示するため、スコアに名前と所属を添える
+    players: scores.map((score) => {
+      const player = gameData.players.find((p) => p.id === score.player_id);
+      return {
+        ...score,
+        name: player?.name ?? "",
+        affiliation: player?.affiliation ?? "",
+      };
+    }),
     logs: gameData.logs.map((log) => ({
       id: log.id,
       player_id: log.playerId || "",

@@ -553,6 +553,12 @@ export const GetViewerBoardDataParamSchema = z.object({
 /** Viewer用ボードデータ取得パラメータ型 */
 export type GetViewerBoardDataParamType = z.infer<typeof GetViewerBoardDataParamSchema>;
 
+/** 観戦モードで表示するプレイヤー（スコア計算結果に表示用の情報を加えたもの） */
+export type ViewerPlayerType = ComputedScoreProps & {
+  name: string;
+  affiliation: string;
+};
+
 /** Viewer用ボードデータレスポンス型 */
 export type GetViewerBoardDataResponseType = {
   game: {
@@ -563,6 +569,6 @@ export type GetViewerBoardDataResponseType = {
     createdAt?: string;
     updatedAt?: string;
   };
-  players: ComputedScoreProps[];
+  players: ViewerPlayerType[];
   logs: OnlineGameLogType[];
 };

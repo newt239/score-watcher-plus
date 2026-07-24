@@ -6,7 +6,7 @@ import { createApiClientOnServer } from "@/utils/hono/server";
 
 import ViewerBoard from "./_components/ViewerBoard/ViewerBoard";
 import ViewerHeader from "./_components/ViewerHeader/ViewerHeader";
-import styles from "./page.module.css";
+import classes from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +34,9 @@ const ViewerPage = async ({ params }: { params: Promise<{ game_id: string }> }) 
   }
 
   return (
-    <div className={styles.container}>
+    <div className={classes.container}>
       <ViewerHeader />
-      <main className={styles.main}>
+      <main className={classes.main}>
         <ViewerBoard gameId={game_id} initialData={result.data} />
       </main>
     </div>

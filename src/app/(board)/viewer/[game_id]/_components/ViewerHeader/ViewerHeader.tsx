@@ -6,7 +6,7 @@ import { ActionIcon, Button, Group, Modal, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconShare } from "@tabler/icons-react";
 
-import styles from "./ViewerHeader.module.css";
+import classes from "./ViewerHeader.module.css";
 
 const ViewerHeader = () => {
   const [shareOpened, { open: openShare, close: closeShare }] = useDisclosure(false);
@@ -24,9 +24,9 @@ const ViewerHeader = () => {
 
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.content}>
-          <div className={styles.title}>
+      <header className={classes.header}>
+        <div className={classes.content}>
+          <div className={classes.title}>
             <Text size="xl" fw={700} c="yellow">
               観戦モード
             </Text>
@@ -44,13 +44,13 @@ const ViewerHeader = () => {
       </header>
 
       <Modal opened={shareOpened} onClose={closeShare} title="観戦ページをシェア" centered>
-        <div className={styles.shareContent}>
+        <div className={classes.share_content}>
           <Text size="sm" c="dimmed" mb="md">
             このURLを共有して、他の人もゲームを観戦できます
           </Text>
 
-          <div className={styles.urlContainer}>
-            <Text size="sm" className={styles.url}>
+          <div className={classes.url_container}>
+            <Text size="sm" className={classes.url}>
               {typeof window !== "undefined" ? window.location.href : ""}
             </Text>
           </div>
