@@ -5,7 +5,7 @@ import computeBackstream from "./backstream";
 import computeDivide from "./divide";
 import computeEndlessChance from "./endless-chance";
 import computeFreezex from "./freezex";
-import { getInitialPlayersStateForOnline } from "./index";
+import { getInitialPlayersStateForOnline, indicator } from "./index";
 import computeNbyn from "./nbyn";
 import computeNomr from "./nomr";
 import computeNomx from "./nomx";
@@ -18,7 +18,7 @@ import computeSwedish10 from "./swedish10";
 import computeVariables from "./variables";
 import computeZ from "./z";
 
-import type { GamePlayerProps, GetGameDetailResponseType } from "@/models/game";
+import type { ComputedScoreProps, GamePlayerProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 // WinPlayerPropsの代替型定義
@@ -26,6 +26,47 @@ type WinPlayerProps = {
   player_id: string;
   name: string;
   text: string;
+};
+
+/** スコア計算結果の型 */
+type ComputeResult = {
+  readonly scores: ComputedScoreProps[];
+  readonly winPlayers: readonly { player_id: string; text: string }[];
+};
+
+/**
+ * 限定問題数に達した場合に順位で勝ち抜け・敗退を確定させる
+ *
+ * 「限定問題数」と「勝ち抜け人数」が設定されているゲームで、規定の問題数を消化したときに 上位のプレイヤーを勝ち抜け、それ以外を敗退として扱います。
+ *
+ * @param game ゲーム情報
+ * @param result 形式ごとのスコア計算結果
+ * @param logs ゲームログ
+ * @returns 判定を反映したスコア計算結果
+ */
+const applyQuestionLimit = (
+  game: GetGameDetailResponseType,
+  result: ComputeResult,
+  logs: SeriarizedGameLog[]
+): ComputeResult => {
+  const limit = "limit" in game.option ? game.option.limit : undefined;
+  const winThrough = "win_through" in game.option ? game.option.win_through : undefined;
+
+  if (!limit || !winThrough || logs.length < limit) {
+    return result;
+  }
+
+  const scores = result.scores.map((score) => {
+    if (score.state === "win") return score;
+    const state = score.order < winThrough ? "win" : "lose";
+    return {
+      ...score,
+      state,
+      text: state === "win" ? indicator(score.order) : "LOSE",
+    } as const;
+  });
+
+  return { ...result, scores };
 };
 
 /** オンライン版のスコア計算（全形式対応） ローカル版と同じく17種類のゲーム形式に対応 */
@@ -36,6 +77,15 @@ export const computeOnlineScore = (
 ) => {
   const initialState = getInitialPlayersStateForOnline(game);
 
+  return applyQuestionLimit(game, computeByRule(game, initialState, logs), logs);
+};
+
+/** 形式ごとのスコア計算を振り分ける */
+const computeByRule = (
+  game: GetGameDetailResponseType,
+  initialState: ReturnType<typeof getInitialPlayersStateForOnline>,
+  logs: SeriarizedGameLog[]
+): ComputeResult => {
   switch (game.ruleType) {
     case "normal":
       return computeNormal(game, initialState, logs);

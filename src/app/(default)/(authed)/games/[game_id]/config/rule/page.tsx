@@ -9,6 +9,7 @@ import ConfigBooleanInput from "../_components/ConfigBooleanInput";
 import ConfigInput from "../_components/ConfigInput";
 import ConfigNumberInput from "../_components/ConfigNumberInput";
 import AQLOptions from "./_components/AQLOptions";
+import ConfigLimit from "./_components/ConfigLimit";
 
 import type { AqlOption } from "@/utils/drizzle/types";
 
@@ -158,6 +159,16 @@ const RulePage = async ({ params }: RulePageProps) => {
       {/* AQL形式のチーム設定 */}
       {ruleType === "aql" && (
         <AQLOptions gameId={game.id} ruleType={ruleType} settings={game.option as AqlOption} />
+      )}
+
+      {/* 限定問題数の設定（AQLは対象外） */}
+      {ruleType !== "aql" && (
+        <ConfigLimit
+          gameId={game.id}
+          limit={"limit" in game.option ? game.option.limit : undefined}
+          winThrough={"win_through" in game.option ? game.option.win_through : undefined}
+          hasOwnWinThrough={ruleType === "attacksurvival"}
+        />
       )}
     </Flex>
   );

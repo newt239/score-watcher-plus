@@ -29,6 +29,7 @@ export const serializeGameForCompute = (gameData: GameWithRelations) => {
     initialScore: player.initialScore,
     initialCorrectCount: player.initialCorrectCount,
     initialWrongCount: player.initialWrongCount,
+    baseCorrectPoint: player.baseCorrectPoint,
   }));
 
   const logs = gameData.logs.map((log) => ({

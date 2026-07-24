@@ -169,6 +169,8 @@ export const gamePlayer = sqliteTable("game_player", {
   initialScore: integer("initial_score").default(0),
   initialCorrectCount: integer("initial_correct_count").default(0),
   initialWrongCount: integer("initial_wrong_count").default(0),
+  // Variables形式でプレイヤーごとに設定する変動値N
+  baseCorrectPoint: integer("base_correct_point").default(1).notNull(),
   userId: text("user_id").references(() => user.id),
   createdAt: integer("created_at", { mode: "timestamp" })
     .default(sql`(unixepoch())`)

@@ -67,6 +67,7 @@ const createPlayer = (
   initialScore,
   initialCorrectCount: initialScore,
   initialWrongCount: initialScore,
+  baseCorrectPoint: 1,
 });
 
 /**

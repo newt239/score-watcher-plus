@@ -43,6 +43,7 @@ const createPlayer = (id: string, initialScore: number, order: number): GamePlay
   initialScore,
   initialCorrectCount: initialScore,
   initialWrongCount: initialScore,
+  baseCorrectPoint: 1,
 });
 
 /** 計算済みスコアを生成する。 */

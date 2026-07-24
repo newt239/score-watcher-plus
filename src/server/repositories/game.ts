@@ -41,6 +41,7 @@ export const getGameById = async (gameId: string, userId: string) => {
           initialScore: true,
           initialCorrectCount: true,
           initialWrongCount: true,
+          baseCorrectPoint: true,
         },
       },
     },
@@ -70,6 +71,7 @@ export const getGameById = async (gameId: string, userId: string) => {
       initialScore: p.initialScore,
       initialCorrectCount: p.initialCorrectCount,
       initialWrongCount: p.initialWrongCount,
+      baseCorrectPoint: p.baseCorrectPoint,
     })),
     logs: gameLogData,
   };
@@ -193,6 +195,7 @@ export const getGamePlayers = async (gameId: string, userId: string) => {
     initialScore: gamePlayer.initialScore,
     initialCorrectCount: gamePlayer.initialCorrectCount,
     initialWrongCount: gamePlayer.initialWrongCount,
+    baseCorrectPoint: gamePlayer.baseCorrectPoint,
     playerName: player.name,
     playerDisplayName: player.displayName,
   })
@@ -212,7 +215,7 @@ export const getGamePlayers = async (gameId: string, userId: string) => {
     name: p.playerDisplayName || p.playerName || "",
     initial_correct: p.initialCorrectCount || 0,
     initial_wrong: p.initialWrongCount || 0,
-    base_correct_point: 1,
+    base_correct_point: p.baseCorrectPoint,
     base_wrong_point: 1,
   }));
 };
@@ -334,6 +337,7 @@ export const updateGamePlayers = async (
         initialScore: player.initialScore || 0,
         initialCorrectCount: player.initialCorrectCount || 0,
         initialWrongCount: player.initialWrongCount || 0,
+        baseCorrectPoint: player.baseCorrectPoint,
         userId,
       });
       updatedCount++;
@@ -359,6 +363,7 @@ export const copyPlayersFromGame = async (
     initialScore: gamePlayer.initialScore,
     initialCorrectCount: gamePlayer.initialCorrectCount,
     initialWrongCount: gamePlayer.initialWrongCount,
+    baseCorrectPoint: gamePlayer.baseCorrectPoint,
   })
     .from(gamePlayer)
     .where(
@@ -399,6 +404,7 @@ export const copyPlayersFromGame = async (
         initialScore: player.initialScore || 0,
         initialCorrectCount: player.initialCorrectCount || 0,
         initialWrongCount: player.initialWrongCount || 0,
+        baseCorrectPoint: player.baseCorrectPoint,
         userId,
       });
       copiedCount++;
@@ -532,6 +538,7 @@ export const getPublicGameById = async (gameId: string) => {
           initialScore: true,
           initialCorrectCount: true,
           initialWrongCount: true,
+          baseCorrectPoint: true,
         },
       },
     },
@@ -561,6 +568,7 @@ export const getPublicGameById = async (gameId: string) => {
       initialScore: p.initialScore,
       initialCorrectCount: p.initialCorrectCount,
       initialWrongCount: p.initialWrongCount,
+      baseCorrectPoint: p.baseCorrectPoint,
     })),
     logs: gameLogData,
   };

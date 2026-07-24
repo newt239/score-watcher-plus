@@ -28,6 +28,9 @@ import type {
 import type { UserPreferencesType } from "@/models/user-preference";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
+/** 他端末の操作を取り込むためのログ取得間隔（ミリ秒） */
+const LOG_POLLING_INTERVAL_MS = 3000;
+
 type BoardProps = {
   gameId: string;
   user: OnlineUserType | null;
@@ -150,6 +153,16 @@ const Board: React.FC<BoardProps> = ({
       }
     });
   }, [logs, refreshLogs]);
+
+  // 他の端末からの操作を反映するため、一定間隔でログを取り直す
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // 自分の操作の反映中や手動更新モード中は取得しない
+      if (isPending || editable) return;
+      refreshLogs();
+    }, LOG_POLLING_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [refreshLogs, isPending, editable]);
 
   // キーボードショートカット
   useEffect(() => {

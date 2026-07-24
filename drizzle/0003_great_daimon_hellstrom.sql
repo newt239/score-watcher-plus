@@ -1,0 +1,1 @@
+ALTER TABLE `game_player` ADD `base_correct_point` integer DEFAULT 1 NOT NULL;

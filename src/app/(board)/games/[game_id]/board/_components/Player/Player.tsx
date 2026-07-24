@@ -128,6 +128,7 @@ const Player: React.FC<Props> = ({
         onAddLog={onAddLog}
         preferences={preferences}
         editable={editable}
+        baseCorrectPoint={player.baseCorrectPoint}
       />
     </Flex>
   );

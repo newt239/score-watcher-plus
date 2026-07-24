@@ -107,6 +107,8 @@ export type GamePlayerProps = {
   initialScore: number | null;
   initialCorrectCount: number | null;
   initialWrongCount: number | null;
+  /** Variables形式でプレイヤーごとに設定する変動値N */
+  baseCorrectPoint: number;
 };
 
 /** ゲーム詳細取得のレスポンスの型 */
@@ -145,6 +147,7 @@ export const UpdateGamePlayerSchema = z.object({
   initialScore: z.number().int().default(0),
   initialCorrectCount: z.number().int().default(0),
   initialWrongCount: z.number().int().default(0),
+  baseCorrectPoint: z.number().int().min(1).default(1),
 });
 
 /** ゲームプレイヤー更新リクエストのパラメータスキーマ */
@@ -169,6 +172,10 @@ export const UpdateGamePlayerRequestJsonSchema = z.union([
   z.object({
     key: z.literal("initialWrongCount"),
     value: z.number().int().min(0),
+  }),
+  z.object({
+    key: z.literal("baseCorrectPoint"),
+    value: z.number().int().min(1),
   }),
 ]);
 

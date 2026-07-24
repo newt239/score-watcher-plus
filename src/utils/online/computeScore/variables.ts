@@ -1,9 +1,9 @@
-import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
+import { getSortedPlayerOrderListForOnline, indicator } from "./index";
 
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/** Variables形式のスコア計算 各プレイヤーが変動値Nを設定、正解で+N、誤答で-N×(N-2) */
+/** Variables形式のスコア計算 プレイヤーごとに設定した変動値Nを使い、正解で+N、誤答で-2N */
 const computeVariables = (
   game: Extract<GetGameDetailResponseType, { ruleType: "variables" }>,
   playersState: ComputedScoreProps[],
@@ -11,47 +11,35 @@ const computeVariables = (
 ) => {
   const winPoint = game.option.win_point;
 
+  // プレイヤーごとの変動値Nを引けるようにしておく
+  const baseCorrectPointById = new Map(
+    game.players.map((player) => [player.id, player.baseCorrectPoint])
+  );
+
   const byId = new Map<string, ComputedScoreProps>(
-    playersState.map((s) => [
-      s.player_id,
-      {
-        ...s,
-        correct: 0,
-        score: 0,
-        // Variablesの変動値Nは初期値で設定される想定
-        // ここでは簡略化して固定値を使用
-        stage: 3, // 変動値Nをstageで管理
-      },
-    ])
+    playersState.map((s) => [s.player_id, { ...s }])
   );
 
   logs.forEach((log, qn) => {
     const s = byId.get(log.playerId || "");
     if (!s) return;
 
-    const variableN = s.stage; // 各プレイヤーの変動値
+    const variableN = baseCorrectPointById.get(s.player_id) ?? 1;
 
     if (log.actionType === "correct") {
       s.correct += 1;
-      s.score += variableN; // 正解で+N
+      s.score += variableN;
       s.last_correct = qn;
 
       if (s.score >= winPoint) {
         s.state = "win";
-      } else if (s.score >= winPoint - variableN) {
+      } else if (s.score + variableN >= winPoint) {
         s.reach_state = "win";
       }
     } else if (log.actionType === "wrong") {
       s.wrong += 1;
-      const penalty = variableN * (variableN - 2); // -N×(N-2)
-      s.score -= penalty;
+      s.score -= variableN * 2;
       s.last_wrong = qn;
-
-      // Variablesでは通常誤答による失格はないが、
-      // スコアがマイナスになった場合の処理
-      if (s.score < 0) {
-        s.score = 0; // マイナススコアを防ぐ
-      }
     }
   });
 
@@ -63,7 +51,12 @@ const computeVariables = (
     return {
       ...score,
       order,
-      text: generateScoreText(score, order),
+      text:
+        score.state === "win"
+          ? indicator(order)
+          : score.state === "lose"
+            ? "LOSE"
+            : `${score.score}pt`,
     };
   });
 

@@ -46,6 +46,7 @@ const createPlayer = (
   initialScore,
   initialCorrectCount: initialScore,
   initialWrongCount: initialScore,
+  baseCorrectPoint: 1,
 });
 
 /** 計算済みスコアのひな型を生成する。 */

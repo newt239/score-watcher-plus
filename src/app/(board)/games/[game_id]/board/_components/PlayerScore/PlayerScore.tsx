@@ -23,6 +23,8 @@ type PlayerScoreProps = {
   preferences: UserPreferencesType | null;
   /** スコアの手動更新モードが有効かどうか */
   editable: boolean;
+  /** Variables形式でプレイヤーに設定されている変動値N */
+  baseCorrectPoint: number;
 };
 
 const PlayerScore: React.FC<PlayerScoreProps> = ({
@@ -32,6 +34,7 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
   onAddLog,
   preferences,
   editable,
+  baseCorrectPoint,
 }) => {
   const props = {
     playerId: player.player_id,
@@ -328,9 +331,7 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
             </PlayerScoreButton>
           </Flex>
           <PlayerScoreButton color="green" disabled {...props}>
-            {/* variables形式の場合、プレイヤー固有の設定を表示する必要がありますが、
-                オンライン版では実装が複雑なため、プレースホルダーを表示 */}
-            {`+1 / -1`}
+            {`+${baseCorrectPoint} / -${baseCorrectPoint * 2}`}
           </PlayerScoreButton>
         </>
       )}

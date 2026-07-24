@@ -82,7 +82,8 @@ const PlayersConfig: React.FC<Props> = ({
         initialScore: 0,
         initialCorrectCount: 0,
         initialWrongCount: 0,
-      } as GamePlayerProps;
+        baseCorrectPoint: 1,
+      };
     });
 
     setCurrentGamePlayers(newGamePlayers);
@@ -108,7 +109,8 @@ const PlayersConfig: React.FC<Props> = ({
       return (
         player.name !== initialPlayer.name ||
         player.initialCorrectCount !== initialPlayer.initialCorrectCount ||
-        player.initialWrongCount !== initialPlayer.initialWrongCount
+        player.initialWrongCount !== initialPlayer.initialWrongCount ||
+        player.baseCorrectPoint !== initialPlayer.baseCorrectPoint
       );
     });
 
@@ -126,6 +128,7 @@ const PlayersConfig: React.FC<Props> = ({
             initialScore: player.initialScore || 0,
             initialCorrectCount: player.initialCorrectCount || 0,
             initialWrongCount: player.initialWrongCount || 0,
+            baseCorrectPoint: player.baseCorrectPoint || 1,
           }));
 
           const result = await parseResponse(
@@ -200,6 +203,16 @@ const PlayersConfig: React.FC<Props> = ({
                   {...form.getInputProps(`players.${index}.initialWrongCount`)}
                 />
               </>
+            )}
+            {rule === "variables" && (
+              <NumberInput
+                label="N"
+                description="正解で+N、誤答で-2Nされます。"
+                min={1}
+                size="md"
+                key={form.key(`players.${index}.baseCorrectPoint`)}
+                {...form.getInputProps(`players.${index}.baseCorrectPoint`)}
+              />
             )}
           </Group>
         </ScrollArea>
