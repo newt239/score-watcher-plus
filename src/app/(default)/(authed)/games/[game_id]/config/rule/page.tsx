@@ -11,7 +11,7 @@ import ConfigNumberInput from "../_components/ConfigNumberInput";
 import AQLOptions from "./_components/AQLOptions";
 import ConfigLimit from "./_components/ConfigLimit";
 
-import type { AqlOption } from "@/utils/drizzle/types";
+import type { RuleNames } from "@/models/game";
 
 export const metadata: Metadata = {
   title: "形式設定",
@@ -38,7 +38,10 @@ const RulePage = async ({ params }: RulePageProps) => {
   const game = gameData.data;
   const ruleType = game.ruleType;
 
-  const winPointRules = {
+  // win_point の入力欄をどう表示するかを形式ごとに定義する
+  const winPointRules: Partial<
+    Record<RuleNames, { name: string; max: number; min: number | undefined }>
+  > = {
     nomx: { name: "勝ち抜けポイント", max: 1000, min: undefined },
     "nomx-ad": { name: "勝ち抜けポイント", max: 1000, min: undefined },
     nomr: { name: "休み(M)", max: 100, min: undefined },
@@ -52,6 +55,8 @@ const RulePage = async ({ params }: RulePageProps) => {
     attacksurvival: { name: "勝ち抜け人数", max: 1000, min: undefined },
   };
 
+  const winPointRule = winPointRules[ruleType];
+
   return (
     <Flex direction="column" gap="lg">
       {/* ゲーム名 */}
@@ -64,24 +69,14 @@ const RulePage = async ({ params }: RulePageProps) => {
       />
 
       {/* win_point が必要なルール */}
-      {(game.ruleType === "nomx" ||
-        game.ruleType === "nomx-ad" ||
-        game.ruleType === "nomr" ||
-        game.ruleType === "endless-chance" ||
-        game.ruleType === "ny" ||
-        game.ruleType === "variables" ||
-        game.ruleType === "nbyn" ||
-        game.ruleType === "nupdown" ||
-        game.ruleType === "squarex" ||
-        game.ruleType === "freezex" ||
-        game.ruleType === "attacksurvival") && (
+      {winPointRule && "win_point" in game.option && (
         <ConfigNumberInput
           gameId={game.id}
-          label={winPointRules[game.ruleType as keyof typeof winPointRules].name}
+          label={winPointRule.name}
           value={game.option.win_point}
           fieldName="win_point"
-          max={winPointRules[game.ruleType as keyof typeof winPointRules].max}
-          min={winPointRules[game.ruleType as keyof typeof winPointRules].min}
+          max={winPointRule.max}
+          min={winPointRule.min}
         />
       )}
 
@@ -157,9 +152,7 @@ const RulePage = async ({ params }: RulePageProps) => {
       )}
 
       {/* AQL形式のチーム設定 */}
-      {ruleType === "aql" && (
-        <AQLOptions gameId={game.id} ruleType={ruleType} settings={game.option as AqlOption} />
-      )}
+      {game.ruleType === "aql" && <AQLOptions gameId={game.id} settings={game.option} />}
 
       {/* 限定問題数の設定（AQLは対象外） */}
       {ruleType !== "aql" && (

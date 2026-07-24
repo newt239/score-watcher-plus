@@ -2,19 +2,15 @@
 
 import ConfigInput from "../../_components/ConfigInput";
 
-import type { RuleNames } from "@/models/game";
 import type { AqlOption } from "@/utils/drizzle/types";
 
 type AQLOptionsProps = {
   gameId: string;
-  ruleType: RuleNames;
   settings: AqlOption;
 };
 
 /** AQLゲーム設定オプション */
-const AQLOptions: React.FC<AQLOptionsProps> = ({ gameId, ruleType, settings }) => {
-  if (ruleType !== "aql") return null;
-
+const AQLOptions: React.FC<AQLOptionsProps> = ({ gameId, settings }) => {
   return (
     <>
       <ConfigInput
