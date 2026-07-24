@@ -127,12 +127,52 @@ test.describe("オンライン版の基本フロー", () => {
     await page.reload();
     await expect(page.getByText("は現在公開中です", { exact: false })).toBeVisible();
 
-    // 未認証コンテキストからviewer APIにアクセスできる（200: キャッシュあり / 202: 準備中）
+    // 未認証コンテキストからviewer APIにアクセスできる
     const viewerContext = await browser.newContext({ baseURL: "http://localhost:3000" });
     const response = await viewerContext.request.get(`/api/viewer/games/${gameId}/board`, {
       headers: { "x-playwright-test": "true" },
     });
-    expect([200, 202]).toContain(response.status());
+    expect(response.status()).toBe(200);
+
+    // 観戦ページにプレイヤー名が表示される
+    const viewerPage = await viewerContext.newPage();
+    await viewerPage.goto(`/viewer/${gameId}`);
+    await expect(viewerPage.getByText(/テストプレイヤー[1１]/)).toBeVisible();
     await viewerContext.close();
+  });
+
+  test("スコアの手動更新モードに切り替えられる", async ({ page }) => {
+    await page.request.post("/api/e2e/test-login", {
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
+    });
+
+    await gotoAndDismissUpdateModal(page, `/games/${gameId}/board`);
+
+    // 手動更新モードに切り替えるとスコアが入力欄になる
+    await page.getByRole("button", { name: "スコアの手動更新" }).click();
+    await expect(page.locator("input[value='○1']").first()).toBeVisible();
+
+    // 「スルー」「一つ戻す」は手動更新モード中は操作できない
+    await expect(page.getByRole("button", { name: "スルー" })).toBeDisabled();
+
+    // 元に戻す
+    await page.getByRole("button", { name: "スコアの手動更新" }).click();
+    await expect(page.getByRole("button", { name: /^○\s*1$/ })).toBeVisible();
+  });
+
+  test("ゲームをリセットするとプレイログが削除される", async ({ page }) => {
+    await page.request.post("/api/e2e/test-login", {
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
+    });
+
+    await gotoAndDismissUpdateModal(page, `/games/${gameId}/config/other`);
+
+    await page.getByRole("button", { name: "リセットする" }).click();
+    await page.getByRole("button", { name: "リセットする" }).last().click();
+    await expect(page.getByText("ゲームをリセットしました")).toBeVisible();
+
+    // ボードのスコアが初期状態に戻る
+    await gotoAndDismissUpdateModal(page, `/games/${gameId}/board`);
+    await expect(page.getByRole("button", { name: /^○\s*0$/ })).toBeVisible();
   });
 });

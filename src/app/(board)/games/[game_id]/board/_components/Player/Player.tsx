@@ -39,6 +39,8 @@ type Props = {
   totalPlayers: number;
   /** スコアの手動更新モードが有効かどうか */
   editable: boolean;
+  /** エンドレスチャンスで誤答を切り替える */
+  onToggleMultipleWrong: (playerId: string) => void;
 };
 
 const Player: React.FC<Props> = ({
@@ -51,6 +53,7 @@ const Player: React.FC<Props> = ({
   preferences,
   totalPlayers,
   editable,
+  onToggleMultipleWrong,
 }) => {
   const computedColorScheme = useComputedColorScheme("light");
   const [editableState, setEditableState] = useState<States>("playing");
@@ -129,6 +132,7 @@ const Player: React.FC<Props> = ({
         preferences={preferences}
         editable={editable}
         baseCorrectPoint={player.baseCorrectPoint}
+        onToggleMultipleWrong={onToggleMultipleWrong}
       />
     </Flex>
   );

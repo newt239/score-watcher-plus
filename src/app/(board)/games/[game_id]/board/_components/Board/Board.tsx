@@ -109,6 +109,72 @@ const Board: React.FC<BoardProps> = ({
     addLog("-", "through");
   }, [addLog]);
 
+  /**
+   * エンドレスチャンスの誤答を切り替える
+   *
+   * 同じ問題に対する誤答は1件のログにまとめて記録し、同じプレイヤーをもう一度押すと取り消します。
+   */
+  const toggleMultipleWrong = useCallback(
+    (playerId: string) => {
+      const lastLog = logs[logs.length - 1];
+
+      startTransition(async () => {
+        try {
+          if (lastLog?.actionType === "multiple_wrong") {
+            const answeredIds = (lastLog.playerId ?? "").split(",").filter((id) => id !== "");
+
+            if (answeredIds.includes(playerId)) {
+              const remainingIds = answeredIds.filter((id) => id !== playerId);
+
+              if (remainingIds.length === 0) {
+                await parseResponse(
+                  apiClient.games.logs[":logId"].$delete({
+                    param: { logId: String(lastLog.id) },
+                  })
+                );
+              } else {
+                await parseResponse(
+                  apiClient.games.logs[":logId"].$patch({
+                    param: { logId: String(lastLog.id) },
+                    json: { playerId: remainingIds.join(",") },
+                  })
+                );
+              }
+            } else {
+              await parseResponse(
+                apiClient.games.logs[":logId"].$patch({
+                  param: { logId: String(lastLog.id) },
+                  json: { playerId: [...answeredIds, playerId].join(",") },
+                })
+              );
+            }
+          } else {
+            await parseResponse(
+              apiClient.games.logs.$post({
+                json: {
+                  gameId,
+                  playerId,
+                  actionType: "multiple_wrong",
+                  isSystemAction: false,
+                },
+              })
+            );
+          }
+
+          await refreshLogs();
+        } catch (e) {
+          console.error("Failed to toggle multiple wrong:", e);
+          notifications.show({
+            title: "エラー",
+            message: "誤答の記録に失敗しました",
+            color: "red",
+          });
+        }
+      });
+    },
+    [logs, gameId, refreshLogs]
+  );
+
   const toggleEditable = useCallback(() => {
     const nextValue = !editable;
     setEditable(nextValue);
@@ -177,7 +243,16 @@ const Board: React.FC<BoardProps> = ({
           let player = players[idx - 1];
           if (idx === 0 && players.length >= 10) player = players[9];
           if (player) {
-            addLog(player.id, event.shiftKey ? "wrong" : "correct");
+            if (event.shiftKey) {
+              // エンドレスチャンスの誤答は1問分をまとめて記録する
+              if (initialGame.ruleType === "endless-chance") {
+                toggleMultipleWrong(player.id);
+              } else {
+                addLog(player.id, "wrong");
+              }
+            } else {
+              addLog(player.id, "correct");
+            }
           }
         }
       } else if (
@@ -191,7 +266,7 @@ const Board: React.FC<BoardProps> = ({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [players, addLog, undo, initialGame, editable]);
+  }, [players, addLog, undo, initialGame, editable, toggleMultipleWrong]);
 
   // useEffectを先に定義
   useEffect(() => {
@@ -283,6 +358,7 @@ const Board: React.FC<BoardProps> = ({
           preferences={preferences}
           showQuiz={quizList.length > 0}
           editable={editable}
+          onToggleMultipleWrong={toggleMultipleWrong}
         />
       )}
 

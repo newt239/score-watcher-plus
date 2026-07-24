@@ -26,6 +26,8 @@ type PlayersProps = {
   showQuiz: boolean;
   /** スコアの手動更新モードが有効かどうか */
   editable: boolean;
+  /** エンドレスチャンスで誤答を切り替える */
+  onToggleMultipleWrong: (playerId: string) => void;
 };
 
 /** オンライン版のプレイヤー一覧表示コンポーネント ローカル版のPlayersコンポーネントと同等の機能を提供 */
@@ -38,6 +40,7 @@ const Players: React.FC<PlayersProps> = ({
   preferences,
   showQuiz,
   editable,
+  onToggleMultipleWrong,
 }) => {
   return (
     <Flex
@@ -58,6 +61,7 @@ const Players: React.FC<PlayersProps> = ({
           preferences={preferences}
           totalPlayers={players.length}
           editable={editable}
+          onToggleMultipleWrong={onToggleMultipleWrong}
         />
       ))}
     </Flex>

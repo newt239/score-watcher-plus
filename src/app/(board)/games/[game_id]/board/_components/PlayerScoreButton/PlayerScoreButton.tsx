@@ -18,6 +18,8 @@ type PlayerScoreButtonProps = {
   disabled?: boolean;
   /** スコアの手動更新モードが有効かどうか */
   editable?: boolean;
+  /** 既定の動作の代わりに実行する処理 */
+  onClick?: () => void;
   children: string;
 };
 
@@ -31,6 +33,7 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
   onAddLog,
   disabled,
   editable = false,
+  onClick,
 }) => {
   const numberSign = children.endsWith("pt")
     ? "pt"
@@ -60,9 +63,14 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
               : "yellow.3";
 
   const handleClick = () => {
-    if (color !== "green" && !disabled && !isPending) {
-      onAddLog(playerId, color === "red" ? "correct" : "wrong");
+    if (color === "green" || disabled || isPending) return;
+
+    if (onClick) {
+      onClick();
+      return;
     }
+
+    onAddLog(playerId, color === "red" ? "correct" : "wrong");
   };
 
   // 手動更新モードでは表示されている値を自由に書き換えられるようにする（ログには記録されない）

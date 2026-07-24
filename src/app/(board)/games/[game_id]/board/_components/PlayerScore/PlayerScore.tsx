@@ -25,6 +25,8 @@ type PlayerScoreProps = {
   editable: boolean;
   /** Variables形式でプレイヤーに設定されている変動値N */
   baseCorrectPoint: number;
+  /** エンドレスチャンスで誤答を切り替える */
+  onToggleMultipleWrong: (playerId: string) => void;
 };
 
 const PlayerScore: React.FC<PlayerScoreProps> = ({
@@ -35,6 +37,7 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
   preferences,
   editable,
   baseCorrectPoint,
+  onToggleMultipleWrong,
 }) => {
   const props = {
     playerId: player.player_id,
@@ -310,7 +313,12 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
           <PlayerScoreButton disabled={player.is_incapacity} color="red" {...props}>
             {player.state === "win" ? player.text : getNumberSign("correct", player.correct)}
           </PlayerScoreButton>
-          <PlayerScoreButton color="blue" disabled={player.is_incapacity} {...props}>
+          <PlayerScoreButton
+            color="blue"
+            disabled={player.is_incapacity}
+            onClick={() => onToggleMultipleWrong(player.player_id)}
+            {...props}
+          >
             {player.state === "lose" || player.is_incapacity
               ? player.text
               : getNumberSign("wrong", player.wrong)}

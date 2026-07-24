@@ -238,6 +238,16 @@ export const DeleteGameRequestParamSchema = z.object({
   gameId: z.string().min(1),
 });
 
+/** ゲームログ更新リクエストのパラメータスキーマ */
+export const UpdateGameLogRequestParamSchema = z.object({
+  logId: z.string().min(1),
+});
+
+/** ゲームログ更新リクエストのjsonスキーマ（playerIdはカンマ区切りで複数指定できる） */
+export const UpdateGameLogRequestJsonSchema = z.object({
+  playerId: z.string().min(1),
+});
+
 /** ゲームログ一括削除（リセット）リクエストのパラメータスキーマ */
 export const ResetGameLogsRequestParamSchema = z.object({
   gameId: z.string().min(1),

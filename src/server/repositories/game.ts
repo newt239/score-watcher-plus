@@ -685,3 +685,21 @@ export const importGame = async (importData: ImportGameRequestType, userId: stri
 
   return { gameId, playerCount: data.players.length, logCount: data.logs.length };
 };
+
+/**
+ * ゲームログの解答者を更新する
+ *
+ * エンドレスチャンスのように、1つの問題に対して複数のプレイヤーの誤答をまとめて記録する形式で 使用します。
+ *
+ * @param logId 更新するログのID
+ * @param playerId 記録する解答者のID（カンマ区切りで複数指定できます）
+ * @param userId 操作するユーザーのID
+ * @returns 更新できたかどうか
+ */
+export const updateGameLogPlayers = async (logId: string, playerId: string, userId: string) => {
+  const result = await DBClient.update(gameLog)
+    .set({ playerId, timestamp: new Date() })
+    .where(and(eq(gameLog.id, logId), eq(gameLog.userId, userId)));
+
+  return result.rowsAffected > 0;
+};
