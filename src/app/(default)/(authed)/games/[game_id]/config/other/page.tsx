@@ -47,8 +47,8 @@ const OtherPage = async ({ params }: OtherPageProps) => {
     <Box>
       <SelectQuizset
         game_id={game.id}
-        game_quiz={undefined}
-        quizset_names={response.data.quizes.map((quiz) => quiz.setName)}
+        game_quiz={{ setName: game.quizSetName ?? "", offset: game.quizOffset }}
+        quizset_names={[...new Set(response.data.quizes.map((quiz) => quiz.setName))]}
       />
       <Title order={3} mt="xl">
         公開設定

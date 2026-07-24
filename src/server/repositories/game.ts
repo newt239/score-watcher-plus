@@ -126,6 +126,17 @@ export const updateGameByKey = async (
 ) => {
   // keyがnameかdiscordWebhookUrlかそれ以外かで分岐
   const { gameId, key, value } = updateData;
+  if (key === "quiz") {
+    const result = await DBClient.update(game)
+      .set({
+        // 空文字が指定された場合は紐づけを解除する
+        quizSetName: value.setName === "" ? null : value.setName,
+        quizOffset: value.offset,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(game.id, gameId), eq(game.userId, userId)));
+    return result.rowsAffected > 0;
+  }
   if (key === "name" || key === "discordWebhookUrl") {
     const result = await DBClient.update(game)
       .set({
@@ -143,7 +154,7 @@ export const updateGameByKey = async (
   } else if (key === "isPublic") {
     const result = await DBClient.update(game)
       .set({
-        isPublic: value as boolean,
+        isPublic: value,
         updatedAt: new Date(),
       })
       .where(and(eq(game.id, gameId), eq(game.userId, userId)));

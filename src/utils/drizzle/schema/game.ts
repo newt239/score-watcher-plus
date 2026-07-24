@@ -43,6 +43,10 @@ export const game = sqliteTable("game", {
   discordWebhookUrl: text("discord_webhook_url"),
   option: blob("options", { mode: "json" }),
   isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
+  // 得点表示画面で問題文を表示するために紐づけるクイズセット名（未設定の場合は問題を表示しない）
+  quizSetName: text("quiz_set_name"),
+  // クイズセット内の何問目から開始するかのオフセット
+  quizOffset: integer("quiz_offset").default(0).notNull(),
   userId: text("user_id").references(() => user.id),
 });
 

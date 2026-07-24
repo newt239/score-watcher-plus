@@ -182,11 +182,20 @@ export const UpdateGamePlayersRequestJsonSchema = z.object({
   players: z.array(UpdateGamePlayerSchema),
 });
 
-/** クイズ設定更新のスキーマ */
+/** クイズ設定更新のスキーマ（setNameが空文字の場合は問題を表示しない） */
 export const UpdateGameQuizSchema = z.object({
-  setName: z.string().optional(),
+  setName: z.string(),
   offset: z.number().int().min(0).default(0),
 });
+
+/** クイズ設定の型 */
+export type GameQuizType = z.infer<typeof UpdateGameQuizSchema>;
+
+/** 得点表示画面で表示する問題の型 */
+export type BoardQuizType = {
+  question: string;
+  answer: string;
+};
 
 /** ゲーム更新リクエストのスキーマ */
 export const UpdateGameRequestParamSchema = z.object({
@@ -206,6 +215,10 @@ export const UpdateGameRequestJsonSchema = z.union([
   z.object({
     key: z.literal("isPublic"),
     value: z.boolean(),
+  }),
+  z.object({
+    key: z.literal("quiz"),
+    value: UpdateGameQuizSchema,
   }),
 ]);
 

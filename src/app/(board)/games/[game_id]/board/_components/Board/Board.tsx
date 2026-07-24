@@ -19,6 +19,7 @@ import WinModal from "../WinModal/WinModal";
 import classes from "./Board.module.css";
 
 import type {
+  BoardQuizType,
   GamePlayerProps,
   GetGameDetailResponseType,
   LogDBProps,
@@ -32,9 +33,16 @@ type BoardProps = {
   user: OnlineUserType | null;
   initialGame: GetGameDetailResponseType;
   initialPreferences: UserPreferencesType | null;
+  quizList: BoardQuizType[];
 };
 
-const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPreferences }) => {
+const Board: React.FC<BoardProps> = ({
+  gameId,
+  user,
+  initialGame,
+  initialPreferences,
+  quizList,
+}) => {
   const [players] = useState<GamePlayerProps[]>(initialGame.players);
   const [logs, setLogs] = useState<SeriarizedGameLog[]>(initialGame.logs);
   const [isPending, startTransition] = useTransition();
@@ -56,6 +64,10 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
   const apiClient = createApiClient();
 
   const { scores } = computeOnlineScore(initialGame, players, logs);
+
+  // スキップは問題番号だけを進める操作なので、表示する問題文は据え置く
+  const answeredCount = logs.filter((log) => log.actionType !== "skip").length;
+  const quizPosition = initialGame.quizOffset + answeredCount - 1;
 
   const refreshLogs = useCallback(async () => {
     const res = await parseResponse(
@@ -192,6 +204,8 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
           ruleType: initialGame.ruleType,
         }}
         logsLength={logs.length}
+        quizPosition={quizPosition}
+        quizList={quizList}
         onUndo={undo}
         onThrough={addThrough}
         preferences={preferences}
@@ -243,6 +257,8 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
         players={players}
         order={order}
         onToggleOrder={() => setOrder((o) => (o === "asc" ? "desc" : "asc"))}
+        quizList={quizList}
+        quizOffset={initialGame.quizOffset}
       />
 
       <WinModal

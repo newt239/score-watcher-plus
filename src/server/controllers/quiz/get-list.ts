@@ -14,12 +14,18 @@ const handler = factory.createHandlers(zValidator("query", GetQuizzesQuerySchema
     return c.json({ success: false, error: "ユーザーが見つかりません" } as const, 404);
   }
 
-  const { limit, offset, category } = c.req.valid("query");
+  const { limit, offset, category, setName } = c.req.valid("query");
 
   try {
     // ページネーションパラメータがある場合は getQuizesWithPagination を使用
     if (limit !== undefined || offset !== undefined) {
-      const result = await getQuizesWithPagination(userId, limit ?? 50, offset ?? 0, category);
+      const result = await getQuizesWithPagination(
+        userId,
+        limit ?? 50,
+        offset ?? 0,
+        category,
+        setName
+      );
       return c.json({
         success: true,
         data: result,

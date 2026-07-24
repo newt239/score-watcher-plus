@@ -19,7 +19,7 @@ import { rules } from "@/utils/rules";
 import PreferenceDrawer from "../PreferenceDrawer/PreferenceDrawer";
 import classes from "./BoardHeader.module.css";
 
-import type { RuleNames } from "@/models/game";
+import type { BoardQuizType, RuleNames } from "@/models/game";
 import type { UserPreferencesType } from "@/models/user-preference";
 
 type OnlineGame = {
@@ -32,6 +32,9 @@ type OnlineGame = {
 type BoardHeaderProps = {
   game: OnlineGame;
   logsLength: number;
+  /** 現在表示する問題文の位置（0始まり。問題未開始や範囲外の場合は負値） */
+  quizPosition: number;
+  quizList: BoardQuizType[];
   onUndo: () => void;
   onThrough: () => void;
   preferences: UserPreferencesType | null;
@@ -41,6 +44,8 @@ type BoardHeaderProps = {
 const BoardHeader: React.FC<BoardHeaderProps> = ({
   game,
   logsLength,
+  quizPosition,
+  quizList,
   onUndo,
   onThrough,
   preferences,
@@ -71,7 +76,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
         component="header"
         className={classes.board_header}
         data-withname={!(game.name === rules[game.ruleType].name || game.name === "")}
-        data-showquiz={false} // オンライン版では問題セット機能がないためfalse
+        data-showquiz={quizList.length > 0}
         data-showqn={showQn}
       >
         {
@@ -95,6 +100,20 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
             </Flex>
           )
         }
+        {quizList.length > 0 && (
+          <Box className={classes.quiz_area}>
+            <span>
+              {quizPosition < 0 || quizPosition >= quizList.length
+                ? "ここに問題文が表示されます"
+                : quizList[quizPosition].question}
+            </span>
+            <span className={classes.answer}>
+              {quizPosition < 0 || quizPosition >= quizList.length
+                ? "ここに答えが表示されます"
+                : quizList[quizPosition].answer}
+            </span>
+          </Box>
+        )}
         <Menu>
           <Menu.Target>
             <ActionIcon

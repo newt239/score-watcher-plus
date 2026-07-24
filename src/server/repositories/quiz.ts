@@ -49,7 +49,8 @@ export const getQuizesWithPagination = async (
   userId: string,
   limit: number = 50,
   offset: number = 0,
-  category?: string
+  category?: string,
+  setName?: string
 ): Promise<GetQuizesListResponseType> => {
   // フィルタ条件を構築
   const whereConditions = [eq(quizQuestion.userId, userId), isNull(quizQuestion.deletedAt)];
@@ -57,13 +58,17 @@ export const getQuizesWithPagination = async (
   if (category) {
     whereConditions.push(like(quizQuestion.category, `%${category}%`));
   }
+  if (setName) {
+    whereConditions.push(eq(quizSet.name, setName));
+  }
 
   // 総数を取得
   const [totalResult] = await DBClient.select({ count: count() })
     .from(quizQuestion)
+    .leftJoin(quizSet, eq(quizQuestion.quizSetId, quizSet.id))
     .where(and(...whereConditions));
 
-  // データを取得
+  // データを取得（セットを指定した場合は出題順に並べる）
   const quizes = await DBClient.select({
     id: quizQuestion.id,
     questionText: quizQuestion.questionText,
@@ -77,7 +82,7 @@ export const getQuizesWithPagination = async (
     .from(quizQuestion)
     .leftJoin(quizSet, eq(quizQuestion.quizSetId, quizSet.id))
     .where(and(...whereConditions))
-    .orderBy(asc(quizQuestion.questionText))
+    .orderBy(setName ? asc(quizQuestion.questionNumber) : asc(quizQuestion.questionText))
     .limit(limit)
     .offset(offset);
 
