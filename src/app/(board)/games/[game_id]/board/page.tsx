@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { parseResponse } from "hono/client";
 import { redirect } from "next/navigation";
 
+import ThemeSync from "@/app/_components/ThemeSync";
 import { getUser } from "@/utils/auth/auth-helpers";
 import { createApiClientOnServer } from "@/utils/hono/server";
 
@@ -75,13 +76,16 @@ const BoardPage = async ({ params }: { params: Promise<{ game_id: string }> }) =
   }
 
   return (
-    <Board
-      gameId={game_id}
-      user={user}
-      initialGame={gameData.data}
-      initialPreferences={preferences}
-      quizList={quizList}
-    />
+    <>
+      {preferences && <ThemeSync theme={preferences.theme} />}
+      <Board
+        gameId={game_id}
+        user={user}
+        initialGame={gameData.data}
+        initialPreferences={preferences}
+        quizList={quizList}
+      />
+    </>
   );
 };
 

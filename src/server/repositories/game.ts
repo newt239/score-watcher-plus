@@ -280,6 +280,15 @@ export const removeGameLog = async (logId: string, userId: string) => {
   await DBClient.delete(gameLog).where(and(eq(gameLog.id, logId), eq(gameLog.userId, userId)));
 };
 
+/** ゲームのログをすべて削除する（ゲームのリセット用） */
+export const removeAllGameLogs = async (gameId: string, userId: string) => {
+  const result = await DBClient.delete(gameLog).where(
+    and(eq(gameLog.gameId, gameId), eq(gameLog.userId, userId))
+  );
+
+  return { deletedCount: result.rowsAffected };
+};
+
 /** ゲームの名前かDiscord Webhook URLを更新 */
 export const updateGameSettings = async (
   gameId: string,

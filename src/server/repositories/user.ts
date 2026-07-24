@@ -3,7 +3,21 @@ import { nanoid } from "nanoid";
 
 import { defaultUserPreferences } from "@/models/user-preference";
 import { DBClient } from "@/utils/drizzle/client";
-import { userPreference } from "@/utils/drizzle/schema";
+import {
+  account,
+  game,
+  gameLog,
+  gamePlayer,
+  gameTag,
+  player,
+  playerTag,
+  quizQuestion,
+  quizSet,
+  session,
+  tag,
+  user,
+  userPreference,
+} from "@/utils/drizzle/schema";
 
 import type { UpdateUserPreferencesRequestType } from "@/models/user-preference";
 
@@ -33,7 +47,6 @@ export const findUserPreferencesByUserId = async (userId: string) => {
       showSignString: pref.showSignString,
       reversePlayerInfo: pref.reversePlayerInfo,
       wrongNumber: pref.wrongNumber,
-      webhookUrl: pref.webhookUrl,
     };
   } catch (error) {
     console.error("Failed to find user preferences:", error);
@@ -129,7 +142,6 @@ export const ensureUserPreferences = async (userId: string) => {
       showSignString: defaultUserPreferences.showSignString,
       reversePlayerInfo: defaultUserPreferences.reversePlayerInfo,
       wrongNumber: defaultUserPreferences.wrongNumber,
-      webhookUrl: defaultUserPreferences.webhookUrl,
       createdAt: now,
       updatedAt: now,
     });
@@ -137,6 +149,37 @@ export const ensureUserPreferences = async (userId: string) => {
     return true;
   } catch (error) {
     console.error("Failed to ensure user preferences:", error);
+    throw error;
+  }
+};
+
+/**
+ * ユーザーと関連するすべてのデータを削除する（退会処理）
+ *
+ * ゲーム・プレイヤー・問題などの保存データと認証情報をまとめて削除します。
+ *
+ * @param userId ユーザーID
+ */
+export const deleteUserWithRelatedData = async (userId: string) => {
+  try {
+    // 参照関係の子側から順に削除する
+    await DBClient.delete(gameLog).where(eq(gameLog.userId, userId));
+    await DBClient.delete(gamePlayer).where(eq(gamePlayer.userId, userId));
+    await DBClient.delete(gameTag).where(eq(gameTag.userId, userId));
+    await DBClient.delete(game).where(eq(game.userId, userId));
+    await DBClient.delete(playerTag).where(eq(playerTag.userId, userId));
+    await DBClient.delete(player).where(eq(player.userId, userId));
+    await DBClient.delete(tag).where(eq(tag.userId, userId));
+    await DBClient.delete(quizQuestion).where(eq(quizQuestion.userId, userId));
+    await DBClient.delete(quizSet).where(eq(quizSet.userId, userId));
+    await DBClient.delete(userPreference).where(eq(userPreference.userId, userId));
+    await DBClient.delete(session).where(eq(session.userId, userId));
+    await DBClient.delete(account).where(eq(account.userId, userId));
+    await DBClient.delete(user).where(eq(user.id, userId));
+
+    return true;
+  } catch (error) {
+    console.error("Failed to delete user:", error);
     throw error;
   }
 };

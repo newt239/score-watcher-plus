@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { Box, Button, Divider, Flex, Group, Switch, Text, TextInput, Title } from "@mantine/core";
+import { Flex, Switch, Title, useMantineColorScheme } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { parseResponse } from "hono/client";
 
@@ -17,6 +17,7 @@ type Props = {
 const UserPreferencesSettings: React.FC<Props> = ({ initialPreferences, userId }) => {
   const [preferences, setPreferences] = useState<UserPreferencesType>(initialPreferences);
   const [isPending, startTransition] = useTransition();
+  const { setColorScheme } = useMantineColorScheme();
 
   const handleUpdate = <K extends keyof UserPreferencesType>(
     key: K,
@@ -60,7 +61,7 @@ const UserPreferencesSettings: React.FC<Props> = ({ initialPreferences, userId }
   };
 
   return (
-    <Box mt="xl">
+    <Flex direction="column" mt="xl">
       <Title order={3} mb="md">
         表示設定
       </Title>
@@ -70,6 +71,8 @@ const UserPreferencesSettings: React.FC<Props> = ({ initialPreferences, userId }
           checked={preferences.theme === "dark"}
           onChange={(event) => {
             const newTheme = event.currentTarget.checked ? "dark" : "light";
+            // 画面へ即座に反映させる
+            setColorScheme(newTheme);
             handleUpdate("theme", newTheme);
           }}
           label="ダークモード"
@@ -138,44 +141,7 @@ const UserPreferencesSettings: React.FC<Props> = ({ initialPreferences, userId }
           disabled={isPending}
         />
       </Flex>
-
-      <Divider mb="md" />
-
-      <Title order={3} mb="md">
-        Webhook設定
-      </Title>
-
-      <Text size="sm" c="dimmed" mb="md">
-        イベント発生時に設定されたURLへPOSTリクエストを送信します。
-      </Text>
-
-      <Group gap="md" mb="xl">
-        <TextInput
-          placeholder="https://example.com/webhook"
-          type="url"
-          value={preferences.webhookUrl || ""}
-          onChange={(event) => {
-            const value = event.currentTarget.value;
-            setPreferences((prev: UserPreferencesType) => ({
-              ...prev,
-              webhookUrl: value || null,
-            }));
-          }}
-          onBlur={() => {
-            handleUpdate("webhookUrl", preferences.webhookUrl);
-          }}
-          style={{ flex: 1 }}
-          disabled={isPending}
-        />
-        <Button
-          onClick={() => handleUpdate("webhookUrl", preferences.webhookUrl)}
-          loading={isPending}
-          size="sm"
-        >
-          保存
-        </Button>
-      </Group>
-    </Box>
+    </Flex>
   );
 };
 

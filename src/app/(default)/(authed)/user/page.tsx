@@ -7,6 +7,7 @@ import { defaultUserPreferences } from "@/models/user-preference";
 import { getUser } from "@/utils/auth/auth-helpers";
 import { createApiClientOnServer } from "@/utils/hono/server";
 
+import DeleteAccount from "./_components/DeleteAccount";
 import SignOutButton from "./_components/SignOutButton";
 import UserPreferencesSettings from "./_components/UserPreferencesSettings";
 
@@ -56,6 +57,8 @@ const AccountPage = async () => {
         }
         userId={user.id}
       />
+
+      <DeleteAccount userId={user.id} email={user.email} />
     </Box>
   );
 };

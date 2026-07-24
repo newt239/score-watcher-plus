@@ -93,8 +93,6 @@ export const userPreference = sqliteTable("user_preference", {
   showSignString: integer("show_sign_string", { mode: "boolean" }).notNull().default(true),
   reversePlayerInfo: integer("reverse_player_info", { mode: "boolean" }).notNull().default(false),
   wrongNumber: integer("wrong_number", { mode: "boolean" }).notNull().default(true),
-  // Webhook設定
-  webhookUrl: text("webhook_url"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .default(sql`(unixepoch())`)
     .notNull(),

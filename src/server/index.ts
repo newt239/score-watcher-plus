@@ -9,6 +9,7 @@ import deleteTestUserHandler from "./controllers/e2e/delete-test-user";
 import postTestLoginHandler from "./controllers/e2e/post-test-login";
 import deleteGameHandler from "./controllers/game/delete-game";
 import deleteLogHandler from "./controllers/game/delete-log";
+import deleteLogsHandler from "./controllers/game/delete-logs";
 import deletePlayersHandler from "./controllers/game/delete-players";
 import getGameDetailHandler from "./controllers/game/get-detail";
 import getGameListHandler from "./controllers/game/get-list";
@@ -34,6 +35,7 @@ import getQuizDetailHandler from "./controllers/quiz/get-detail";
 import getQuizListHandler from "./controllers/quiz/get-list";
 import patchUpdateQuizHandler from "./controllers/quiz/patch-update";
 import postCreateQuizHandler from "./controllers/quiz/post-create";
+import deleteUserHandler from "./controllers/user/delete-user";
 import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
 import getViewerBoardDataHandler from "./controllers/viewer/get-board-data";
@@ -64,6 +66,7 @@ const app = new Hono()
   .get("/", ...indexHandler)
   .get("/user/:user_id/preferences", ...getUserPreferencesHandler)
   .patch("/user/:user_id/preferences", ...updateUserPreferencesHandler)
+  .delete("/user/:user_id", ...deleteUserHandler)
   // Games API
   .get("/games", ...getGameListHandler)
   .post("/games", ...postCreateGameHandler)
@@ -78,6 +81,7 @@ const app = new Hono()
   .patch("/games/players/:gamePlayerId", ...patchGameUpdatePlayerHandler)
   .post("/games/:game_id/copy-players", ...postCopyPlayersHandler)
   .get("/games/:gameId/logs", ...getGameLogsHandler)
+  .delete("/games/:gameId/logs", ...deleteLogsHandler)
   .post("/games/logs", ...postAddLogHandler)
   .delete("/games/logs/:logId", ...deleteLogHandler)
   // Players API

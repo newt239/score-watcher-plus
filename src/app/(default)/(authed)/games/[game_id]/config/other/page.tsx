@@ -12,6 +12,7 @@ import CopyGame from "./_components/CopyGame";
 import DeleteGame from "./_components/DeleteGame";
 import ExportGame from "./_components/ExportGame";
 import PublicityToggle from "./_components/PublicityToggle";
+import ResetGame from "./_components/ResetGame";
 import SelectQuizset from "./_components/SelectQuizset";
 
 export const metadata: Metadata = {
@@ -79,6 +80,7 @@ const OtherPage = async ({ params }: OtherPageProps) => {
         discordWebhookUrl={game.discordWebhookUrl || ""}
       />
       <ExportGame gameId={game.id} ruleType={game.ruleType} />
+      <ResetGame gameId={game.id} gameName={game.name} logCount={game.logs.length} />
       <DeleteGame gameId={game.id} gameName={game.name} ruleType={game.ruleType} />
     </Box>
   );
