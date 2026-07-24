@@ -1,5 +1,4 @@
 import { zValidator } from "@hono/zod-validator";
-import { setCookie } from "hono/cookie";
 import { createFactory } from "hono/factory";
 
 import { TestLoginRequestSchema } from "@/models/e2e";
@@ -38,33 +37,29 @@ export default factory.createHandlers(zValidator("json", TestLoginRequestSchema)
     // ユーザーが既に存在する場合はエラーが発生する
   }
 
-  // Better Auth APIを使用してサインイン
-  const signInResult = await auth.api.signInEmail({
+  // Better Auth APIを使用してサインインし、署名付きセッションcookieをそのまま転送する
+  const signInResponse = await auth.api.signInEmail({
     body: {
       email,
       password,
     },
     headers: c.req.raw.headers,
+    asResponse: true,
   });
 
-  if (!signInResult) {
+  if (!signInResponse.ok) {
     return c.json({ error: "サインインに失敗しました" }, 500);
   }
 
-  // セッショントークンをクッキーに設定
-  const sessionToken = signInResult.token;
-  if (sessionToken) {
-    setCookie(c, "better-auth.session_token", sessionToken, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "Lax",
-      maxAge: 604800, // 7日間
-    });
+  const setCookieHeader = signInResponse.headers.get("set-cookie");
+  if (setCookieHeader) {
+    c.header("set-cookie", setCookieHeader);
   }
+
+  const signInResult = await signInResponse.json();
 
   return c.json({
     user: signInResult.user,
-    token: sessionToken,
     message: "テストユーザー作成・サインイン完了",
   } as const);
 });
