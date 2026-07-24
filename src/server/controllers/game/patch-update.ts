@@ -3,7 +3,9 @@ import { createFactory } from "hono/factory";
 
 import { UpdateGameRequestJsonSchema, UpdateGameRequestParamSchema } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
-import { updateGameByKey } from "@/server/repositories/game";
+import { getGameById, updateGameByKey } from "@/server/repositories/game";
+import { refreshBoardCache } from "@/server/utils/board-data";
+import { invalidateBoardCache } from "@/utils/cache/cache-service";
 
 const factory = createFactory();
 
@@ -27,6 +29,15 @@ const handler = factory.createHandlers(
         },
         userId
       );
+
+      // 公開に切り替えた直後は観戦用キャッシュが無いため、ここで生成しておく
+      if (jsonData.key === "isPublic") {
+        if (jsonData.value) {
+          await refreshBoardCache(await getGameById(gameId, userId));
+        } else {
+          await invalidateBoardCache(gameId);
+        }
+      }
 
       return c.json(
         {

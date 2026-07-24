@@ -12,17 +12,27 @@ import {
   IconLock,
 } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
+import { useRouter } from "next/navigation";
 
 import createApiClient from "@/utils/hono/browser";
+
+import ViewerUrlShare from "./ViewerUrlShare";
 
 type PublicityToggleProps = {
   gameId: string;
   isPublic: boolean;
   gameName: string;
+  viewerUrl: string;
 };
 
 /** ゲーム公開/非公開切り替えトグルコンポーネント */
-const PublicityToggle: React.FC<PublicityToggleProps> = ({ gameId, isPublic, gameName }) => {
+const PublicityToggle: React.FC<PublicityToggleProps> = ({
+  gameId,
+  isPublic,
+  gameName,
+  viewerUrl,
+}) => {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [pendingValue, setPendingValue] = useState<boolean | null>(null);
@@ -51,6 +61,8 @@ const PublicityToggle: React.FC<PublicityToggleProps> = ({ gameId, isPublic, gam
         if (result && typeof result === "object" && "result" in result) {
           setConfirmModalOpened(false);
           setPendingValue(null);
+          // サーバーコンポーネントが保持している公開状態を最新化する
+          router.refresh();
         } else {
           // エラー時の処理
           const errorMessage =
@@ -95,9 +107,10 @@ const PublicityToggle: React.FC<PublicityToggleProps> = ({ gameId, isPublic, gam
         <Alert variant="light" color="blue" icon={<IconInfoCircle />} mb="md">
           <Text size="sm">
             「{gameName}
-            」は現在公開中です。Viewer専用URLから認証なしで観戦できます。
+            」は現在公開中です。観戦用URLから認証なしで観戦できます。
             プレイヤー情報と進行状況がリアルタイムで公開されます。
           </Text>
+          <ViewerUrlShare viewerUrl={viewerUrl} />
         </Alert>
       )}
 

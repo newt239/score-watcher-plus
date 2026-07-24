@@ -6,7 +6,8 @@ import {
   UpdateGamePlayersRequestParamSchema,
 } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
-import { updateGamePlayers } from "@/server/repositories/game";
+import { getGameById, updateGamePlayers } from "@/server/repositories/game";
+import { refreshBoardCache } from "@/server/utils/board-data";
 
 const factory = createFactory();
 
@@ -25,6 +26,8 @@ const handler = factory.createHandlers(
       const { players } = c.req.valid("json");
 
       const result = await updateGamePlayers(gameId, players, userId);
+
+      await refreshBoardCache(await getGameById(gameId, userId));
 
       return c.json(
         {

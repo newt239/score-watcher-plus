@@ -4,6 +4,7 @@ import { Box, Title } from "@mantine/core";
 import { parseResponse } from "hono/client";
 import { notFound } from "next/navigation";
 
+import { getAppBaseUrl } from "@/utils/app-url";
 import { createApiClientOnServer } from "@/utils/hono/server";
 
 import ConfigInput from "../_components/ConfigInput";
@@ -52,7 +53,12 @@ const OtherPage = async ({ params }: OtherPageProps) => {
       <Title order={3} mt="xl">
         公開設定
       </Title>
-      <PublicityToggle gameId={game.id} isPublic={game.isPublic} gameName={game.name} />
+      <PublicityToggle
+        gameId={game.id}
+        isPublic={game.isPublic}
+        gameName={game.name}
+        viewerUrl={`${getAppBaseUrl()}/viewer/${game.id}`}
+      />
       <Title order={3} mt="xl">
         オプション
       </Title>

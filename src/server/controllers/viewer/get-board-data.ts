@@ -2,7 +2,8 @@ import { zValidator } from "@hono/zod-validator";
 import { createFactory } from "hono/factory";
 
 import { GetViewerBoardDataParamSchema } from "@/models/game";
-import { getCachedBoardData } from "@/utils/cache/cache-service";
+import { buildBoardData } from "@/server/utils/board-data";
+import { cacheBoardData, getCachedBoardData } from "@/utils/cache/cache-service";
 
 import { getPublicGameById } from "../../repositories/game";
 
@@ -36,19 +37,19 @@ const handler = factory.createHandlers(
         );
       }
 
-      // キャッシュが存在しない場合は、データが準備中である旨を返す
-      return c.json(
-        {
-          error: "データを準備中です。しばらくしてから再度お試しください",
-        },
-        202
-      );
+      // キャッシュが無い場合はその場で組み立てて返し、次回以降のためにキャッシュへ保存する
+      const boardData = buildBoardData(gameData);
+      await cacheBoardData(gameId, boardData);
+
+      return c.json({
+        data: boardData,
+      } as const);
     } catch (error) {
       console.error("Failed to get viewer board data:", error);
       return c.json(
         {
           error: "ボードデータの取得に失敗しました",
-        },
+        } as const,
         500
       );
     }
