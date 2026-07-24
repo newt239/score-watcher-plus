@@ -14,7 +14,7 @@ const handler = factory.createHandlers(
   zValidator("param", ResetGameLogsRequestParamSchema),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
 
       if (!userId) {
         return c.json({ error: "認証が必要です" } as const, 401);

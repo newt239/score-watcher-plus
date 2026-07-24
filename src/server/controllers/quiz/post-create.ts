@@ -12,7 +12,7 @@ const factory = createFactory();
 /** クイズ問題作成 */
 const handler = factory.createHandlers(zValidator("json", CreateQuizRequestSchema), async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
     if (!userId) {
       return c.json({ success: false, error: "ユーザーが見つかりません" } as const, 404);
     }

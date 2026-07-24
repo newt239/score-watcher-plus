@@ -9,7 +9,7 @@ const factory = createFactory();
 
 /** プレイヤータグ追加APIハンドラー */
 const handler = factory.createHandlers(zValidator("json", AddPlayerTagRequestSchema), async (c) => {
-  const userId = await getUserId();
+  const userId = await getUserId(c.req.raw.headers);
   if (!userId) {
     return c.json({ error: "認証が必要です" } as const, 401);
   }

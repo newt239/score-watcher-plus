@@ -14,7 +14,7 @@ const QuizDetailParamSchema = z.object({
 /** クイズ問題詳細取得 */
 const handler = factory.createHandlers(zValidator("param", QuizDetailParamSchema), async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
     if (!userId) {
       return c.json({ success: false, error: "ユーザーが見つかりません" } as const, 404);
     }

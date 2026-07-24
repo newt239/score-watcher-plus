@@ -1,8 +1,6 @@
-"use client";
-
 import { Anchor } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
-import { default as NextLink } from "next/link";
+import { Link as RouterLink } from "react-router";
 
 type Props = {
   children: React.ReactNode;
@@ -11,16 +9,20 @@ type Props = {
 
 const Link: React.FC<Props> = (props) => {
   const { children, href, ...rest } = props;
+
+  // 外部リンクはReact Routerのクライアント遷移に乗せず、別タブで開く
+  if (href.startsWith("http")) {
+    return (
+      <Anchor c="blue" href={href} target="_blank" rel="noopener noreferrer" {...rest}>
+        {children}
+        <IconExternalLink />
+      </Anchor>
+    );
+  }
+
   return (
-    <Anchor
-      c="blue"
-      component={NextLink}
-      href={href}
-      {...rest}
-      target={href.startsWith("http") ? "_blank" : "_self"}
-    >
+    <Anchor c="blue" component={RouterLink} to={href} {...rest}>
       {children}
-      {href.startsWith("http") && <IconExternalLink />}
     </Anchor>
   );
 };

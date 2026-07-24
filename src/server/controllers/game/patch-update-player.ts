@@ -16,7 +16,7 @@ const handler = factory.createHandlers(
   zValidator("json", UpdateGamePlayerRequestJsonSchema),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
       if (!userId) {
         return c.json({ success: false, error: "ログインしてください" } as const, 401);
       }

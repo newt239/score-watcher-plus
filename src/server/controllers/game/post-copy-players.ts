@@ -14,7 +14,7 @@ const handler = factory.createHandlers(
   zValidator("param", z.object({ game_id: z.string().min(1) })),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
       if (!userId) {
         return c.json({ success: false, error: "ユーザーが見つかりません" } as const, 404);
       }

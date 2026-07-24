@@ -21,7 +21,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     // テスト環境のみ有効化
-    enabled: process.env.NODE_ENV !== "production",
+    enabled: !import.meta.env.PROD,
     requireEmailVerification: false, // テスト用のため検証不要
   },
   socialProviders: {

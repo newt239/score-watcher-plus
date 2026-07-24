@@ -9,7 +9,7 @@ const factory = createFactory();
 /** テスト専用ログインエンドポイント E2Eテストでのみ使用される固定クレデンシャルでのログイン機能 */
 export default factory.createHandlers(zValidator("json", TestLoginRequestSchema), async (c) => {
   // 本番環境では無効
-  if (process.env.NODE_ENV === "production") {
+  if (import.meta.env.PROD) {
     return c.json({ error: "このエンドポイントは利用できません" }, 403);
   }
 
@@ -37,29 +37,31 @@ export default factory.createHandlers(zValidator("json", TestLoginRequestSchema)
     // ユーザーが既に存在する場合はエラーが発生する
   }
 
-  // Better Auth APIを使用してサインインし、署名付きセッションcookieをそのまま転送する
-  const signInResponse = await auth.api.signInEmail({
-    body: {
-      email,
-      password,
-    },
-    headers: c.req.raw.headers,
-    asResponse: true,
-  });
+  // Better Auth APIを使用してサインインし、署名付きセッションcookieをそのまま転送する。
+  // asResponseではなくreturnHeadersを使うことで、レスポンス本文に型がついたまま
+  // set-cookieヘッダーも取得できる
+  try {
+    const { headers: signInHeaders, response: signInResult } = await auth.api.signInEmail({
+      body: {
+        email,
+        password,
+      },
+      headers: c.req.raw.headers,
+      returnHeaders: true,
+    });
 
-  if (!signInResponse.ok) {
+    const setCookieHeader = signInHeaders.get("set-cookie");
+    if (setCookieHeader) {
+      c.header("set-cookie", setCookieHeader);
+    }
+
+    return c.json({
+      user: signInResult.user,
+      message: "テストユーザー作成・サインイン完了",
+    } as const);
+  } catch (error) {
+    console.error("Failed to sign in test user:", error);
+
     return c.json({ error: "サインインに失敗しました" }, 500);
   }
-
-  const setCookieHeader = signInResponse.headers.get("set-cookie");
-  if (setCookieHeader) {
-    c.header("set-cookie", setCookieHeader);
-  }
-
-  const signInResult = await signInResponse.json();
-
-  return c.json({
-    user: signInResult.user,
-    message: "テストユーザー作成・サインイン完了",
-  } as const);
 });

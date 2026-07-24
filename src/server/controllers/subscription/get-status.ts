@@ -9,7 +9,7 @@ const factory = createFactory();
 /** 現在の契約状態と上限値・利用状況を取得する */
 const handler = factory.createHandlers(async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
 
     if (!userId) {
       return c.json({ error: "認証が必要です" } as const, 401);
