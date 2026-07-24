@@ -1,11 +1,15 @@
-import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
+import { getSortedPlayerOrderListForOnline, indicator } from "./index";
 
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/** Z形式のスコア計算 5つのステージをクリアしていく形式 */
+/**
+ * Z形式のスコア計算
+ *
+ * ステージ1〜4をクリアしてステージ5へ到達すると勝ち抜けです。 誰かがステージをクリアすると、他のプレイヤーの正解数・誤答数・失格状態がリセットされます。
+ */
 const computeZ = (
-  game: Extract<GetGameDetailResponseType, { ruleType: "z" }>,
+  _game: Extract<GetGameDetailResponseType, { ruleType: "z" }>,
   playersState: ComputedScoreProps[],
   logs: SeriarizedGameLog[]
 ) => {
@@ -15,87 +19,58 @@ const computeZ = (
 
   logs.forEach((log, qn) => {
     const s = byId.get(log.playerId || "");
-    if (!s || s.state !== "playing") return;
+    if (!s) return;
 
-    const currentStage = s.stage;
+    const stage = s.stage;
 
     if (log.actionType === "correct") {
-      s.correct += 1;
-      s.last_correct = qn;
+      const newCorrect = s.correct + 1;
 
-      // 各ステージのクリア条件をチェック
-      let shouldClearStage = false;
-      switch (currentStage) {
-        case 1:
-          shouldClearStage = s.correct >= 1;
-          break;
-        case 2:
-          shouldClearStage = s.correct >= 2;
-          break;
-        case 3:
-          shouldClearStage = s.correct >= 3;
-          break;
-        case 4:
-          shouldClearStage = s.correct >= 4;
-          break;
-        default:
-          shouldClearStage = false;
-      }
-
-      if (shouldClearStage) {
-        if (currentStage === 4) {
-          // ステージ5に到達で勝ち抜け
-          s.state = "win";
-          s.stage = 5;
-        } else {
-          // 次のステージへ
-          s.stage = currentStage + 1;
-        }
-
-        // ステージクリア時に全員の状態をリセット
-        for (const [otherId, otherState] of byId) {
-          if (otherId !== log.playerId) {
-            otherState.correct = 0;
-            otherState.wrong = 0;
-            otherState.state = "playing";
-            otherState.reach_state = "playing";
-            otherState.is_incapacity = false;
-          }
-        }
-
-        // ステージクリア者の状態もリセット
+      if (stage === 4 && newCorrect === 4) {
+        // ステージ5に到達したため勝ち抜け
+        s.correct = newCorrect;
+        s.last_correct = qn;
+        s.state = "win";
+        s.is_incapacity = false;
+      } else if (stage === newCorrect) {
+        // ステージクリア。全員の正誤と失格状態をリセットする
         s.correct = 0;
         s.wrong = 0;
+        s.stage = stage + 1;
+        s.last_correct = qn;
+        s.is_incapacity = false;
+
+        for (const [otherId, other] of byId) {
+          if (otherId !== s.player_id && other.state !== "win") {
+            other.correct = 0;
+            other.wrong = 0;
+            other.is_incapacity = false;
+            other.state = "playing";
+          }
+        }
+      } else {
+        s.correct = newCorrect;
+        s.last_correct = qn;
         s.is_incapacity = false;
       }
     } else if (log.actionType === "wrong") {
-      s.wrong += 1;
-      s.last_wrong = qn;
+      const newWrong = s.wrong + 1;
 
-      // 各ステージの失格条件をチェック
-      let shouldLose = false;
-      switch (currentStage) {
-        case 1:
-          // ステージ1: 誤答で1問休み
-          s.is_incapacity = true;
-          break;
-        case 2:
-          shouldLose = s.wrong >= 1;
-          break;
-        case 3:
-          shouldLose = s.wrong >= 2;
-          break;
-        case 4:
-          shouldLose = s.wrong >= 3;
-          break;
-      }
-
-      if (shouldLose) {
+      if (stage === 1 && newWrong === 1) {
+        // ステージ1では1問だけ解答権を失う
+        s.wrong = 0;
+        s.last_wrong = qn;
+      } else if (stage === newWrong + 1) {
+        s.is_incapacity = true;
+        s.last_wrong = qn;
         s.state = "lose";
+      } else {
+        s.wrong = newWrong;
+        s.last_wrong = qn;
       }
     }
 
-    // スコアはステージ番号とする
+    // スコアはステージ番号として扱う
     s.score = s.stage;
   });
 
@@ -104,10 +79,12 @@ const computeZ = (
 
   const finalScores = scores.map((score) => {
     const order = playerOrderList.findIndex((id) => id === score.player_id);
+    const isResting =
+      score.is_incapacity || (logs.length === score.last_wrong + 1 && score.stage === 1);
     return {
       ...score,
       order,
-      text: generateScoreText(score, order),
+      text: score.state === "win" ? indicator(order) : isResting ? "休" : `Stage${score.stage}`,
     };
   });
 

@@ -1,37 +1,37 @@
 import { Text } from "@mantine/core";
 
-import styles from "./ViewerPlayer.module.css";
+import classes from "./ViewerPlayer.module.css";
 
-import type { ComputedScoreProps } from "@/models/game";
+import type { ViewerPlayerType } from "@/models/game";
 
 // 個別プレイヤーカード（観戦専用）
 type ViewerPlayerProps = {
-  player: ComputedScoreProps;
+  player: ViewerPlayerType;
 };
 
 const ViewerPlayer = ({ player }: ViewerPlayerProps) => {
-  // プレイヤー名を取得（player.textを使用）
-  const playerName = player.text || `プレイヤー${player.player_id}`;
   return (
-    <div className={styles.player_card}>
-      <div className={styles.player_info}>
-        <Text size="lg" fw={600} c="white">
-          {playerName}
+    <div className={classes.player_card} data-state={player.state}>
+      <div className={classes.player_info}>
+        <Text size="lg" fw={600}>
+          {player.name}
         </Text>
-        <Text size="sm" c="dimmed">
-          {player.order}位
-        </Text>
-      </div>
-      <div className={styles.player_score}>
-        <Text size="xl" fw={700} c="yellow">
-          {player.score}pt
-        </Text>
-        <div className={styles.player_stats}>
-          <Text size="sm" c="green">
-            正解: {player.correct}
+        {player.affiliation && (
+          <Text size="sm" c="dimmed">
+            {player.affiliation}
           </Text>
+        )}
+      </div>
+      <div className={classes.player_score}>
+        <Text size="xl" fw={700}>
+          {player.text}
+        </Text>
+        <div className={classes.player_stats}>
           <Text size="sm" c="red">
-            誤答: {player.wrong}
+            ○{player.correct}
+          </Text>
+          <Text size="sm" c="blue">
+            ✕{player.wrong}
           </Text>
         </div>
       </div>

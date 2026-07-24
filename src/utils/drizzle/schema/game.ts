@@ -43,6 +43,12 @@ export const game = sqliteTable("game", {
   discordWebhookUrl: text("discord_webhook_url"),
   option: blob("options", { mode: "json" }),
   isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
+  // 得点表示画面で問題文を表示するために紐づけるクイズセット名（未設定の場合は問題を表示しない）
+  quizSetName: text("quiz_set_name"),
+  // クイズセット内の何問目から開始するかのオフセット
+  quizOffset: integer("quiz_offset").default(0).notNull(),
+  // スコアを手動で書き換える「スコアの手動更新」モードが有効かどうか
+  editable: integer("editable", { mode: "boolean" }).default(false).notNull(),
   userId: text("user_id").references(() => user.id),
 });
 
@@ -163,6 +169,8 @@ export const gamePlayer = sqliteTable("game_player", {
   initialScore: integer("initial_score").default(0),
   initialCorrectCount: integer("initial_correct_count").default(0),
   initialWrongCount: integer("initial_wrong_count").default(0),
+  // Variables形式でプレイヤーごとに設定する変動値N
+  baseCorrectPoint: integer("base_correct_point").default(1).notNull(),
   userId: text("user_id").references(() => user.id),
   createdAt: integer("created_at", { mode: "timestamp" })
     .default(sql`(unixepoch())`)

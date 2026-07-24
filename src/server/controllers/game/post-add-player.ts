@@ -3,7 +3,8 @@ import { createFactory } from "hono/factory";
 
 import { AddPlayerToGameRequestSchema } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
-import { addGamePlayer } from "@/server/repositories/game";
+import { addGamePlayer, getGameById } from "@/server/repositories/game";
+import { refreshBoardCache } from "@/server/utils/board-data";
 
 const factory = createFactory();
 
@@ -25,6 +26,8 @@ const handler = factory.createHandlers(
 
       const playerData = c.req.valid("json");
       const result = await addGamePlayer(gameId, playerData, userId);
+
+      await refreshBoardCache(await getGameById(gameId, userId));
 
       return c.json({ result } as const, 201);
     } catch (error) {

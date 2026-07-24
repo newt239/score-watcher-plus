@@ -4,9 +4,21 @@
   justify-content: space-between;
   padding: 1rem;
   margin: 0.5rem 0;
+  color: var(--mantine-color-white);
   background-color: var(--mantine-color-dark-7);
   border: 1px solid var(--mantine-color-dark-5);
   border-radius: 8px;
+
+  /* 勝ち抜け・敗退はボード画面と同じ配色で示す */
+  &[data-state="win"] {
+    background-color: var(--mantine-color-red-9);
+    border-color: var(--mantine-color-red-6);
+  }
+
+  &[data-state="lose"] {
+    background-color: var(--mantine-color-blue-9);
+    border-color: var(--mantine-color-blue-6);
+  }
 }
 
 .player_info {

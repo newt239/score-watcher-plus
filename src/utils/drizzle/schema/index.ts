@@ -6,3 +6,6 @@ export * from "./game";
 
 // quizスキーマからのエクスポート
 export * from "./quiz";
+
+// billingスキーマからのエクスポート
+export * from "./billing";

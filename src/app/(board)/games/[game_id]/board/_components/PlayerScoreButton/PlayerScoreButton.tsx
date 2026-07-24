@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { UnstyledButton, useComputedColorScheme } from "@mantine/core";
+import { TextInput, UnstyledButton, useComputedColorScheme } from "@mantine/core";
 
 import classes from "./PlayerScoreButton.module.css";
 
@@ -16,6 +16,10 @@ type PlayerScoreButtonProps = {
   isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   disabled?: boolean;
+  /** スコアの手動更新モードが有効かどうか */
+  editable?: boolean;
+  /** 既定の動作の代わりに実行する処理 */
+  onClick?: () => void;
   children: string;
 };
 
@@ -28,6 +32,8 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
   isPending,
   onAddLog,
   disabled,
+  editable = false,
+  onClick,
 }) => {
   const numberSign = children.endsWith("pt")
     ? "pt"
@@ -57,10 +63,34 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
               : "yellow.3";
 
   const handleClick = () => {
-    if (color !== "green" && !disabled && !isPending) {
-      onAddLog(playerId, color === "red" ? "correct" : "wrong");
+    if (color === "green" || disabled || isPending) return;
+
+    if (onClick) {
+      onClick();
+      return;
     }
+
+    onAddLog(playerId, color === "red" ? "correct" : "wrong");
   };
+
+  // 手動更新モードでは表示されている値を自由に書き換えられるようにする（ログには記録されない）
+  if (editable) {
+    return (
+      <TextInput
+        variant="unstyled"
+        classNames={{ input: classes.player_score_button }}
+        data-compact={compact}
+        styles={{
+          input: {
+            cursor: "text",
+            color: `var(--mantine-color-${(filled ? defaultColor : variantColor).replace(".", "-")})`,
+            backgroundColor: filled ? variantColor : "transparent",
+          },
+        }}
+        defaultValue={children}
+      />
+    );
+  }
 
   return (
     <UnstyledButton

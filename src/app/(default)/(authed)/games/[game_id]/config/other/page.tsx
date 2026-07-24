@@ -4,6 +4,7 @@ import { Box, Title } from "@mantine/core";
 import { parseResponse } from "hono/client";
 import { notFound } from "next/navigation";
 
+import { getAppBaseUrl } from "@/utils/app-url";
 import { createApiClientOnServer } from "@/utils/hono/server";
 
 import ConfigInput from "../_components/ConfigInput";
@@ -11,6 +12,7 @@ import CopyGame from "./_components/CopyGame";
 import DeleteGame from "./_components/DeleteGame";
 import ExportGame from "./_components/ExportGame";
 import PublicityToggle from "./_components/PublicityToggle";
+import ResetGame from "./_components/ResetGame";
 import SelectQuizset from "./_components/SelectQuizset";
 
 export const metadata: Metadata = {
@@ -46,13 +48,18 @@ const OtherPage = async ({ params }: OtherPageProps) => {
     <Box>
       <SelectQuizset
         game_id={game.id}
-        game_quiz={undefined}
-        quizset_names={response.data.quizes.map((quiz) => quiz.setName)}
+        game_quiz={{ setName: game.quizSetName ?? "", offset: game.quizOffset }}
+        quizset_names={[...new Set(response.data.quizes.map((quiz) => quiz.setName))]}
       />
       <Title order={3} mt="xl">
         公開設定
       </Title>
-      <PublicityToggle gameId={game.id} isPublic={game.isPublic} gameName={game.name} />
+      <PublicityToggle
+        gameId={game.id}
+        isPublic={game.isPublic}
+        gameName={game.name}
+        viewerUrl={`${getAppBaseUrl()}/viewer/${game.id}`}
+      />
       <Title order={3} mt="xl">
         オプション
       </Title>
@@ -73,6 +80,7 @@ const OtherPage = async ({ params }: OtherPageProps) => {
         discordWebhookUrl={game.discordWebhookUrl || ""}
       />
       <ExportGame gameId={game.id} ruleType={game.ruleType} />
+      <ResetGame gameId={game.id} gameName={game.name} logCount={game.logs.length} />
       <DeleteGame gameId={game.id} gameName={game.name} ruleType={game.ruleType} />
     </Box>
   );

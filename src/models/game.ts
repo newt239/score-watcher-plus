@@ -107,6 +107,8 @@ export type GamePlayerProps = {
   initialScore: number | null;
   initialCorrectCount: number | null;
   initialWrongCount: number | null;
+  /** Variables形式でプレイヤーごとに設定する変動値N */
+  baseCorrectPoint: number;
 };
 
 /** ゲーム詳細取得のレスポンスの型 */
@@ -145,6 +147,7 @@ export const UpdateGamePlayerSchema = z.object({
   initialScore: z.number().int().default(0),
   initialCorrectCount: z.number().int().default(0),
   initialWrongCount: z.number().int().default(0),
+  baseCorrectPoint: z.number().int().min(1).default(1),
 });
 
 /** ゲームプレイヤー更新リクエストのパラメータスキーマ */
@@ -170,6 +173,10 @@ export const UpdateGamePlayerRequestJsonSchema = z.union([
     key: z.literal("initialWrongCount"),
     value: z.number().int().min(0),
   }),
+  z.object({
+    key: z.literal("baseCorrectPoint"),
+    value: z.number().int().min(1),
+  }),
 ]);
 
 /** ゲームプレイヤー一括更新リクエストのパラメータスキーマ */
@@ -182,11 +189,20 @@ export const UpdateGamePlayersRequestJsonSchema = z.object({
   players: z.array(UpdateGamePlayerSchema),
 });
 
-/** クイズ設定更新のスキーマ */
+/** クイズ設定更新のスキーマ（setNameが空文字の場合は問題を表示しない） */
 export const UpdateGameQuizSchema = z.object({
-  setName: z.string().optional(),
+  setName: z.string(),
   offset: z.number().int().min(0).default(0),
 });
+
+/** クイズ設定の型 */
+export type GameQuizType = z.infer<typeof UpdateGameQuizSchema>;
+
+/** 得点表示画面で表示する問題の型 */
+export type BoardQuizType = {
+  question: string;
+  answer: string;
+};
 
 /** ゲーム更新リクエストのスキーマ */
 export const UpdateGameRequestParamSchema = z.object({
@@ -207,12 +223,75 @@ export const UpdateGameRequestJsonSchema = z.union([
     key: z.literal("isPublic"),
     value: z.boolean(),
   }),
+  z.object({
+    key: z.literal("quiz"),
+    value: UpdateGameQuizSchema,
+  }),
+  z.object({
+    key: z.literal("editable"),
+    value: z.boolean(),
+  }),
 ]);
 
 /** ゲーム削除リクエストのスキーマ */
 export const DeleteGameRequestParamSchema = z.object({
   gameId: z.string().min(1),
 });
+
+/** ゲームログ更新リクエストのパラメータスキーマ */
+export const UpdateGameLogRequestParamSchema = z.object({
+  logId: z.string().min(1),
+});
+
+/** ゲームログ更新リクエストのjsonスキーマ（playerIdはカンマ区切りで複数指定できる） */
+export const UpdateGameLogRequestJsonSchema = z.object({
+  playerId: z.string().min(1),
+});
+
+/** ゲームログ一括削除（リセット）リクエストのパラメータスキーマ */
+export const ResetGameLogsRequestParamSchema = z.object({
+  gameId: z.string().min(1),
+});
+
+/** ゲームインポートで受け取るプレイヤーのスキーマ */
+const ImportGamePlayerSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  affiliation: z.string().nullable().optional(),
+  displayOrder: z.number().int().min(0),
+  initialScore: z.number().int().nullable().optional(),
+  initialCorrectCount: z.number().int().nullable().optional(),
+  initialWrongCount: z.number().int().nullable().optional(),
+  baseCorrectPoint: z.number().int().min(1).optional(),
+});
+
+/** ゲームインポートで受け取るログのスキーマ */
+const ImportGameLogSchema = z.object({
+  playerId: z.string().nullable().optional(),
+  actionType: z.string() as z.ZodSchema<Variants>,
+  questionNumber: z.number().int().nullable().optional(),
+  scoreChange: z.number().int().nullable().optional(),
+  isSystemAction: z.boolean().nullable().optional(),
+  timestamp: z.string().optional(),
+});
+
+/** ゲームインポートリクエストのスキーマ（エクスポートしたJSONの形式に対応） */
+export const ImportGameRequestSchema = z.object({
+  data: z.object({
+    name: z.string().min(1),
+    ruleType: z.string() as z.ZodSchema<RuleNames>,
+    option: z.unknown().optional(),
+    discordWebhookUrl: z.string().nullable().optional(),
+    quizSetName: z.string().nullable().optional(),
+    quizOffset: z.number().int().min(0).optional(),
+    players: z.array(ImportGamePlayerSchema),
+    logs: z.array(ImportGameLogSchema),
+  }),
+});
+
+/** ゲームインポートリクエストの型 */
+export type ImportGameRequestType = z.infer<typeof ImportGameRequestSchema>;
 
 /** ゲームにプレイヤー追加リクエストのスキーマ */
 export const AddPlayerToGameRequestSchema = z.object({
@@ -484,6 +563,12 @@ export const GetViewerBoardDataParamSchema = z.object({
 /** Viewer用ボードデータ取得パラメータ型 */
 export type GetViewerBoardDataParamType = z.infer<typeof GetViewerBoardDataParamSchema>;
 
+/** 観戦モードで表示するプレイヤー（スコア計算結果に表示用の情報を加えたもの） */
+export type ViewerPlayerType = ComputedScoreProps & {
+  name: string;
+  affiliation: string;
+};
+
 /** Viewer用ボードデータレスポンス型 */
 export type GetViewerBoardDataResponseType = {
   game: {
@@ -494,6 +579,6 @@ export type GetViewerBoardDataResponseType = {
     createdAt?: string;
     updatedAt?: string;
   };
-  players: ComputedScoreProps[];
+  players: ViewerPlayerType[];
   logs: OnlineGameLogType[];
 };

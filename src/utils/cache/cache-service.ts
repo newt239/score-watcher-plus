@@ -48,10 +48,3 @@ export const invalidateBoardCache = async (gameId: string): Promise<boolean> => 
     return false;
   }
 };
-
-/** ゲームが公開かどうかをチェック */
-export const isGamePublic = async (_gameId: string): Promise<boolean> => {
-  // TODO: 実際の実装では、ゲームテーブルから is_public を確認する
-  // 現在は仮の実装
-  return false;
-};

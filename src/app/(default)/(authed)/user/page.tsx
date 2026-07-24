@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 
 import { Avatar, Box, Group, Text, Title } from "@mantine/core";
+import { IconCreditCard } from "@tabler/icons-react";
 import { redirect } from "next/navigation";
 
+import ButtonLink from "@/components/ButtonLink";
 import { defaultUserPreferences } from "@/models/user-preference";
 import { getUser } from "@/utils/auth/auth-helpers";
 import { createApiClientOnServer } from "@/utils/hono/server";
 
+import DeleteAccount from "./_components/DeleteAccount";
 import SignOutButton from "./_components/SignOutButton";
 import UserPreferencesSettings from "./_components/UserPreferencesSettings";
 
@@ -50,12 +53,18 @@ const AccountPage = async () => {
         <SignOutButton />
       </Group>
 
+      <ButtonLink href="/user/plan" variant="default" leftSection={<IconCreditCard size={16} />}>
+        プランを確認する
+      </ButtonLink>
+
       <UserPreferencesSettings
         initialPreferences={
           "preferences" in preferences ? preferences.preferences : defaultUserPreferences
         }
         userId={user.id}
       />
+
+      <DeleteAccount userId={user.id} email={user.email} />
     </Box>
   );
 };

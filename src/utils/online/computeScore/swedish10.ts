@@ -1,7 +1,22 @@
-import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
+import { getSortedPlayerOrderListForOnline, indicator } from "./index";
 
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
+
+/**
+ * 正答数に応じた誤答時のダメージを求める
+ *
+ * 正解を重ねるほど誤答のダメージが大きくなります。
+ *
+ * @param correct 現在の正答数
+ * @returns 加算される誤答ポイント
+ */
+const getWrongDamage = (correct: number) => {
+  if (correct <= 0) return 1;
+  if (correct <= 2) return 2;
+  if (correct <= 5) return 3;
+  return 4;
+};
 
 /** Swedish10形式のスコア計算 正答数に応じて誤答時のダメージポイントが変動 */
 const computeSwedish10 = (
@@ -12,8 +27,9 @@ const computeSwedish10 = (
   const winPoint = game.option.win_point;
   const losePoint = game.option.lose_point;
 
+  // Swedish10ではscoreを誤答ポイントとして扱う
   const byId = new Map<string, ComputedScoreProps>(
-    playersState.map((s) => [s.player_id, { ...s, score: 0, wrong: 0 }]) // Swedish10は誤答ダメージを管理
+    playersState.map((s) => [s.player_id, { ...s, score: s.wrong }])
   );
 
   logs.forEach((log, qn) => {
@@ -22,31 +38,22 @@ const computeSwedish10 = (
 
     if (log.actionType === "correct") {
       s.correct += 1;
-      s.score = s.correct; // Swedish10ではスコア=正解数
       s.last_correct = qn;
 
-      if (s.score >= winPoint) {
+      if (s.correct >= winPoint) {
         s.state = "win";
-      } else if (s.score === winPoint - 1) {
+      } else if (s.correct === winPoint - 1) {
         s.reach_state = "win";
       }
     } else if (log.actionType === "wrong") {
-      const currentCorrect = s.correct;
-      let damage = 0;
-
-      // 正答数に応じたダメージ計算
-      if (currentCorrect === 0) damage = 1;
-      else if (currentCorrect >= 1 && currentCorrect <= 2) damage = 2;
-      else if (currentCorrect >= 3 && currentCorrect <= 5) damage = 3;
-      else if (currentCorrect >= 6 && currentCorrect <= 9) damage = 4;
-
-      const newWrongDamage = s.wrong + damage;
-      s.wrong = newWrongDamage;
+      const damage = getWrongDamage(s.correct);
+      s.wrong += damage;
+      s.score = s.wrong;
       s.last_wrong = qn;
 
-      if (newWrongDamage >= losePoint) {
+      if (s.wrong >= losePoint) {
         s.state = "lose";
-      } else if (newWrongDamage + damage >= losePoint) {
+      } else if (s.wrong + damage >= losePoint) {
         s.reach_state = "lose";
       }
     }
@@ -60,7 +67,12 @@ const computeSwedish10 = (
     return {
       ...score,
       order,
-      text: generateScoreText(score, order),
+      text:
+        score.state === "win"
+          ? indicator(order)
+          : score.state === "lose"
+            ? "LOSE"
+            : `${score.correct}pt`,
     };
   });
 

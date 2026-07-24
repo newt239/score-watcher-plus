@@ -1,14 +1,26 @@
 import { hc } from "hono/client";
 
+import { getAppBaseUrl } from "@/utils/app-url";
+
 import type { APIRouteType } from "@/server";
 
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
-  : "http://localhost:3000";
+/**
+ * APIのベースURLを解決する
+ *
+ * ブラウザ上では常に表示中のオリジンを使用します。カスタムドメインとVercelのプレビューURLの どちらでアクセスされてもクロスオリジンにならず、セッションcookieが確実に送信されます。
+ *
+ * @returns APIのベースURL
+ */
+const resolveApiBaseUrl = () => {
+  if (typeof window === "undefined") {
+    return getAppBaseUrl();
+  }
+  return window.location.origin;
+};
 
 /** ブラウザ上で動作するAPIクライアントを作成 */
 const createApiClient = () => {
-  return hc<APIRouteType>(`${baseUrl}/api`, {
+  return hc<APIRouteType>(`${resolveApiBaseUrl()}/api`, {
     init: {
       credentials: "include",
     },

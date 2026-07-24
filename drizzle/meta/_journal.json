@@ -8,6 +8,41 @@
       "when": 1755363008456,
       "tag": "0000_ambiguous_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784882416497,
+      "tag": "0001_tearful_franklin_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784882995057,
+      "tag": "0002_nervous_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784883389582,
+      "tag": "0003_great_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784883644208,
+      "tag": "0004_loud_ultron",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784889449764,
+      "tag": "0005_grey_firedrake",
+      "breakpoints": true
     }
   ]
 }

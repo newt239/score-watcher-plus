@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import { parseResponse } from "hono/client";
 
 import createApiClient from "@/utils/hono/browser";
+import { notifyApiError } from "@/utils/notify-error";
 
 import CreatePlayer from "./CreatePlayer";
 import ImportPlayer from "./ImportPlayer";
@@ -64,13 +65,7 @@ const ManagePlayer: React.FC<Props> = ({ initialPlayers }) => {
       }
       throw new Error("プレイヤーの作成に失敗しました");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "プレイヤーの作成に失敗しました";
-      notifications.show({
-        title: "エラー",
-        message: errorMessage,
-        color: "red",
-      });
+      notifyApiError(error, "プレイヤーの作成に失敗しました");
       throw error;
     }
   }, []);

@@ -1,32 +1,59 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { NativeSelect, NumberInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { sendGAEvent } from "@next/third-parties/google";
 import { IconUpload } from "@tabler/icons-react";
-
-// GameDBQuizPropsの型定義
-type GameDBQuizProps = {
-  set_name: string;
-  offset: number;
-};
+import { parseResponse } from "hono/client";
+import { useRouter } from "next/navigation";
 
 import ButtonLink from "@/components/ButtonLink";
+import createApiClient from "@/utils/hono/browser";
+
+import type { GameQuizType } from "@/models/game";
 
 type Props = {
   game_id: string;
-  game_quiz: GameDBQuizProps | undefined;
+  game_quiz: GameQuizType;
   quizset_names: string[];
 };
 
 /** オンライン版クイズセット選択コンポーネント クイズセットの選択とオフセット設定 */
 const SelectQuizset: React.FC<Props> = ({ game_id, game_quiz, quizset_names }) => {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [quiz, setQuiz] = useState<GameQuizType>(game_quiz);
 
-  const updateQuizSetting = async (_quiz: GameDBQuizProps) => {
+  /** クイズ設定をサーバーへ保存する */
+  const updateQuizSetting = (newQuiz: GameQuizType) => {
+    setQuiz(newQuiz);
+
     startTransition(async () => {
-      // TODO: 問題設定の更新
+      try {
+        const apiClient = createApiClient();
+        const result = await parseResponse(
+          apiClient.games[":gameId"].$patch({
+            param: { gameId: game_id },
+            json: { key: "quiz", value: newQuiz },
+          })
+        );
+
+        if ("error" in result) {
+          throw new Error(String(result.error));
+        }
+
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to update quiz setting:", error);
+        notifications.show({
+          title: "エラー",
+          message: "問題設定の保存に失敗しました",
+          color: "red",
+        });
+        setQuiz(game_quiz);
+      }
     });
   };
 
@@ -37,15 +64,16 @@ const SelectQuizset: React.FC<Props> = ({ game_id, game_quiz, quizset_names }) =
         <>
           <NativeSelect
             label="セット名"
-            defaultValue={game_quiz?.set_name || ""}
-            onChange={async (v) => {
+            description="選択したセットの問題文と答えが得点表示画面に表示されます。"
+            value={quiz.setName}
+            onChange={(v) => {
               sendGAEvent({
                 event: "select_quizset",
                 value: v.target.value,
               });
               updateQuizSetting({
-                set_name: v.target.value,
-                offset: game_quiz?.offset || 0,
+                setName: v.target.value,
+                offset: quiz.offset,
               });
             }}
             w="auto"
@@ -58,27 +86,24 @@ const SelectQuizset: React.FC<Props> = ({ game_id, game_quiz, quizset_names }) =
               </option>
             ))}
           </NativeSelect>
-          {game_quiz && game_quiz.set_name !== "" && (
+          {quiz.setName !== "" && (
             <NumberInput
               label="オフセット"
+              description="セットの何問目から開始するかを指定します。"
               min={0}
-              onChange={async (n) => {
+              onChange={(n) => {
                 updateQuizSetting({
-                  set_name: game_quiz.set_name,
+                  setName: quiz.setName,
                   offset: typeof n === "string" ? parseInt(n, 10) || 0 : n || 0,
                 });
               }}
-              value={game_quiz.offset}
+              value={quiz.offset}
               disabled={isPending}
             />
           )}
         </>
       ) : (
-        <ButtonLink
-          leftSection={<IconUpload />}
-          href={`/quizes?from=cloud-games/${game_id}`}
-          disabled={isPending}
-        >
+        <ButtonLink leftSection={<IconUpload />} href="/quizes" disabled={isPending}>
           問題データを読み込む
         </ButtonLink>
       )}

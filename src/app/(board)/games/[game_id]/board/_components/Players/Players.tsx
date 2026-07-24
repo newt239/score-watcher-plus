@@ -22,6 +22,12 @@ type PlayersProps = {
   isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
+  /** ヘッダーに問題文を表示しているかどうか */
+  showQuiz: boolean;
+  /** スコアの手動更新モードが有効かどうか */
+  editable: boolean;
+  /** エンドレスチャンスで誤答を切り替える */
+  onToggleMultipleWrong: (playerId: string) => void;
 };
 
 /** オンライン版のプレイヤー一覧表示コンポーネント ローカル版のPlayersコンポーネントと同等の機能を提供 */
@@ -32,12 +38,15 @@ const Players: React.FC<PlayersProps> = ({
   isPending,
   onAddLog,
   preferences,
+  showQuiz,
+  editable,
+  onToggleMultipleWrong,
 }) => {
   return (
     <Flex
       className={classes.players}
       id="players-area"
-      data-showq={false} // オンライン版では問題セット機能がないためfalse
+      data-showq={showQuiz}
       data-showheader={preferences?.showBoardHeader ?? true}
     >
       {players.map((player, i) => (
@@ -51,6 +60,8 @@ const Players: React.FC<PlayersProps> = ({
           onAddLog={onAddLog}
           preferences={preferences}
           totalPlayers={players.length}
+          editable={editable}
+          onToggleMultipleWrong={onToggleMultipleWrong}
         />
       ))}
     </Flex>

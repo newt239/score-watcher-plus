@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
+import { PRODUCTION_APP_URL, getTrustedOrigins } from "@/utils/app-url";
 import { auth } from "@/utils/auth/auth";
 
 import indexHandler from "./controllers";
@@ -8,12 +9,14 @@ import deleteTestUserHandler from "./controllers/e2e/delete-test-user";
 import postTestLoginHandler from "./controllers/e2e/post-test-login";
 import deleteGameHandler from "./controllers/game/delete-game";
 import deleteLogHandler from "./controllers/game/delete-log";
+import deleteLogsHandler from "./controllers/game/delete-logs";
 import deletePlayersHandler from "./controllers/game/delete-players";
 import getGameDetailHandler from "./controllers/game/get-detail";
 import getGameListHandler from "./controllers/game/get-list";
 import getGameLogsHandler from "./controllers/game/get-logs";
 import getGamePlayersHandler from "./controllers/game/get-players";
 import patchGameUpdateHandler from "./controllers/game/patch-update";
+import patchGameUpdateLogHandler from "./controllers/game/patch-update-log";
 import patchGameUpdateOptionsHandler from "./controllers/game/patch-update-options";
 import patchGameUpdatePlayerHandler from "./controllers/game/patch-update-player";
 import patchGameUpdatePlayersHandler from "./controllers/game/patch-update-players";
@@ -21,6 +24,7 @@ import postAddLogHandler from "./controllers/game/post-add-log";
 import postAddPlayerHandler from "./controllers/game/post-add-player";
 import postCopyPlayersHandler from "./controllers/game/post-copy-players";
 import postCreateGameHandler from "./controllers/game/post-create";
+import postImportGameHandler from "./controllers/game/post-import";
 import deletePlayerHandler from "./controllers/player/delete-player";
 import deletePlayerTagHandler from "./controllers/player/delete-tag";
 import getPlayerDetailHandler from "./controllers/player/get-detail";
@@ -33,9 +37,17 @@ import getQuizDetailHandler from "./controllers/quiz/get-detail";
 import getQuizListHandler from "./controllers/quiz/get-list";
 import patchUpdateQuizHandler from "./controllers/quiz/patch-update";
 import postCreateQuizHandler from "./controllers/quiz/post-create";
+import postCreateCheckoutSessionHandler from "./controllers/stripe/post-create-checkout-session";
+import postPortalHandler from "./controllers/stripe/post-portal";
+import postWebhookHandler from "./controllers/stripe/post-webhook";
+import getSubscriptionStatusHandler from "./controllers/subscription/get-status";
+import deleteUserHandler from "./controllers/user/delete-user";
 import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
 import getViewerBoardDataHandler from "./controllers/viewer/get-board-data";
+
+// Vercelのプレビューデプロイは動的にURLが変わるため、パターンで許可する
+const VERCEL_PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
 
 // Hono RPCで型をつけるため、チェインさせる必要がある
 const app = new Hono()
@@ -44,11 +56,13 @@ const app = new Hono()
     cors({
       // https://hono.dev/docs/middleware/builtin/cors
       origin: (origin, _c) => {
-        return origin.endsWith("newts-projects.vercel.app") ||
-          origin.endsWith("score-watcher.com") ||
-          origin.endsWith("localhost:3000")
-          ? origin
-          : "https://plus.score-watcher.com";
+        if (getTrustedOrigins().includes(origin)) {
+          return origin;
+        }
+        if (VERCEL_PREVIEW_ORIGIN_PATTERN.test(origin)) {
+          return origin;
+        }
+        return PRODUCTION_APP_URL;
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
@@ -58,9 +72,11 @@ const app = new Hono()
   .get("/", ...indexHandler)
   .get("/user/:user_id/preferences", ...getUserPreferencesHandler)
   .patch("/user/:user_id/preferences", ...updateUserPreferencesHandler)
+  .delete("/user/:user_id", ...deleteUserHandler)
   // Games API
   .get("/games", ...getGameListHandler)
   .post("/games", ...postCreateGameHandler)
+  .post("/games/import", ...postImportGameHandler)
   .get("/games/:gameId", ...getGameDetailHandler)
   .patch("/games/:gameId", ...patchGameUpdateHandler)
   .patch("/games/:gameId/options", ...patchGameUpdateOptionsHandler)
@@ -72,7 +88,9 @@ const app = new Hono()
   .patch("/games/players/:gamePlayerId", ...patchGameUpdatePlayerHandler)
   .post("/games/:game_id/copy-players", ...postCopyPlayersHandler)
   .get("/games/:gameId/logs", ...getGameLogsHandler)
+  .delete("/games/:gameId/logs", ...deleteLogsHandler)
   .post("/games/logs", ...postAddLogHandler)
+  .patch("/games/logs/:logId", ...patchGameUpdateLogHandler)
   .delete("/games/logs/:logId", ...deleteLogHandler)
   // Players API
   .get("/players", ...getPlayerListHandler)
@@ -88,6 +106,11 @@ const app = new Hono()
   .patch("/quizes", ...patchUpdateQuizHandler)
   .delete("/quizes", ...deleteQuizHandler)
   .get("/quizes/:id", ...getQuizDetailHandler)
+  // Subscription API
+  .get("/subscription/status", ...getSubscriptionStatusHandler)
+  .post("/stripe/create-checkout-session", ...postCreateCheckoutSessionHandler)
+  .post("/stripe/portal", ...postPortalHandler)
+  .post("/stripe/webhook", ...postWebhookHandler)
   // Viewer API (認証不要)
   .get("/viewer/games/:gameId/board", ...getViewerBoardDataHandler)
   // e2eテスト用認証

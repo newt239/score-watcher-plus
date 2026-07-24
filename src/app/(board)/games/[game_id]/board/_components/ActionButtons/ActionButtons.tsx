@@ -10,6 +10,8 @@ import {
   IconBalloon,
   IconComet,
   IconMaximize,
+  IconSquare,
+  IconSquareCheck,
 } from "@tabler/icons-react";
 
 import ButtonLink from "@/components/ButtonLink";
@@ -27,6 +29,9 @@ type ActionButtonsProps = {
   onThrough: () => void;
   userId: string;
   preferences: UserPreferencesType | null;
+  /** スコアの手動更新モードが有効かどうか */
+  editable: boolean;
+  onToggleEditable: () => void;
 };
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -36,6 +41,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   onThrough,
   userId,
   preferences,
+  editable,
+  onToggleEditable,
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [isFullscreenEnabled, setIsFullscreenEnabled] = useState(false);
@@ -53,6 +60,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             size="xs"
             variant="default"
             leftSection={<IconComet size={20} />}
+            disabled={editable}
             onClick={onThrough}
           >
             スルー
@@ -61,11 +69,22 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             size="xs"
             variant="default"
             leftSection={<IconArrowBackUp size={20} />}
-            disabled={logsLength === 0}
+            disabled={logsLength === 0 || editable}
             onClick={onUndo}
           >
             一つ戻す
           </Button>
+          {game.ruleType !== "aql" && (
+            <Button
+              visibleFrom="md"
+              size="xs"
+              variant="default"
+              leftSection={editable ? <IconSquareCheck size={20} /> : <IconSquare size={20} />}
+              onClick={onToggleEditable}
+            >
+              スコアの手動更新
+            </Button>
+          )}
           {isFullscreenEnabled && (
             <Button
               visibleFrom="md"

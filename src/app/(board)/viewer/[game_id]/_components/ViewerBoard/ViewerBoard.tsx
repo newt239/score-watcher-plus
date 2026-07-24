@@ -1,16 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Text } from "@mantine/core";
 
 import createApiClient from "@/utils/hono/browser";
+import { rules } from "@/utils/rules";
 
 import ViewerAQLBoard from "../ViewerAQLBoard/ViewerAQLBoard";
 import ViewerPlayer from "../ViewerPlayer/ViewerPlayer";
-import styles from "./ViewerBoard.module.css";
+import classes from "./ViewerBoard.module.css";
 
-import type { GetViewerBoardDataResponseType } from "@/models/game";
+import type { GetViewerBoardDataResponseType, Variants } from "@/models/game";
+
+/** 観戦データの更新間隔（ミリ秒） */
+const POLLING_INTERVAL_MS = 2000;
+
+/** ログの種類ごとの日本語表記 */
+const LOG_LABELS: Record<Variants, string> = {
+  correct: "正解",
+  wrong: "誤答",
+  through: "スルー",
+  mutiple_correct: "複数正解",
+  multiple_wrong: "複数誤答",
+  skip: "スキップ",
+  blank: "空欄",
+};
 
 type ViewerBoardProps = {
   gameId: string;
@@ -25,7 +40,20 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
   // すでにサーバー側で計算済みのスコアデータ
   const players = gameData.players;
 
-  // 2秒間隔でデータを更新
+  // 直近のログを新しい順に並べる。複数人の誤答は1問の中での解答なので問題番号を進めない
+  const shownLogs = useMemo(() => {
+    let questionNumber = 0;
+    return gameData.logs
+      .map((log) => {
+        if (log.variant !== "multiple_wrong") {
+          questionNumber += 1;
+        }
+        return { log, questionNumber: Math.max(1, questionNumber) };
+      })
+      .slice(-10)
+      .reverse();
+  }, [gameData.logs]);
+
   const fetchData = useCallback(async () => {
     if (isLoading) return;
 
@@ -50,33 +78,28 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
   }, [gameId, isLoading]);
 
   useEffect(() => {
-    const interval = setInterval(fetchData, 2000);
+    const interval = setInterval(fetchData, POLLING_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [fetchData]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className={classes.container}>
+      <div className={classes.header}>
         <Text size="xl" fw={700} c="white">
           {gameData.game.name}
         </Text>
         <Text size="sm" c="dimmed">
-          {gameData.game.ruleType} ルール
+          {rules[gameData.game.ruleType].name}
         </Text>
-        {isLoading && (
-          <Text size="xs" c="blue">
-            更新中...
-          </Text>
-        )}
       </div>
 
-      <div className={styles.board}>
+      <div className={classes.board}>
         {gameData.game.ruleType === "aql" ? (
-          <div className={styles.aqlBoard}>
+          <div className={classes.aql_board}>
             <ViewerAQLBoard players={players} />
           </div>
         ) : (
-          <div className={styles.playersList}>
+          <div className={classes.players_list}>
             {players.map((player) => (
               <ViewerPlayer key={player.player_id} player={player} />
             ))}
@@ -84,22 +107,27 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
         )}
       </div>
 
-      <div className={styles.logs}>
+      <div className={classes.logs}>
         <Text size="lg" fw={600} mb="md" c="white">
           ゲームログ
         </Text>
-        <div className={styles.logsContainer}>
-          {gameData.logs.slice(-10).map((log, index) => {
-            const player = gameData.players.find((p) => p.player_id === log.player_id);
-            const playerName = player?.text || `プレイヤー${log.player_id}`;
-            return (
-              <div key={index} className={styles.logItem}>
-                <Text size="sm" c="dimmed">
-                  {log.variant} - {playerName}
-                </Text>
-              </div>
-            );
-          })}
+        <div className={classes.logs_container}>
+          {shownLogs.length === 0 ? (
+            <Text size="sm" c="dimmed">
+              まだ解答はありません。
+            </Text>
+          ) : (
+            shownLogs.map(({ log, questionNumber }) => {
+              const player = gameData.players.find((p) => p.player_id === log.player_id);
+              return (
+                <div key={log.id} className={classes.log_item}>
+                  <Text size="sm" c="dimmed">
+                    Q{questionNumber} {player ? player.name : "－"} / {LOG_LABELS[log.variant]}
+                  </Text>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

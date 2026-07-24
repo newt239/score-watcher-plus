@@ -8,7 +8,7 @@ import {
   TableThead,
   TableTr,
 } from "@mantine/core";
-import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { IconAdjustmentsHorizontal, IconEye } from "@tabler/icons-react";
 import { cdate } from "cdate";
 
 import ButtonLink from "@/components/ButtonLink";
@@ -71,6 +71,16 @@ const GameListTable: React.FC<GameListTableProps> = ({ gameList }) => {
                       >
                         開く
                       </ButtonLink>
+                      {game.isPublic && (
+                        <ButtonLink
+                          href={`/viewer/${game.id}`}
+                          leftSection={<IconEye />}
+                          size="sm"
+                          variant="default"
+                        >
+                          観戦
+                        </ButtonLink>
+                      )}
                     </Group>
                   </TableTd>
                 </TableTr>

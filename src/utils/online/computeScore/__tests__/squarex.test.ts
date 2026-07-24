@@ -37,6 +37,9 @@ const createSquarexGame = (
   updatedAt: "2024-01-01T00:00:00.000Z",
   deletedAt: null,
   discordWebhookUrl: null,
+  quizSetName: null,
+  quizOffset: 0,
+  editable: false,
   isPublic: false,
   userId: "user-1",
   players,
@@ -64,6 +67,7 @@ const createPlayer = (
   initialScore,
   initialCorrectCount: initialScore,
   initialWrongCount: initialScore,
+  baseCorrectPoint: 1,
 });
 
 /**

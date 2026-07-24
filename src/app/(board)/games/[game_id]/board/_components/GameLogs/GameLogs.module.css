@@ -1,3 +1,11 @@
+.answer {
+  color: var(--mantine-color-red-9);
+
+  @mixin dark {
+    color: var(--mantine-color-red-3);
+  }
+}
+
 .game_logs {
   padding: 1rem;
   white-space: nowrap;

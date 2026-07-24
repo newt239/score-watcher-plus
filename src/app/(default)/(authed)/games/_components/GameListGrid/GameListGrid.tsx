@@ -1,5 +1,5 @@
 import { Box, Card, CardSection, Group, Text } from "@mantine/core";
-import { IconAdjustmentsHorizontal, IconPlayerPlay } from "@tabler/icons-react";
+import { IconAdjustmentsHorizontal, IconEye, IconPlayerPlay } from "@tabler/icons-react";
 import Avatar from "boring-avatars";
 import { cdate } from "cdate";
 
@@ -73,6 +73,18 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
                   表示
                 </ButtonLink>
               </Group>
+              {game.isPublic && (
+                <ButtonLink
+                  href={`/viewer/${game.id}`}
+                  leftSection={<IconEye />}
+                  size="sm"
+                  variant="subtle"
+                  fullWidth
+                  mt="xs"
+                >
+                  観戦ページを開く
+                </ButtonLink>
+              )}
             </Card>
           ))}
         </Box>

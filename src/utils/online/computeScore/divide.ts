@@ -1,16 +1,16 @@
-import { generateScoreText, getSortedPlayerOrderListForOnline } from "./index";
+import { getSortedPlayerOrderListForOnline, indicator } from "./index";
 
 import type { ComputedScoreProps, GetGameDetailResponseType } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
-/** Divide形式のスコア計算 正解で+10pt、誤答回数に応じて割る数が増加 */
+/** Divide形式のスコア計算 正解で加点し、誤答するたびに現在の得点を割っていく */
 const computeDivide = (
   game: Extract<GetGameDetailResponseType, { ruleType: "divide" }>,
   playersState: ComputedScoreProps[],
   logs: SeriarizedGameLog[]
 ) => {
   const winPoint = game.option.win_point;
-  const correctPoints = game.option.correct_me;
+  const correctPoint = game.option.correct_me;
 
   const byId = new Map<string, ComputedScoreProps>(
     playersState.map((s) => [s.player_id, { ...s }])
@@ -22,25 +22,21 @@ const computeDivide = (
 
     if (log.actionType === "correct") {
       s.correct += 1;
-
-      // 正解時のポイント計算: 基本ポイント / (誤答回数 + 1)
-      const basePoints = s.correct * correctPoints;
-      const divisor = s.wrong === 0 ? 1 : s.wrong;
-      s.score = Math.floor(basePoints / divisor);
+      s.score += correctPoint;
       s.last_correct = qn;
 
       if (s.score >= winPoint) {
         s.state = "win";
-      } else if (s.score >= winPoint - correctPoints) {
+      } else if (s.score + 1 === winPoint) {
         s.reach_state = "win";
+      } else {
+        s.state = "playing";
+        s.reach_state = "playing";
       }
     } else if (log.actionType === "wrong") {
+      // 誤答するたびに割る数が1ずつ増えていく
+      s.score = Math.floor(s.score / (s.wrong + 1));
       s.wrong += 1;
-
-      // 誤答時のポイント再計算
-      const basePoints = s.correct * correctPoints;
-      const divisor = s.wrong;
-      s.score = basePoints > 0 && divisor > 0 ? Math.floor(basePoints / divisor) : 0;
       s.last_wrong = qn;
     }
   });
@@ -53,7 +49,7 @@ const computeDivide = (
     return {
       ...score,
       order,
-      text: generateScoreText(score, order),
+      text: score.state === "win" ? indicator(order) : `${score.score}pt`,
     };
   });
 

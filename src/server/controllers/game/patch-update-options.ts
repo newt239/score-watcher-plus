@@ -6,7 +6,8 @@ import {
   UpdateGameOptionsRequestParamSchema,
 } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
-import { getGameOptionById, updateGameOption } from "@/server/repositories/game";
+import { getGameById, getGameOptionById, updateGameOption } from "@/server/repositories/game";
+import { refreshBoardCache } from "@/server/utils/board-data";
 
 const factory = createFactory();
 
@@ -49,6 +50,9 @@ export default factory.createHandlers(
           404
         );
       }
+
+      // 形式設定はスコア計算に影響するため、公開中であればキャッシュを作り直す
+      await refreshBoardCache(await getGameById(gameId, userId));
 
       return c.json({
         updated: true,

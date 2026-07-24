@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { DBClient } from "@/utils/drizzle/client";
@@ -10,6 +10,7 @@ import type {
   AddGameLogRequestType,
   AddPlayerToGameRequestType,
   CreateGameRequestType,
+  ImportGameRequestType,
   UpdateGamePlayerRequestJsonType,
   UpdateGamePlayerType,
   UpdateGameRequestJsonType,
@@ -41,6 +42,7 @@ export const getGameById = async (gameId: string, userId: string) => {
           initialScore: true,
           initialCorrectCount: true,
           initialWrongCount: true,
+          baseCorrectPoint: true,
         },
       },
     },
@@ -70,6 +72,7 @@ export const getGameById = async (gameId: string, userId: string) => {
       initialScore: p.initialScore,
       initialCorrectCount: p.initialCorrectCount,
       initialWrongCount: p.initialWrongCount,
+      baseCorrectPoint: p.baseCorrectPoint,
     })),
     logs: gameLogData,
   };
@@ -83,13 +86,15 @@ export const getGames = async (userId: string) => {
     ruleType: game.ruleType,
     updatedAt: game.updatedAt,
     isPublic: game.isPublic,
-    logCount: count(gameLog.id),
-    playerCount: count(gamePlayer.id),
+    // ログとプレイヤーを同時にJOINすると件数が掛け合わされるため、重複を除いて数える
+    logCount: countDistinct(gameLog.id),
+    playerCount: countDistinct(gamePlayer.id),
   })
     .from(game)
-    .leftJoin(gameLog, eq(game.id, gameLog.gameId))
-    .leftJoin(gamePlayer, eq(game.id, gamePlayer.gameId))
+    .leftJoin(gameLog, and(eq(game.id, gameLog.gameId), isNull(gameLog.deletedAt)))
+    .leftJoin(gamePlayer, and(eq(game.id, gamePlayer.gameId), isNull(gamePlayer.deletedAt)))
     .where(and(eq(game.userId, userId), isNull(game.deletedAt)))
+    .groupBy(game.id)
     .orderBy(desc(game.updatedAt));
 
   return games.filter((g) => g.id !== null);
@@ -126,6 +131,17 @@ export const updateGameByKey = async (
 ) => {
   // keyがnameかdiscordWebhookUrlかそれ以外かで分岐
   const { gameId, key, value } = updateData;
+  if (key === "quiz") {
+    const result = await DBClient.update(game)
+      .set({
+        // 空文字が指定された場合は紐づけを解除する
+        quizSetName: value.setName === "" ? null : value.setName,
+        quizOffset: value.offset,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(game.id, gameId), eq(game.userId, userId)));
+    return result.rowsAffected > 0;
+  }
   if (key === "name" || key === "discordWebhookUrl") {
     const result = await DBClient.update(game)
       .set({
@@ -143,7 +159,15 @@ export const updateGameByKey = async (
   } else if (key === "isPublic") {
     const result = await DBClient.update(game)
       .set({
-        isPublic: value as boolean,
+        isPublic: value,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(game.id, gameId), eq(game.userId, userId)));
+    return result.rowsAffected > 0;
+  } else if (key === "editable") {
+    const result = await DBClient.update(game)
+      .set({
+        editable: value,
         updatedAt: new Date(),
       })
       .where(and(eq(game.id, gameId), eq(game.userId, userId)));
@@ -174,6 +198,7 @@ export const getGamePlayers = async (gameId: string, userId: string) => {
     initialScore: gamePlayer.initialScore,
     initialCorrectCount: gamePlayer.initialCorrectCount,
     initialWrongCount: gamePlayer.initialWrongCount,
+    baseCorrectPoint: gamePlayer.baseCorrectPoint,
     playerName: player.name,
     playerDisplayName: player.displayName,
   })
@@ -193,7 +218,7 @@ export const getGamePlayers = async (gameId: string, userId: string) => {
     name: p.playerDisplayName || p.playerName || "",
     initial_correct: p.initialCorrectCount || 0,
     initial_wrong: p.initialWrongCount || 0,
-    base_correct_point: 1,
+    base_correct_point: p.baseCorrectPoint,
     base_wrong_point: 1,
   }));
 };
@@ -258,6 +283,15 @@ export const removeGameLog = async (logId: string, userId: string) => {
   await DBClient.delete(gameLog).where(and(eq(gameLog.id, logId), eq(gameLog.userId, userId)));
 };
 
+/** ゲームのログをすべて削除する（ゲームのリセット用） */
+export const removeAllGameLogs = async (gameId: string, userId: string) => {
+  const result = await DBClient.delete(gameLog).where(
+    and(eq(gameLog.gameId, gameId), eq(gameLog.userId, userId))
+  );
+
+  return { deletedCount: result.rowsAffected };
+};
+
 /** ゲームの名前かDiscord Webhook URLを更新 */
 export const updateGameSettings = async (
   gameId: string,
@@ -315,6 +349,7 @@ export const updateGamePlayers = async (
         initialScore: player.initialScore || 0,
         initialCorrectCount: player.initialCorrectCount || 0,
         initialWrongCount: player.initialWrongCount || 0,
+        baseCorrectPoint: player.baseCorrectPoint,
         userId,
       });
       updatedCount++;
@@ -340,6 +375,7 @@ export const copyPlayersFromGame = async (
     initialScore: gamePlayer.initialScore,
     initialCorrectCount: gamePlayer.initialCorrectCount,
     initialWrongCount: gamePlayer.initialWrongCount,
+    baseCorrectPoint: gamePlayer.baseCorrectPoint,
   })
     .from(gamePlayer)
     .where(
@@ -380,6 +416,7 @@ export const copyPlayersFromGame = async (
         initialScore: player.initialScore || 0,
         initialCorrectCount: player.initialCorrectCount || 0,
         initialWrongCount: player.initialWrongCount || 0,
+        baseCorrectPoint: player.baseCorrectPoint,
         userId,
       });
       copiedCount++;
@@ -513,6 +550,7 @@ export const getPublicGameById = async (gameId: string) => {
           initialScore: true,
           initialCorrectCount: true,
           initialWrongCount: true,
+          baseCorrectPoint: true,
         },
       },
     },
@@ -542,7 +580,126 @@ export const getPublicGameById = async (gameId: string) => {
       initialScore: p.initialScore,
       initialCorrectCount: p.initialCorrectCount,
       initialWrongCount: p.initialWrongCount,
+      baseCorrectPoint: p.baseCorrectPoint,
     })),
     logs: gameLogData,
   };
+};
+
+/**
+ * エクスポートしたゲームデータからゲームを復元する
+ *
+ * プレイヤーは同じIDのものがあれば再利用し、無ければ同名のプレイヤーを探して紐づけます。 どちらも見つからない場合は新しいプレイヤーとして作成します。
+ *
+ * @param importData エクスポートされたゲームデータ
+ * @param userId 復元先のユーザーID
+ * @returns 作成したゲームのID
+ */
+export const importGame = async (importData: ImportGameRequestType, userId: string) => {
+  const { data } = importData;
+
+  const gameId = nanoid();
+  await DBClient.insert(game).values({
+    id: gameId,
+    name: data.name,
+    ruleType: data.ruleType,
+    discordWebhookUrl: data.discordWebhookUrl ?? null,
+    option: setupDefaultGameOption({
+      ruleType: data.ruleType,
+      option: data.option,
+    }),
+    quizSetName: data.quizSetName ?? null,
+    quizOffset: data.quizOffset ?? 0,
+    userId,
+  });
+
+  // このユーザーが持つ既存のプレイヤーを一度だけ読み込み、IDと名前の両方から引けるようにする
+  const existingPlayers = await DBClient.select({ id: player.id, name: player.name })
+    .from(player)
+    .where(and(eq(player.userId, userId), isNull(player.deletedAt)));
+
+  const playerIdSet = new Set(existingPlayers.map((p) => p.id));
+  const playerIdByName = new Map(existingPlayers.map((p) => [p.name, p.id]));
+
+  // インポート元のプレイヤーIDを、このユーザーが持つプレイヤーIDへ対応付ける
+  const playerIdMap = new Map<string, string>();
+  const playersToCreate: (typeof player.$inferInsert)[] = [];
+
+  for (const importedPlayer of data.players) {
+    let playerId = playerIdSet.has(importedPlayer.id)
+      ? importedPlayer.id
+      : playerIdByName.get(importedPlayer.name);
+
+    if (!playerId) {
+      playerId = nanoid();
+      playersToCreate.push({
+        id: playerId,
+        name: importedPlayer.name,
+        displayName: importedPlayer.name,
+        affiliation: importedPlayer.affiliation ?? null,
+        description: importedPlayer.description ?? null,
+        userId,
+      });
+      // 同じ名前が複数回現れた場合に重複して作らないようにする
+      playerIdByName.set(importedPlayer.name, playerId);
+    }
+
+    playerIdMap.set(importedPlayer.id, playerId);
+  }
+
+  if (playersToCreate.length > 0) {
+    await DBClient.insert(player).values(playersToCreate);
+  }
+
+  const gamePlayersToCreate = data.players.map((importedPlayer) => ({
+    gameId,
+    playerId: playerIdMap.get(importedPlayer.id),
+    displayOrder: importedPlayer.displayOrder,
+    initialScore: importedPlayer.initialScore ?? 0,
+    initialCorrectCount: importedPlayer.initialCorrectCount ?? 0,
+    initialWrongCount: importedPlayer.initialWrongCount ?? 0,
+    baseCorrectPoint: importedPlayer.baseCorrectPoint ?? 1,
+    userId,
+  }));
+
+  if (gamePlayersToCreate.length > 0) {
+    await DBClient.insert(gamePlayer).values(gamePlayersToCreate);
+  }
+
+  const logsToCreate = data.logs.map((importedLog) => ({
+    id: nanoid(),
+    gameId,
+    // スルーやスキップのようにプレイヤーが紐づかないログもそのまま復元する
+    playerId: importedLog.playerId ? (playerIdMap.get(importedLog.playerId) ?? null) : null,
+    questionNumber: importedLog.questionNumber ?? null,
+    actionType: importedLog.actionType,
+    scoreChange: importedLog.scoreChange ?? 0,
+    timestamp: importedLog.timestamp ? new Date(importedLog.timestamp) : new Date(),
+    isSystemAction: importedLog.isSystemAction ?? false,
+    userId,
+  }));
+
+  if (logsToCreate.length > 0) {
+    await DBClient.insert(gameLog).values(logsToCreate);
+  }
+
+  return { gameId, playerCount: data.players.length, logCount: data.logs.length };
+};
+
+/**
+ * ゲームログの解答者を更新する
+ *
+ * エンドレスチャンスのように、1つの問題に対して複数のプレイヤーの誤答をまとめて記録する形式で 使用します。
+ *
+ * @param logId 更新するログのID
+ * @param playerId 記録する解答者のID（カンマ区切りで複数指定できます）
+ * @param userId 操作するユーザーのID
+ * @returns 更新できたかどうか
+ */
+export const updateGameLogPlayers = async (logId: string, playerId: string, userId: string) => {
+  const result = await DBClient.update(gameLog)
+    .set({ playerId, timestamp: new Date() })
+    .where(and(eq(gameLog.id, logId), eq(gameLog.userId, userId)));
+
+  return result.rowsAffected > 0;
 };

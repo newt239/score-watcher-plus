@@ -6,7 +6,8 @@ import {
   RemoveGamePlayersRequestParamSchema,
 } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
-import { removeGamePlayers } from "@/server/repositories/game";
+import { getGameById, removeGamePlayers } from "@/server/repositories/game";
+import { refreshBoardCache } from "@/server/utils/board-data";
 
 const factory = createFactory();
 
@@ -25,6 +26,8 @@ const handler = factory.createHandlers(
       const { playerIds } = c.req.valid("json");
 
       const result = await removeGamePlayers(gameId, playerIds, userId);
+
+      await refreshBoardCache(await getGameById(gameId, userId));
 
       return c.json(
         {

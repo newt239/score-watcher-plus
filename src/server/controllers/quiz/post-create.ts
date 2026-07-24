@@ -4,6 +4,8 @@ import { createFactory } from "hono/factory";
 import { CreateQuizRequestSchema } from "@/models/quiz";
 import { getUserId } from "@/server/repositories/auth";
 import { createQuiz } from "@/server/repositories/quiz";
+import { checkCreationLimit } from "@/server/repositories/subscription";
+import { buildPlanLimitError } from "@/server/utils/subscription/limit-response";
 
 const factory = createFactory();
 
@@ -16,6 +18,15 @@ const handler = factory.createHandlers(zValidator("json", CreateQuizRequestSchem
     }
 
     const quizesData = c.req.valid("json");
+
+    const limitCheck = await checkCreationLimit(userId, "quiz", quizesData.length);
+    if (!limitCheck.allowed) {
+      return c.json(
+        buildPlanLimitError("quiz", limitCheck.planCode, limitCheck.limit, limitCheck.current),
+        403
+      );
+    }
+
     const result = await createQuiz(quizesData, userId);
 
     return c.json(

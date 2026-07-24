@@ -2,7 +2,7 @@ import { createFactory } from "hono/factory";
 
 import { getUserId } from "@/server/repositories/auth";
 import { getGameLogById, removeGameLog, getGameById } from "@/server/repositories/game";
-import { invalidateBoardCache } from "@/utils/cache/cache-service";
+import { refreshBoardCache } from "@/server/utils/board-data";
 import { sendDiscordResetNotification } from "@/utils/online/discord";
 
 const factory = createFactory();
@@ -38,8 +38,8 @@ const handler = factory.createHandlers(async (c) => {
     const gameDataAfter = await getGameById(logInfo.gameId, userId);
     const logCountAfter = gameDataAfter?.logs.length || 0;
 
-    // ログが公開ゲームのものの場合、キャッシュを無効化
-    await invalidateBoardCache(logInfo.gameId);
+    // 公開ゲームの場合は巻き戻し後の状態でキャッシュを作り直す（削除だけだと観戦画面が表示できなくなる）
+    await refreshBoardCache(gameDataAfter);
 
     // ゲームリセット（全ログ削除）の場合にDiscord通知を送信
     if (gameDataAfter && logCountBefore > 0 && logCountAfter === 0) {

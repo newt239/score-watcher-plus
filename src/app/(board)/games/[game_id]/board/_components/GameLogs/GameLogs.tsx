@@ -8,7 +8,7 @@ import { cdate } from "cdate";
 
 import classes from "./GameLogs.module.css";
 
-import type { GamePlayerProps } from "@/models/game";
+import type { BoardQuizType, GamePlayerProps } from "@/models/game";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
 type GameLogsProps = {
@@ -16,9 +16,18 @@ type GameLogsProps = {
   players: GamePlayerProps[];
   order: "asc" | "desc";
   onToggleOrder: () => void;
+  quizList: BoardQuizType[];
+  quizOffset: number;
 };
 
-const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder }) => {
+const GameLogs: React.FC<GameLogsProps> = ({
+  logs,
+  players,
+  order,
+  onToggleOrder,
+  quizList,
+  quizOffset,
+}) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const filteredLogs = useMemo(() => {
@@ -28,6 +37,17 @@ const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder
   const shownLogs = useMemo(() => {
     return order === "asc" ? filteredLogs : [...filteredLogs].reverse();
   }, [filteredLogs, order]);
+
+  // スキップを挟むと問題とログの対応が崩れるため、その場合は問題文を表示しない
+  const showQuiz = useMemo(() => {
+    return quizList.length > 0 && !logs.some((log) => log.actionType === "skip");
+  }, [quizList, logs]);
+
+  /** 表示順を考慮して、そのログに対応する問題を取得する */
+  const getQuizForRow = (rowIndex: number) => {
+    const logIndex = order === "desc" ? filteredLogs.length - rowIndex - 1 : rowIndex;
+    return quizList[quizOffset + logIndex];
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,12 +60,15 @@ const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder
     const logsWithTableFormat = `<table><tbody>${shownLogs
       .map((log, qn) => {
         const player = players.find((p) => p.id === log.playerId);
+        const quiz = showQuiz ? getQuizForRow(qn) : undefined;
         return `
         <tr>
           <td>${order === "desc" ? filteredLogs.length - qn : qn + 1}.</td>
           <td>${player ? player.name : log.actionType === "through" ? "(スルー)" : "-"}</td>
           <td>${log.actionType === "correct" ? "o" : log.actionType === "wrong" ? "x" : "-"}</td>
-          <td>${cdate(log.timestamp || new Date().toISOString()).format("YYYY/MM/DD HH:mm:ss")}</td>
+          <td>${cdate(log.timestamp || new Date().toISOString()).format("YYYY/MM/DD HH:mm:ss")}</td>${
+            quiz ? `\n          <td>${quiz.question}</td>\n          <td>${quiz.answer}</td>` : ""
+          }
         </tr>`;
       })
       .join("")}
@@ -91,6 +114,7 @@ const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder
             <Table.Tbody>
               {shownLogs.map((log, qn) => {
                 const player = players.find((p) => p.id === log.playerId);
+                const quiz = showQuiz ? getQuizForRow(qn) : undefined;
                 return (
                   <Table.Tr key={log.id}>
                     <Table.Td>{order === "desc" ? filteredLogs.length - qn : qn + 1}.</Table.Td>
@@ -107,6 +131,12 @@ const GameLogs: React.FC<GameLogsProps> = ({ logs, players, order, onToggleOrder
                     >
                       {cdate(log.timestamp || new Date().toISOString()).format("HH:mm:ss")}
                     </Table.Td>
+                    {quiz && (
+                      <>
+                        <Table.Td>{quiz.question}</Table.Td>
+                        <Table.Td className={classes.answer}>{quiz.answer}</Table.Td>
+                      </>
+                    )}
                   </Table.Tr>
                 );
               })}

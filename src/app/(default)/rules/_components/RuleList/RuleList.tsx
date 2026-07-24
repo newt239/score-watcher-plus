@@ -10,6 +10,7 @@ import { parseResponse } from "hono/client";
 import { useRouter } from "next/navigation";
 
 import createApiClient from "@/utils/hono/browser";
+import { notifyApiError } from "@/utils/notify-error";
 import { rules } from "@/utils/rules";
 
 import classes from "./RuleList.module.css";
@@ -60,34 +61,37 @@ const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
     if (validation.hasErrors) return;
 
     startTransition(async () => {
-      const result = await parseResponse(
-        apiClient["games"].$post({
-          json: [
-            {
-              name: form.values.name,
-              ruleType: selectedRule,
-            },
-          ],
-        })
-      );
+      try {
+        const result = await parseResponse(
+          apiClient["games"].$post({
+            json: [
+              {
+                name: form.values.name,
+                ruleType: selectedRule,
+              },
+            ],
+          })
+        );
 
-      setCreateModalOpen(false);
-      form.reset();
-      setSelectedRule(null);
+        setCreateModalOpen(false);
+        form.reset();
+        setSelectedRule(null);
 
-      if ("error" in result) {
-        notifications.show({
-          title: "エラー",
-          message: String(result.error),
-          color: "red",
-        });
-      } else {
+        if ("error" in result) {
+          throw new Error(String(result.error));
+        }
+
         notifications.show({
           title: "成功",
           message: "ゲームを作成しました",
           color: "green",
         });
         router.push(`/games/${result.data.ids[0]}/config`);
+      } catch (error) {
+        setCreateModalOpen(false);
+        form.reset();
+        setSelectedRule(null);
+        notifyApiError(error, "ゲームの作成に失敗しました");
       }
     });
   };

@@ -18,11 +18,11 @@
   gap: 0.25rem;
 }
 
-.shareContent {
+.share_content {
   padding: 0.5rem 0;
 }
 
-.urlContainer {
+.url_container {
   padding: 0.75rem;
   background-color: var(--mantine-color-gray-1);
   border: 1px solid var(--mantine-color-gray-3);

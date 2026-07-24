@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import { parseResponse } from "hono/client";
 
 import createApiClient from "@/utils/hono/browser";
+import { notifyApiError } from "@/utils/notify-error";
 
 import CreateQuiz from "./CreateQuiz";
 import ImportQuiz from "./ImportQuiz";
@@ -65,13 +66,7 @@ const ManageQuiz: React.FC<Props> = ({ initialQuizes }) => {
       }
       throw new Error("クイズ問題の作成に失敗しました");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "クイズ問題の作成に失敗しました";
-      notifications.show({
-        title: "エラー",
-        message: errorMessage,
-        color: "red",
-      });
+      notifyApiError(error, "クイズ問題の作成に失敗しました");
       throw error;
     }
   }, []);

@@ -1,21 +1,21 @@
 import { Flex, Text } from "@mantine/core";
 
-import styles from "../ViewerBoard/ViewerBoard.module.css";
+import classes from "../ViewerBoard/ViewerBoard.module.css";
 
-import type { ComputedScoreProps } from "@/models/game";
+import type { ViewerPlayerType } from "@/models/game";
 
 // AQL専用ボード（観戦専用）
-const ViewerAQLBoard = ({ players }: { players: ComputedScoreProps[] }) => {
+const ViewerAQLBoard = ({ players }: { players: ViewerPlayerType[] }) => {
   return (
-    <div className={styles.aqlContainer}>
-      <div className={styles.aqlPlayers}>
+    <div className={classes.aql_container}>
+      <div className={classes.aql_players}>
         {players.map((player) => (
-          <div key={player.player_id} className={styles.aqlPlayer}>
+          <div key={player.player_id} className={classes.aql_player}>
             <Text size="md" fw={600} c="white" ta="center">
-              {player.text || `プレイヤー${player.player_id}`}
+              {player.name}
             </Text>
             <Text size="xl" fw={700} c="yellow" ta="center">
-              {player.score}
+              {player.text}
             </Text>
             <Flex gap="sm" justify="center">
               <Text size="sm" c="green">

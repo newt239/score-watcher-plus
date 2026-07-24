@@ -9,7 +9,6 @@ export type UserPreferencesType = {
   showSignString: boolean;
   reversePlayerInfo: boolean;
   wrongNumber: boolean;
-  webhookUrl: string | null;
 };
 
 /** デフォルトユーザー設定 */
@@ -21,7 +20,6 @@ export const defaultUserPreferences: UserPreferencesType = {
   showSignString: true,
   reversePlayerInfo: false,
   wrongNumber: true,
-  webhookUrl: null,
 };
 
 /** ユーザー設定更新リクエストの型 */
@@ -41,7 +39,6 @@ export const UpdateUserPreferencesRequestSchema = z.object({
   showSignString: z.boolean().optional(),
   reversePlayerInfo: z.boolean().optional(),
   wrongNumber: z.boolean().optional(),
-  webhookUrl: z.string().nullable().optional(),
 });
 
 /** ユーザーIDパラメータの型 */

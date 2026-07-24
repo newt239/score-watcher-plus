@@ -19,6 +19,7 @@ import WinModal from "../WinModal/WinModal";
 import classes from "./Board.module.css";
 
 import type {
+  BoardQuizType,
   GamePlayerProps,
   GetGameDetailResponseType,
   LogDBProps,
@@ -27,19 +28,30 @@ import type {
 import type { UserPreferencesType } from "@/models/user-preference";
 import type { SeriarizedGameLog } from "@/utils/drizzle/types";
 
+/** 他端末の操作を取り込むためのログ取得間隔（ミリ秒） */
+const LOG_POLLING_INTERVAL_MS = 3000;
+
 type BoardProps = {
   gameId: string;
   user: OnlineUserType | null;
   initialGame: GetGameDetailResponseType;
   initialPreferences: UserPreferencesType | null;
+  quizList: BoardQuizType[];
 };
 
-const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPreferences }) => {
+const Board: React.FC<BoardProps> = ({
+  gameId,
+  user,
+  initialGame,
+  initialPreferences,
+  quizList,
+}) => {
   const [players] = useState<GamePlayerProps[]>(initialGame.players);
   const [logs, setLogs] = useState<SeriarizedGameLog[]>(initialGame.logs);
   const [isPending, startTransition] = useTransition();
   const [order, setOrder] = useState<"asc" | "desc">("asc");
   const [skipSuggest, setSkipSuggest] = useState(false);
+  const [editable, setEditable] = useState(initialGame.editable);
 
   // サーバーから取得した設定を使用
   const [preferences] = useState<UserPreferencesType | null>(initialPreferences);
@@ -56,6 +68,14 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
   const apiClient = createApiClient();
 
   const { scores } = computeOnlineScore(initialGame, players, logs);
+
+  // エンドレスチャンスの誤答は同じ問題への解答なので、問題番号を進めない
+  const questionNumber = logs.filter((log) => log.actionType !== "multiple_wrong").length;
+  // スキップは問題番号だけを進める操作なので、表示する問題文は据え置く
+  const answeredCount = logs.filter(
+    (log) => log.actionType !== "multiple_wrong" && log.actionType !== "skip"
+  ).length;
+  const quizPosition = initialGame.quizOffset + answeredCount - 1;
 
   const refreshLogs = useCallback(async () => {
     const res = await parseResponse(
@@ -93,6 +113,95 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
     addLog("-", "through");
   }, [addLog]);
 
+  /**
+   * エンドレスチャンスの誤答を切り替える
+   *
+   * 同じ問題に対する誤答は1件のログにまとめて記録し、同じプレイヤーをもう一度押すと取り消します。
+   */
+  const toggleMultipleWrong = useCallback(
+    (playerId: string) => {
+      const lastLog = logs[logs.length - 1];
+
+      startTransition(async () => {
+        try {
+          if (lastLog?.actionType === "multiple_wrong") {
+            const answeredIds = (lastLog.playerId ?? "").split(",").filter((id) => id !== "");
+
+            if (answeredIds.includes(playerId)) {
+              const remainingIds = answeredIds.filter((id) => id !== playerId);
+
+              if (remainingIds.length === 0) {
+                await parseResponse(
+                  apiClient.games.logs[":logId"].$delete({
+                    param: { logId: String(lastLog.id) },
+                  })
+                );
+              } else {
+                await parseResponse(
+                  apiClient.games.logs[":logId"].$patch({
+                    param: { logId: String(lastLog.id) },
+                    json: { playerId: remainingIds.join(",") },
+                  })
+                );
+              }
+            } else {
+              await parseResponse(
+                apiClient.games.logs[":logId"].$patch({
+                  param: { logId: String(lastLog.id) },
+                  json: { playerId: [...answeredIds, playerId].join(",") },
+                })
+              );
+            }
+          } else {
+            await parseResponse(
+              apiClient.games.logs.$post({
+                json: {
+                  gameId,
+                  playerId,
+                  actionType: "multiple_wrong",
+                  isSystemAction: false,
+                },
+              })
+            );
+          }
+
+          await refreshLogs();
+        } catch (e) {
+          console.error("Failed to toggle multiple wrong:", e);
+          notifications.show({
+            title: "エラー",
+            message: "誤答の記録に失敗しました",
+            color: "red",
+          });
+        }
+      });
+    },
+    [logs, gameId, refreshLogs]
+  );
+
+  const toggleEditable = useCallback(() => {
+    const nextValue = !editable;
+    setEditable(nextValue);
+    startTransition(async () => {
+      try {
+        await parseResponse(
+          apiClient.games[":gameId"].$patch({
+            param: { gameId },
+            json: { key: "editable", value: nextValue },
+          })
+        );
+      } catch (e) {
+        console.error("Failed to switch editable mode:", e);
+        setEditable(!nextValue);
+        notifications.show({
+          title: "エラー",
+          message: "スコアの手動更新モードの切り替えに失敗しました",
+          color: "red",
+        });
+      }
+    });
+  }, [editable, gameId]);
+
   const undo = useCallback(async () => {
     const last = logs[logs.length - 1];
     if (!last) return;
@@ -115,10 +224,22 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
     });
   }, [logs, refreshLogs]);
 
+  // 他の端末からの操作を反映するため、一定間隔でログを取り直す
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // 自分の操作の反映中や手動更新モード中は取得しない
+      if (isPending || editable) return;
+      refreshLogs();
+    }, LOG_POLLING_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [refreshLogs, isPending, editable]);
+
   // キーボードショートカット
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (!initialGame) return;
+      // 手動更新モードではスコアを直接入力するため、ショートカットを無効にする
+      if (editable) return;
       if (event.code.startsWith("Digit") || event.code.startsWith("Numpad")) {
         const code = event.code.startsWith("Digit") ? event.code[5] : event.code[6];
         const idx = Number(code);
@@ -126,7 +247,16 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
           let player = players[idx - 1];
           if (idx === 0 && players.length >= 10) player = players[9];
           if (player) {
-            addLog(player.id, event.shiftKey ? "wrong" : "correct");
+            if (event.shiftKey) {
+              // エンドレスチャンスの誤答は1問分をまとめて記録する
+              if (initialGame.ruleType === "endless-chance") {
+                toggleMultipleWrong(player.id);
+              } else {
+                addLog(player.id, "wrong");
+              }
+            } else {
+              addLog(player.id, "correct");
+            }
           }
         }
       } else if (
@@ -140,7 +270,7 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [players, addLog, undo, initialGame]);
+  }, [players, addLog, undo, initialGame, editable, toggleMultipleWrong]);
 
   // useEffectを先に定義
   useEffect(() => {
@@ -192,10 +322,15 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
           ruleType: initialGame.ruleType,
         }}
         logsLength={logs.length}
+        questionNumber={questionNumber}
+        quizPosition={quizPosition}
+        quizList={quizList}
         onUndo={undo}
         onThrough={addThrough}
         preferences={preferences}
         userId={user.id}
+        editable={editable}
+        onToggleEditable={toggleEditable}
       />
       {initialGame.ruleType === "squarex" && (
         <Box
@@ -226,6 +361,9 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
           isPending={isPending}
           onAddLog={addLog}
           preferences={preferences}
+          showQuiz={quizList.length > 0}
+          editable={editable}
+          onToggleMultipleWrong={toggleMultipleWrong}
         />
       )}
 
@@ -236,6 +374,8 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
         onThrough={addThrough}
         userId={user.id}
         preferences={preferences}
+        editable={editable}
+        onToggleEditable={toggleEditable}
       />
 
       <GameLogs
@@ -243,6 +383,8 @@ const Board: React.FC<BoardProps> = ({ gameId, user, initialGame, initialPrefere
         players={players}
         order={order}
         onToggleOrder={() => setOrder((o) => (o === "asc" ? "desc" : "asc"))}
+        quizList={quizList}
+        quizOffset={initialGame.quizOffset}
       />
 
       <WinModal
