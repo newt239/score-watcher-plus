@@ -3,6 +3,7 @@
   "ignore": ["drizzle.config.ts"],
   "ignoreDependencies": [
     "@css-modules-kit/stylelint-plugin",
+    "@typescript/native-preview",
     "dotenv",
     "import-in-the-middle",
     "require-in-the-middle",
