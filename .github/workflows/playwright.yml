@@ -7,7 +7,18 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has-secrets: ${{ steps.check.outputs.has }}
+    steps:
+      - name: Turso等のSecretsが設定されているか確認
+        id: check
+        run: echo "has=${{ secrets.TURSO_DATABASE_URL != '' }}" >> "$GITHUB_OUTPUT"
   test:
+    # Secretsが未設定のリポジトリではスキップする
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has-secrets == 'true'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
@@ -33,7 +44,7 @@ jobs:
       - name: Playwrightのバージョンを取得し、ブラウザのキャッシュキーを生成
         id: version-checker
         run: |
-          echo "playwright-version=$(npx playwright --version | sed 's/ //g')" >> $GITHUB_OUTPUT
+          echo "playwright-version=$(npx playwright --version | sed 's/ //g')" >> "$GITHUB_OUTPUT"
         shell: bash
       - name: ブラウザのキャッシュを復元
         id: restore-chromium

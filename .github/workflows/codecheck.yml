@@ -29,3 +29,5 @@ jobs:
         run: pnpm run ls-lint
       - name: Knipチェック
         run: pnpm run knip
+      - name: ユニットテスト
+        run: pnpm run test
