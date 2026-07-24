@@ -3,7 +3,8 @@ import { Flex } from "@mantine/core";
 import Header from "./_components/Header/Header";
 import classes from "./layout.module.css";
 
-export const dynamic = "force-static";
+// Headerがログイン状態を表示するためcookiesへのアクセスが必要（force-static禁止）
+export const dynamic = "force-dynamic";
 
 const DefaultLayout = async ({
   children,
