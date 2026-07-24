@@ -9,10 +9,10 @@ import {
   TableTr,
 } from "@mantine/core";
 import { IconAdjustmentsHorizontal, IconEye } from "@tabler/icons-react";
-import { cdate } from "cdate";
 
 import ButtonLink from "@/components/ButtonLink";
 import Link from "@/components/Link";
+import { formatDisplayDate } from "@/utils/date";
 
 import PublicityBadge from "../PublicityBadge/PublicityBadge";
 
@@ -61,7 +61,7 @@ const GameListTable: React.FC<GameListTableProps> = ({ gameList }) => {
                   <TableTd>
                     <PublicityBadge isPublic={game.isPublic} size="lg" />
                   </TableTd>
-                  <TableTd>{cdate(game.updatedAt).format("MM/DD HH:mm")}</TableTd>
+                  <TableTd>{formatDisplayDate(game.updatedAt, "MM/DD HH:mm")}</TableTd>
                   <TableTd>
                     <Group gap="xs">
                       <ButtonLink

@@ -1,10 +1,10 @@
 import { Box, Card, CardSection, Group, Text } from "@mantine/core";
 import { IconAdjustmentsHorizontal, IconEye, IconPlayerPlay } from "@tabler/icons-react";
 import Avatar from "boring-avatars";
-import { cdate } from "cdate";
 
 import ButtonLink from "@/components/ButtonLink";
 import Link from "@/components/Link";
+import { formatDisplayDate } from "@/utils/date";
 
 import PublicityBadge from "../PublicityBadge/PublicityBadge";
 import classes from "./GameListGrid.module.css";
@@ -50,7 +50,7 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
               <CardSection className={classes.game_description}>
                 <Text size="sm">
                   {game.logCount}問目 ・ {game.playerCount}人 ・{" "}
-                  {cdate(game.updatedAt).format("MM/DD")}
+                  {formatDisplayDate(game.updatedAt, "MM/DD")}
                 </Text>
               </CardSection>
               <Group className={classes.game_footer}>

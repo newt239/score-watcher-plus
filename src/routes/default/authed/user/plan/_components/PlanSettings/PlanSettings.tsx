@@ -3,9 +3,9 @@ import { useState, useTransition } from "react";
 import { Badge, Button, Card, Group, List, SegmentedControl, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconExternalLink } from "@tabler/icons-react";
-import { cdate } from "cdate";
 import { parseResponse } from "hono/client";
 
+import { formatDisplayDate } from "@/utils/date";
 import createApiClient from "@/utils/hono/browser";
 
 import classes from "./PlanSettings.module.css";
@@ -87,8 +87,8 @@ const PlanSettings: React.FC<PlanSettingsProps> = ({ subscription, isBillingAvai
       {subscription.currentPeriodEnd && (
         <Text size="sm" c="dimmed" mb="md">
           {subscription.cancelAtPeriodEnd
-            ? `${cdate(subscription.currentPeriodEnd).format("YYYY年MM月DD日")}にフリープランへ戻ります。`
-            : `次回の更新日は${cdate(subscription.currentPeriodEnd).format("YYYY年MM月DD日")}です。`}
+            ? `${formatDisplayDate(subscription.currentPeriodEnd, "YYYY年MM月DD日")}にフリープランへ戻ります。`
+            : `次回の更新日は${formatDisplayDate(subscription.currentPeriodEnd, "YYYY年MM月DD日")}です。`}
         </Text>
       )}
 

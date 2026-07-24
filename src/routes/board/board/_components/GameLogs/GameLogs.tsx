@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Group, Table, Text } from "@mantine/core";
 import { IconCheck, IconCopy, IconSortAscending, IconSortDescending } from "@tabler/icons-react";
-import { cdate } from "cdate";
+
+import { formatDisplayDate } from "@/utils/date";
 
 import classes from "./GameLogs.module.css";
 
@@ -64,7 +65,7 @@ const GameLogs: React.FC<GameLogsProps> = ({
           <td>${order === "desc" ? filteredLogs.length - qn : qn + 1}.</td>
           <td>${player ? player.name : log.actionType === "through" ? "(スルー)" : "-"}</td>
           <td>${log.actionType === "correct" ? "o" : log.actionType === "wrong" ? "x" : "-"}</td>
-          <td>${cdate(log.timestamp || new Date().toISOString()).format("YYYY/MM/DD HH:mm:ss")}</td>${
+          <td>${formatDisplayDate(log.timestamp || new Date().toISOString(), "YYYY/MM/DD HH:mm:ss")}</td>${
             quiz ? `\n          <td>${quiz.question}</td>\n          <td>${quiz.answer}</td>` : ""
           }
         </tr>`;
@@ -123,11 +124,12 @@ const GameLogs: React.FC<GameLogsProps> = ({
                       {log.actionType === "correct" ? "o" : log.actionType === "wrong" ? "x" : "-"}
                     </Table.Td>
                     <Table.Td
-                      title={cdate(log.timestamp || new Date().toISOString()).format(
+                      title={formatDisplayDate(
+                        log.timestamp || new Date().toISOString(),
                         "YYYY年MM月DD日 HH時mm分ss秒"
                       )}
                     >
-                      {cdate(log.timestamp || new Date().toISOString()).format("HH:mm:ss")}
+                      {formatDisplayDate(log.timestamp || new Date().toISOString(), "HH:mm:ss")}
                     </Table.Td>
                     {quiz && (
                       <>
