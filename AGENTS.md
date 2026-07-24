@@ -45,42 +45,51 @@ pnpm run codecheck
 
 ## プロジェクト概要
 
-Score Watcher は競技クイズのスコア可視化Webアプリケーションです。Next.jsのApp Routerアーキテクチャを使用しています。
+Score Watcher は競技クイズのスコア可視化Webアプリケーションです。**React Router v8（framework mode）** で実装し、**Cloudflare Workers** にデプロイしています。
 
-プレイデータはすべてサーバー（Turso DB）に保存されます。Googleアカウントでログインして利用し、ゲームを公開設定にすると認証なしの観戦モード（`/viewer/[game_id]`）で誰でも観戦できます。
+プレイデータはすべてサーバー（Turso DB）に保存されます。Googleアカウントでログインして利用し、ゲームを公開設定にすると認証なしの観戦モード（`/viewer/:game_id`）で誰でも観戦できます。
 
-### URL構成
+### ルーティング
+
+ルートは **`src/routes.ts` の設定ベース**で定義します（ファイル名からの自動生成ではありません）。ルートを追加する際は `src/routes.ts` に `route()` / `index()` / `layout()` / `prefix()` で追記してください。
+
+ルートモジュールのファイル名は `route.tsx`（ページ）と `layout.tsx`（レイアウト）に統一しています。`_components` / `_hooks` はルートモジュールの隣にそのまま置けます（設定ベースなのでルートとして解釈されません）。
 
 - `/` … トップページ（LP、認証不要）
 - `/sign-in` … ログイン（認証不要）
 - `/rules` … 形式一覧（認証不要。ゲーム作成にはログインが必要）
-- `/games`, `/players`, `/quizes`, `/user` … 認証必須（`src/app/(default)/(authed)/` 配下）
-- `/games/[game_id]/board` … スコアボード（認証必須、`(board)`グループ）
-- `/viewer/[game_id]` … 観戦モード（認証不要、公開ゲームのみ）
+- `/games`, `/players`, `/quizes`, `/user` … 認証必須（`src/routes/default/authed/` 配下）
+- `/games/:game_id/board` … スコアボード（認証必須）
+- `/viewer/:game_id` … 観戦モード（認証不要、公開ゲームのみ）
 - `/docs` … アプリ情報（認証不要）
 
-旧URL `/online/*` は `next.config.ts` の `redirects()` で新URLへ301リダイレクトされます。
+旧URL `/online/*` は `workers/app.ts` で新URLへ301リダイレクトされます。
 
 ### 認証ガード
 
-`middleware.ts` は使用していません。認証ガードは以下で行います。
+認証ガードは React Router の **middleware**（`src/middleware/auth.ts` の `authMiddleware`）で行います。ガードを通ったユーザーは `userContext`（`src/context.ts`）に載るので、loader からは `context.get(userContext)` で取得してください。
 
-- `src/app/(default)/(authed)/layout.tsx` … `(authed)`グループ全体を`getUser()` + `redirect("/sign-in")`で保護（`dynamic = "force-dynamic"` を必ず維持すること）
-- `src/app/(board)/games/[game_id]/board/page.tsx` … `(board)`グループにはlayoutガードがないためページ内で個別に保護
-- API側は各コントローラーが`getUserId()`で認証確認
+- `src/routes/default/authed/layout.tsx` … 認証必須グループ全体を保護
+- `src/routes/board/board/route.tsx` … 上記グループの配下ではないため、このルートに個別に `middleware` を付与
+- API側は各コントローラーが `getUserId(c.req.raw.headers)` で認証確認
 
 ## 主要技術
 
 ### フロントエンド
 
-Next.js v15を使用し、TypeScriptで記述します。App Routerを使用し、なるべくサーバーコンポーネントで実装してください。ユーザーとのインタラクションが必要な部分に限り`use client`の使用を許可しますが、その領域は最低限にしてください。
+**React Router v8（framework mode）** を **Vite** 上で使用し、TypeScriptで記述します。React Server Components は使用しません（React Router の RSC サポートは experimental のため採用していません）。したがって `"use client"` は不要で、書いてはいけません。
 
-**データ取得とuseEffectについて:**
+**データ取得について:**
 
-- **初期データ取得**: page.tsxでサーバーコンポーネントとして実装し、propsでコンポーネントに渡してください
+- **初期データ取得**: ルートモジュールの `loader` で行い、`loaderData` としてコンポーネントへ渡してください
+- **loader からは `src/server/repositories/` を直接呼んでよい**です。HTTPの往復が無くなるため、画面の初期表示ではこちらを使ってください
+- **クライアントからの更新・再取得**: `createApiClient()`（`@/utils/hono/browser`）でHono RPC経由のAPIを呼んでください。**コンポーネントから `repositories` を直接呼ぶことは禁止**です（呼んでよいのは loader / action / Honoのコントローラーだけ）
 - **useEffect**: データ取得には使用しないでください。ブラウザAPIアクセスやイベントリスナー登録など、真に必要な場合のみ使用を許可します
-- **API Routes経由でのデータアクセス**: コンポーネントから`repositories`以下の関数を直接呼び出さないでください。必ずAPI Routes経由で取得してください
 - **型アサーションの使用禁止**: 安易に型アサーションを使用しないでください。APIレスポンスは型を信頼し、そのまま受け入れてください
+- **日付の扱い**: リポジトリは `Date` を返しますが、コンポーネントの型はAPIレスポンスに合わせた文字列形式（`SeriarizedGame` など）です。loader で返す際は `serializeGameForCompute()`（`@/server/utils/board-data`）などでISO文字列へ揃えてください
+- **日時の表示**: SSRとブラウザでタイムゾーンがずれてハイドレーションが壊れるため、`formatDisplayDate()`（`@/utils/date`）を使ってください。`cdate().format()` の直接呼び出しは禁止です
+
+ルート更新後に画面を再取得したい場合は `useRevalidator().revalidate()`、遷移は `useNavigate()` を使用します。
 
 Reactのガイドも参考にしてください：
 https://react.dev/learn/you-might-not-need-an-effect
@@ -99,11 +108,19 @@ UIコンポーネントライブラリの一つである**Mantine**を使用し�
 - 接続クライアント: `src/utils/drizzle/client.ts`
 - データベース操作は`src/server/repositories/`以下の関数で行い、必ず`userId`で本人スコープを強制してください
 
-観戦モードのボードデータは**Cloudflare KV**（`src/utils/cache/`）でキャッシュされます。
+観戦モードのボードデータは**Cloudflare KV**（`src/utils/cache/`）でキャッシュされます。KVはREST APIではなく `wrangler.jsonc` の `BOARD_CACHE` バインディング経由でアクセスします（`import { env } from "cloudflare:workers"`）。
 
 ### 認証
 
-**better-auth**（`src/utils/auth/auth.ts`）を使用します。本番はGoogle OAuth、非本番環境ではE2Eテスト用のEmail/Password認証も有効です。サーバー側でのユーザー取得は`src/utils/auth/auth-helpers.ts`の`getUser()`を使用してください。
+**better-auth**（`src/utils/auth/auth.ts`）を使用します。本番はGoogle OAuth、非本番環境ではE2Eテスト用のEmail/Password認証も有効です。サーバー側でのユーザー取得は`src/utils/auth/auth-helpers.ts`の`getUser(headers)`を使用してください（`Headers`を引数で渡します）。
+
+### デプロイ先
+
+**Cloudflare Workers** です。エントリは `workers/app.ts` で、`/api/*` をHonoへ、それ以外を React Router のリクエストハンドラへ振り分けています。
+
+- 環境判定は `process.env.NODE_ENV` ではなく **`import.meta.env.PROD`** を使ってください。Workers上では `process.env.NODE_ENV` が未定義になり、本番でE2E用エンドポイントが開いてしまいます
+- クライアントに埋め込む環境変数は **`VITE_` プレフィックス**が必須です（ビルド時に静的置換されます）。サーバー専用のシークレットはプレフィックス無しで `wrangler secret put` に登録します
+- Cloudflareのバインディングは `context.get(cloudflareContext)`（`src/context.ts`）から参照できます
 
 ## コマンド一覧
 
@@ -111,16 +128,20 @@ UIコンポーネントライブラリの一つである**Mantine**を使用し�
 
 ```bash
 pnpm install          # 依存関係のインストール
-pnpm run dev          # Turbo使用での開発サーバー起動 (localhost:3000)
+pnpm run dev          # Vite開発サーバー起動 (localhost:3000)
 pnpm run build        # プロダクションビルド
-pnpm run start        # プロダクションサーバー起動
+pnpm run preview      # ビルドして実workerd(wrangler dev)で起動 (localhost:8787)
+pnpm run deploy       # ビルドしてCloudflare Workersへデプロイ
+pnpm run cf-typegen   # wrangler.jsoncからEnv型を生成（バインディング変更時に実行）
 ```
+
+`pnpm run dev` はVite上でも Workers ランタイムを使うため本番に近い挙動になりますが、Node と workerd の差で dev だけ通るケースがあります。**ランタイム挙動に関わる変更をしたときは `pnpm run preview` でも確認してください。**
 
 ### 品質管理
 
 ```bash
 pnpm run codecheck     # typecheck + lint + format + stylelint + ls-lint + knip を一括実行
-pnpm run typecheck     # TypeScript型チェック
+pnpm run typecheck     # React Routerの型生成 + TypeScript型チェック
 pnpm run lint          # oxlint
 pnpm run lint:fix
 pnpm run format        # oxfmt（importソート含む）
@@ -149,28 +170,32 @@ pnpm run vitest       # Vitest（watchモード）
 pnpm run playwright   # Playwright E2E テスト
 ```
 
-E2Eテスト（`tests/online-game.spec.ts`）は開発サーバー経由で実際のTurso DBに接続します。ローカル実行には`.env`にTurso・better-auth関連の環境変数が必要です。テストログインは`/api/e2e/test-login`（NODE_ENV=production では無効）を使用します。
+E2Eテスト（`tests/online-game.spec.ts`）は開発サーバー経由で実際のTurso DBに接続します。ローカル実行には`.env`にTurso・better-auth関連の環境変数が必要です。テストログインは`/api/e2e/test-login`（本番ビルドでは403で無効）を使用します。
 
 ## ファイル構造とアーキテクチャ
 
 ### ディレクトリ構成
 
 ```bash
+workers/
+└── app.ts                 # Workerのエントリ（Honoのマウント・旧URLリダイレクト・Sentry）
 src/
-├── app/
-│   ├── (board)/           # スコアボード・観戦ページ群（全画面レイアウト）
-│   │   ├── games/[game_id]/board/  # スコアボード（認証必須）
-│   │   └── viewer/[game_id]/       # 観戦モード（認証不要）
-│   ├── (default)/         # 通常レイアウトのページ群
-│   │   ├── (authed)/      # 認証必須ページ（games, players, quizes, user）
-│   │   ├── rules/         # 形式一覧（公開）
-│   │   ├── sign-in/       # ログイン
-│   │   ├── docs/          # アプリ情報
-│   │   └── _components/   # (default)グループ共有コンポーネント
-│   ├── _components/       # アプリ全体で使用する共有コンポーネント
-│   ├── api/               # API Routes（Honoでルーティング）
-│   ├── globals.css        # グローバルスタイル
-│   └── layout.tsx         # ルートレイアウト
+├── routes.ts              # ルート定義（設定ベース）
+├── root.tsx               # ルートレイアウト（Mantine・meta・Scripts）
+├── entry.client.tsx       # クライアントエントリ（Sentry初期化）
+├── context.ts             # loader/middleware間で共有するコンテキスト
+├── globals.css            # グローバルスタイル
+├── middleware/            # React Routerのmiddleware（認証ガード）
+├── routes/
+│   ├── board/             # スコアボード・観戦ページ群（全画面レイアウト）
+│   │   ├── board/         # スコアボード（認証必須）
+│   │   └── viewer/        # 観戦モード（認証不要）
+│   └── default/           # 通常レイアウトのページ群
+│       ├── authed/        # 認証必須ページ（games, players, quizes, user）
+│       ├── rules/         # 形式一覧（公開）
+│       ├── sign-in/       # ログイン
+│       ├── docs/          # アプリ情報
+│       └── _components/   # 通常レイアウト共有コンポーネント
 ├── assets/                # 画像などの静的アセット
 ├── components/            # 汎用UIコンポーネント（ButtonLink, Link等）
 ├── models/                # Zodスキーマと型定義（機能ごと）
@@ -224,7 +249,7 @@ src/
 - 原則としてアロー関数を使用してください。
 - コンポーネントは原則として`default`でexportしてください。
 - 決して`any`を使用しないでください。
-- 型定義には `type`を使用してください。`interface`は禁止です。
+- 型定義には `type`を使用してください。`interface`は禁止です（例外は`src/vite-env.d.ts`の`ImportMetaEnv`だけで、宣言マージのためにinterfaceが必須です）。
 - 原則として型アサーションを使用しないでください。使用する場合は明確な理由が必要です。
 - パスエイリアスは`@/`で`src/`を参照してください。
 - CSS Modulesは自動生成されたTypeScript定義を使用してください。
@@ -254,9 +279,15 @@ src/
    - `src/utils/online/computeScore/`内の対応ファイルを編集
    - テストファイルも合わせて更新
 
+4. ルート追加時:
+   - ルートモジュールを`src/routes/`以下に`route.tsx`（または`layout.tsx`）として作成
+   - `src/routes.ts`に登録
+   - 型は`import type { Route } from "./+types/route";`で受け取る（`pnpm run typecheck`で自動生成されます）
+   - ページタイトルは`meta`をexportして設定します。**`meta`は親ルートのものを上書きするため、タイトルが必要なルートでは必ず`{ title: ... }`を含めてください**
+
 ### API Routes（Hono）
 
-データベースとのやり取りはすべてHonoのAPI Routesで実装します。
+クライアントからのデータ更新・再取得はすべてHonoのAPI Routesで実装します（画面の初期データはルートの`loader`が担当します）。
 
 - API RoutesのルートはすべてHonoで管理します
 - エントリーポイントは`src/server/index.ts`で管理します
@@ -265,7 +296,7 @@ src/
 - **バリデーションには必ず`zValidator`を使用**してください（リクエストボディ、クエリパラメータ両方）
 - **バリデーションスキーマは`src/models/`で定義**し、UpperCamelCaseで命名してください
 - データベースとのやり取りは`repositories`以下で行ってください
-- **APIクライアント**: クライアントサイドでは`createApiClient()`（`@/utils/hono/browser`）、サーバーサイドでは`createApiClientOnServer()`（`@/utils/hono/server`）を使用してください。生のfetchは使用しないでください
+- **APIクライアント**: クライアントサイドでは`createApiClient()`（`@/utils/hono/browser`）を使用してください。生のfetchは使用しないでください。サーバーサイド（loader）からAPIをHTTPで呼ぶことはせず、`repositories`を直接呼びます
 
 **バリデーション実装例:**
 
@@ -317,27 +348,32 @@ const handler = factory.createHandlers(
 - APIリクエストを行う際は`useTransition`を使用してローディング表示を行ってください。
 - ボタンを連打できないように`disabled`を設定してください。
 
-### サーバーサイド データ取得パターン
+### ルートの実装パターン
 
 ```typescript
-const PlayersPage = async () => {
-  const apiClient = await createApiClientOnServer();
-  let initialData: ApiDataType[] = [];
-  try {
-    const response = await apiClient.players.$get({ query: {} });
-    if (response.ok) {
-      const data = await response.json();
-      initialData = data.data.items || [];
-    }
-  } catch (error) {
-    console.error("Failed to fetch initial data:", error);
-  }
+import { userContext } from "@/context";
+import { getPlayers } from "@/server/repositories/player";
 
-  return <PlayersComponent initialData={initialData} />;
+import type { Route } from "./+types/route";
+
+export const meta: Route.MetaFunction = () => [{ title: "プレイヤー管理 - Score Watcher" }];
+
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const user = context.get(userContext);
+
+  return { initialPlayers: await getPlayers(user.id) } as const;
 };
+
+const PlayersPage = ({ loaderData }: Route.ComponentProps) => {
+  return <PlayersComponent initialPlayers={loaderData.initialPlayers} />;
+};
+
+export default PlayersPage;
 ```
 
-※ `(authed)`グループ配下は layout が認証ガードするため、各ページでの`getUser()`チェックは不要です。
+※ 認証必須グループ配下は layout の `middleware` がガードするため、各ルートでの認証チェックは不要です。`context.get(userContext)` は必ずユーザーを返します。
+
+データ取得に失敗した／対象が見つからない場合は `throw data(null, { status: 404 })` を使い、表示は `ErrorBoundary` に任せてください。
 
 ### 型定義パターン
 
@@ -359,7 +395,10 @@ export type ApiDataType = {
 - **ファイル名規則**: ls-lint（`.ls-lint.yml`）
 - **未使用コード検出**: knip（`knip.json`）。未使用エクスポート・型は警告扱いでベースライン化中
 - **pre-commitフック**: lefthook（`lefthook.yml`）で lint:fix / format:fix / stylelint:fix / ls-lint を実行
-- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`deploy.yml`（mainへのpushでCloudflare Workersへデプロイ）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+- **ビルド**: Vite（`vite.config.ts`）。pnpm構成ではSSRの依存最適化でReactが二重に読み込まれてフックが壊れるため、`resolve.dedupe` の指定を外さないこと
+- **Workers設定**: `wrangler.jsonc`。バインディングを変更したら `pnpm run cf-typegen` で `worker-configuration.d.ts` を再生成すること
+- **パッケージ**: ESM-only（`package.json`の`"type": "module"`）。React Router v8 と Cloudflare の各プラグインがESM専用のため外さないこと
 
 ## AGENTS.md更新ルール
 
