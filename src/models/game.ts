@@ -243,6 +243,46 @@ export const ResetGameLogsRequestParamSchema = z.object({
   gameId: z.string().min(1),
 });
 
+/** ゲームインポートで受け取るプレイヤーのスキーマ */
+const ImportGamePlayerSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  affiliation: z.string().nullable().optional(),
+  displayOrder: z.number().int().min(0),
+  initialScore: z.number().int().nullable().optional(),
+  initialCorrectCount: z.number().int().nullable().optional(),
+  initialWrongCount: z.number().int().nullable().optional(),
+  baseCorrectPoint: z.number().int().min(1).optional(),
+});
+
+/** ゲームインポートで受け取るログのスキーマ */
+const ImportGameLogSchema = z.object({
+  playerId: z.string().nullable().optional(),
+  actionType: z.string() as z.ZodSchema<Variants>,
+  questionNumber: z.number().int().nullable().optional(),
+  scoreChange: z.number().int().nullable().optional(),
+  isSystemAction: z.boolean().nullable().optional(),
+  timestamp: z.string().optional(),
+});
+
+/** ゲームインポートリクエストのスキーマ（エクスポートしたJSONの形式に対応） */
+export const ImportGameRequestSchema = z.object({
+  data: z.object({
+    name: z.string().min(1),
+    ruleType: z.string() as z.ZodSchema<RuleNames>,
+    option: z.unknown().optional(),
+    discordWebhookUrl: z.string().nullable().optional(),
+    quizSetName: z.string().nullable().optional(),
+    quizOffset: z.number().int().min(0).optional(),
+    players: z.array(ImportGamePlayerSchema),
+    logs: z.array(ImportGameLogSchema),
+  }),
+});
+
+/** ゲームインポートリクエストの型 */
+export type ImportGameRequestType = z.infer<typeof ImportGameRequestSchema>;
+
 /** ゲームにプレイヤー追加リクエストのスキーマ */
 export const AddPlayerToGameRequestSchema = z.object({
   playerId: z.string().min(1),

@@ -12,6 +12,7 @@ import { createApiClientOnServer } from "@/utils/hono/server";
 import GameListControl from "./_components/GameListControl/GameListControl";
 import GameListGrid from "./_components/GameListGrid/GameListGrid";
 import GameListTable from "./_components/GameListTable/GameListTable";
+import ImportGame from "./_components/ImportGame/ImportGame";
 
 export const metadata: Metadata = {
   title: "ゲーム一覧",
@@ -56,9 +57,12 @@ const GamesPage = async ({ searchParams }: GamesPageProps) => {
     <>
       <Group justify="space-between" mb="lg">
         <Title order={2}>ゲーム</Title>
-        <ButtonLink href="/rules" leftSection={<IconPlus size={16} />}>
-          新しいゲームを作成
-        </ButtonLink>
+        <Group gap="sm">
+          <ImportGame />
+          <ButtonLink href="/rules" leftSection={<IconPlus size={16} />}>
+            新しいゲームを作成
+          </ButtonLink>
+        </Group>
       </Group>
       <GameListControl />
       {orderedGameList.length === 0 ? (

@@ -10,6 +10,7 @@ import type {
   AddGameLogRequestType,
   AddPlayerToGameRequestType,
   CreateGameRequestType,
+  ImportGameRequestType,
   UpdateGamePlayerRequestJsonType,
   UpdateGamePlayerType,
   UpdateGameRequestJsonType,
@@ -581,4 +582,106 @@ export const getPublicGameById = async (gameId: string) => {
     })),
     logs: gameLogData,
   };
+};
+
+/**
+ * エクスポートしたゲームデータからゲームを復元する
+ *
+ * プレイヤーは同じIDのものがあれば再利用し、無ければ同名のプレイヤーを探して紐づけます。 どちらも見つからない場合は新しいプレイヤーとして作成します。
+ *
+ * @param importData エクスポートされたゲームデータ
+ * @param userId 復元先のユーザーID
+ * @returns 作成したゲームのID
+ */
+export const importGame = async (importData: ImportGameRequestType, userId: string) => {
+  const { data } = importData;
+
+  const gameId = nanoid();
+  await DBClient.insert(game).values({
+    id: gameId,
+    name: data.name,
+    ruleType: data.ruleType,
+    discordWebhookUrl: data.discordWebhookUrl ?? null,
+    option: setupDefaultGameOption({
+      ruleType: data.ruleType,
+      option: data.option,
+    }),
+    quizSetName: data.quizSetName ?? null,
+    quizOffset: data.quizOffset ?? 0,
+    userId,
+  });
+
+  // インポート元のプレイヤーIDを、このユーザーが持つプレイヤーIDへ対応付ける
+  const playerIdMap = new Map<string, string>();
+
+  for (const importedPlayer of data.players) {
+    const [existingById] = await DBClient.select({ id: player.id })
+      .from(player)
+      .where(
+        and(eq(player.id, importedPlayer.id), eq(player.userId, userId), isNull(player.deletedAt))
+      )
+      .limit(1);
+
+    let playerId = existingById?.id;
+
+    if (!playerId) {
+      const [existingByName] = await DBClient.select({ id: player.id })
+        .from(player)
+        .where(
+          and(
+            eq(player.name, importedPlayer.name),
+            eq(player.userId, userId),
+            isNull(player.deletedAt)
+          )
+        )
+        .limit(1);
+      playerId = existingByName?.id;
+    }
+
+    if (!playerId) {
+      playerId = nanoid();
+      await DBClient.insert(player).values({
+        id: playerId,
+        name: importedPlayer.name,
+        displayName: importedPlayer.name,
+        affiliation: importedPlayer.affiliation ?? null,
+        description: importedPlayer.description ?? null,
+        userId,
+      });
+    }
+
+    playerIdMap.set(importedPlayer.id, playerId);
+
+    await DBClient.insert(gamePlayer).values({
+      gameId,
+      playerId,
+      displayOrder: importedPlayer.displayOrder,
+      initialScore: importedPlayer.initialScore ?? 0,
+      initialCorrectCount: importedPlayer.initialCorrectCount ?? 0,
+      initialWrongCount: importedPlayer.initialWrongCount ?? 0,
+      baseCorrectPoint: importedPlayer.baseCorrectPoint ?? 1,
+      userId,
+    });
+  }
+
+  for (const importedLog of data.logs) {
+    // スルーやスキップのようにプレイヤーが紐づかないログもそのまま復元する
+    const mappedPlayerId = importedLog.playerId
+      ? (playerIdMap.get(importedLog.playerId) ?? null)
+      : null;
+
+    await DBClient.insert(gameLog).values({
+      id: nanoid(),
+      gameId,
+      playerId: mappedPlayerId,
+      questionNumber: importedLog.questionNumber ?? null,
+      actionType: importedLog.actionType,
+      scoreChange: importedLog.scoreChange ?? 0,
+      timestamp: importedLog.timestamp ? new Date(importedLog.timestamp) : new Date(),
+      isSystemAction: importedLog.isSystemAction ?? false,
+      userId,
+    });
+  }
+
+  return { gameId, playerCount: data.players.length, logCount: data.logs.length };
 };
