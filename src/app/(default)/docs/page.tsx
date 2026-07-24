@@ -10,7 +10,7 @@ import RecommendedEnvironment from "./_components/RecommendedEnvironment";
 export const metadata: Metadata = {
   title: "アプリ情報",
   alternates: {
-    canonical: "https://score-watcher.com/docs",
+    canonical: "https://plus.score-watcher.com/docs",
   },
 };
 

@@ -63,7 +63,7 @@ export async function sendDiscordWinnerNotification(gameData: GameWithRelations)
     }
 
     // Discord通知メッセージを作成
-    const description = `${winnerPlayer.name}さんが勝ち抜けました:tada:\nhttps://score-watcher.com/games/${gameData.id}/board`;
+    const description = `${winnerPlayer.name}さんが勝ち抜けました:tada:\nhttps://plus.score-watcher.com/games/${gameData.id}/board`;
 
     // Discord Webhook APIにリクエストを送信
     await fetch(gameData.discordWebhookUrl, {
@@ -73,7 +73,7 @@ export async function sendDiscordWinnerNotification(gameData: GameWithRelations)
       },
       body: JSON.stringify({
         username: "Score Watcher",
-        avatar_url: "https://score-watcher.com/icons/icon-512x512.png",
+        avatar_url: "https://plus.score-watcher.com/icons/icon-512x512.png",
         embeds: [
           {
             title: gameData.name,
@@ -82,7 +82,7 @@ export async function sendDiscordWinnerNotification(gameData: GameWithRelations)
             color: 2664261, // Score Watcherのテーマカラー
             footer: {
               text: "© 2022-2024 newt",
-              icon_url: "https://score-watcher.com/icons/icon-512x512.png",
+              icon_url: "https://plus.score-watcher.com/icons/icon-512x512.png",
             },
           },
         ],
@@ -107,7 +107,7 @@ export async function sendDiscordResetNotification(gameData: GameWithRelations):
 
   try {
     // Discord通知メッセージを作成
-    const description = `ゲームがリセットされました\nhttps://score-watcher.com/games/${gameData.id}/board`;
+    const description = `ゲームがリセットされました\nhttps://plus.score-watcher.com/games/${gameData.id}/board`;
 
     // Discord Webhook APIにリクエストを送信
     await fetch(gameData.discordWebhookUrl, {
@@ -117,7 +117,7 @@ export async function sendDiscordResetNotification(gameData: GameWithRelations):
       },
       body: JSON.stringify({
         username: "Score Watcher",
-        avatar_url: "https://score-watcher.com/icons/icon-512x512.png",
+        avatar_url: "https://plus.score-watcher.com/icons/icon-512x512.png",
         embeds: [
           {
             title: gameData.name,
@@ -126,7 +126,7 @@ export async function sendDiscordResetNotification(gameData: GameWithRelations):
             color: 16711680, // 赤色（リセット通知用）
             footer: {
               text: "© 2022-2024 newt",
-              icon_url: "https://score-watcher.com/icons/icon-512x512.png",
+              icon_url: "https://plus.score-watcher.com/icons/icon-512x512.png",
             },
           },
         ],

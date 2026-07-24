@@ -7,7 +7,7 @@ import Link from "@/components/Link";
 export const metadata: Metadata = {
   title: "利用規約",
   alternates: {
-    canonical: "https://score-watcher.com/docs/terms_of_service",
+    canonical: "https://plus.score-watcher.com/docs/terms_of_service",
   },
 };
 

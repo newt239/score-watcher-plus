@@ -6,7 +6,7 @@ import Term from "./_components/Term";
 
 export const metadata: Metadata = {
   alternates: {
-    canonical: "https://score-watcher.com/",
+    canonical: "https://plus.score-watcher.com/",
   },
 };
 

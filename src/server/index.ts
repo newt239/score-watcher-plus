@@ -48,7 +48,7 @@ const app = new Hono()
           origin.endsWith("score-watcher.com") ||
           origin.endsWith("localhost:3000")
           ? origin
-          : "https://score-watcher.com";
+          : "https://plus.score-watcher.com";
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],

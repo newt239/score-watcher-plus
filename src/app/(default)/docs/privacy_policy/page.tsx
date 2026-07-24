@@ -7,7 +7,7 @@ import Link from "@/components/Link";
 export const metadata: Metadata = {
   title: "プライバシーポリシー",
   alternates: {
-    canonical: "https://score-watcher.com/docs/privacy_policy",
+    canonical: "https://plus.score-watcher.com/docs/privacy_policy",
   },
 };
 

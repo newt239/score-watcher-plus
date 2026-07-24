@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "ユーザー設定",
   alternates: {
-    canonical: "https://score-watcher.com/user",
+    canonical: "https://plus.score-watcher.com/user",
   },
 };
 

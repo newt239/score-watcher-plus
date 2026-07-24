@@ -22,7 +22,7 @@ const ViewerNotFound = () => {
         </ButtonLink>
       </Group>
       <Text>
-        <Link href="https://score-watcher.com/">https://score-watcher.com/</Link>
+        <Link href="https://plus.score-watcher.com/">https://plus.score-watcher.com/</Link>
       </Text>
     </main>
   );

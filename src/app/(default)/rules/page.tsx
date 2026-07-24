@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "形式一覧",
   alternates: {
-    canonical: "https://score-watcher.com/rules",
+    canonical: "https://plus.score-watcher.com/rules",
   },
 };
 
