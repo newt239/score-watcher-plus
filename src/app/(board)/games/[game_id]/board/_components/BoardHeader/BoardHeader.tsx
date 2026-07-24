@@ -34,6 +34,8 @@ type OnlineGame = {
 type BoardHeaderProps = {
   game: OnlineGame;
   logsLength: number;
+  /** 画面に表示する問題番号（0始まり） */
+  questionNumber: number;
   /** 現在表示する問題文の位置（0始まり。問題未開始や範囲外の場合は負値） */
   quizPosition: number;
   quizList: BoardQuizType[];
@@ -49,6 +51,7 @@ type BoardHeaderProps = {
 const BoardHeader: React.FC<BoardHeaderProps> = ({
   game,
   logsLength,
+  questionNumber,
   quizPosition,
   quizList,
   onUndo,
@@ -84,7 +87,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
 
   if (!showBoardHeader) return null;
 
-  const displayedQuestionNumber = logsLength + 1 + manualQuizShift;
+  const displayedQuestionNumber = questionNumber + 1 + manualQuizShift;
   const displayedQuizPosition = quizPosition + manualQuizShift;
 
   return (

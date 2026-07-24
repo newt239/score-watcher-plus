@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Text } from "@mantine/core";
 
@@ -39,6 +39,20 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
   // APIから受け取ったプレイヤーデータをそのまま使用
   // すでにサーバー側で計算済みのスコアデータ
   const players = gameData.players;
+
+  // 直近のログを新しい順に並べる。複数人の誤答は1問の中での解答なので問題番号を進めない
+  const shownLogs = useMemo(() => {
+    let questionNumber = 0;
+    return gameData.logs
+      .map((log) => {
+        if (log.variant !== "multiple_wrong") {
+          questionNumber += 1;
+        }
+        return { log, questionNumber: Math.max(1, questionNumber) };
+      })
+      .slice(-10)
+      .reverse();
+  }, [gameData.logs]);
 
   const fetchData = useCallback(async () => {
     if (isLoading) return;
@@ -98,25 +112,21 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
           ゲームログ
         </Text>
         <div className={classes.logs_container}>
-          {gameData.logs.length === 0 ? (
+          {shownLogs.length === 0 ? (
             <Text size="sm" c="dimmed">
               まだ解答はありません。
             </Text>
           ) : (
-            gameData.logs
-              .slice(-10)
-              .reverse()
-              .map((log, index) => {
-                const player = gameData.players.find((p) => p.player_id === log.player_id);
-                const questionNumber = gameData.logs.length - index;
-                return (
-                  <div key={log.id} className={classes.log_item}>
-                    <Text size="sm" c="dimmed">
-                      Q{questionNumber} {player ? player.name : "－"} / {LOG_LABELS[log.variant]}
-                    </Text>
-                  </div>
-                );
-              })
+            shownLogs.map(({ log, questionNumber }) => {
+              const player = gameData.players.find((p) => p.player_id === log.player_id);
+              return (
+                <div key={log.id} className={classes.log_item}>
+                  <Text size="sm" c="dimmed">
+                    Q{questionNumber} {player ? player.name : "－"} / {LOG_LABELS[log.variant]}
+                  </Text>
+                </div>
+              );
+            })
           )}
         </div>
       </div>

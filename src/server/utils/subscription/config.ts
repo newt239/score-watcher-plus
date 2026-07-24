@@ -1,7 +1,6 @@
-/** プランコード */
-export const planCodes = ["free", "plus"] as const;
+import type { PlanCodeType } from "@/models/subscription";
 
-export type PlanCode = (typeof planCodes)[number];
+export type PlanCode = PlanCodeType;
 
 /** プランごとの上限値 */
 export type PlanLimits = {

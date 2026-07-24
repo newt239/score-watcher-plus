@@ -12,12 +12,29 @@ import { getPublicGameById } from "../../repositories/game";
 
 const factory = createFactory();
 
+/** 同じゲームへのアクセスをCDNでまとめて処理させるためのキャッシュ指定 */
+const CACHE_CONTROL = "public, s-maxage=2, stale-while-revalidate=10";
+
 /** 公開ゲームのボードデータを取得（認証不要・viewer用） */
 const handler = factory.createHandlers(
   zValidator("param", GetViewerBoardDataParamSchema),
   async (c) => {
     try {
       const { gameId } = c.req.valid("param");
+
+      const { count, retryAfterSeconds } = consumeRateLimit(
+        `viewer:${gameId}:${getClientIdentifier(c.req.raw.headers)}`
+      );
+
+      // フリープランの上限内であれば、キャッシュだけで応答してデータベースへの問い合わせを避ける
+      if (count <= PLAN_LIMITS.free.viewerRateLimitPerMinute) {
+        const cachedData = await getCachedBoardData(gameId);
+
+        if (cachedData) {
+          c.header("Cache-Control", CACHE_CONTROL);
+          return c.json({ data: cachedData } as const);
+        }
+      }
 
       // ゲームが公開されているかを確認し、所有者のプランに応じた上限を適用する
       const gameData = await getPublicGameById(gameId);
@@ -35,12 +52,7 @@ const handler = factory.createHandlers(
         ? await getUserSubscription(gameData.userId)
         : ({ planCode: "free" } as const);
 
-      const { allowed, retryAfterSeconds } = consumeRateLimit(
-        `viewer:${gameId}:${getClientIdentifier(c.req.raw.headers)}`,
-        PLAN_LIMITS[planCode].viewerRateLimitPerMinute
-      );
-
-      if (!allowed) {
+      if (count > PLAN_LIMITS[planCode].viewerRateLimitPerMinute) {
         c.header("Retry-After", String(retryAfterSeconds));
         return c.json(
           {
@@ -50,25 +62,20 @@ const handler = factory.createHandlers(
         );
       }
 
-      // 同じゲームへのアクセスはCDNでまとめて処理させる
-      c.header("Cache-Control", "public, s-maxage=2, stale-while-revalidate=10");
+      c.header("Cache-Control", CACHE_CONTROL);
 
-      // まずキャッシュからデータを取得
+      // フリープランの上限を超えていた場合はキャッシュを確認していないため、ここで改めて確認する
       const cachedData = await getCachedBoardData(gameId);
 
       if (cachedData) {
-        return c.json({
-          data: cachedData,
-        } as const);
+        return c.json({ data: cachedData } as const);
       }
 
       // キャッシュが無い場合はその場で組み立てて返し、次回以降のためにキャッシュへ保存する
       const boardData = buildBoardData(gameData);
       await cacheBoardData(gameId, boardData);
 
-      return c.json({
-        data: boardData,
-      } as const);
+      return c.json({ data: boardData } as const);
     } catch (error) {
       console.error("Failed to get viewer board data:", error);
       return c.json(

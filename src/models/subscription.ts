@@ -1,9 +1,13 @@
 import { z } from "zod";
 
-import { planCodes } from "@/server/utils/subscription/config";
+/** プランコード */
+export const planCodes = ["free", "plus"] as const;
 
 /** プランコードのスキーマ */
 export const PlanCodeSchema = z.enum(planCodes);
+
+/** プランコードの型 */
+export type PlanCodeType = z.infer<typeof PlanCodeSchema>;
 
 /** 課金間隔のスキーマ */
 export const BillingIntervalSchema = z.enum(["week", "month"]);

@@ -69,8 +69,12 @@ const Board: React.FC<BoardProps> = ({
 
   const { scores } = computeOnlineScore(initialGame, players, logs);
 
+  // エンドレスチャンスの誤答は同じ問題への解答なので、問題番号を進めない
+  const questionNumber = logs.filter((log) => log.actionType !== "multiple_wrong").length;
   // スキップは問題番号だけを進める操作なので、表示する問題文は据え置く
-  const answeredCount = logs.filter((log) => log.actionType !== "skip").length;
+  const answeredCount = logs.filter(
+    (log) => log.actionType !== "multiple_wrong" && log.actionType !== "skip"
+  ).length;
   const quizPosition = initialGame.quizOffset + answeredCount - 1;
 
   const refreshLogs = useCallback(async () => {
@@ -318,6 +322,7 @@ const Board: React.FC<BoardProps> = ({
           ruleType: initialGame.ruleType,
         }}
         logsLength={logs.length}
+        questionNumber={questionNumber}
         quizPosition={quizPosition}
         quizList={quizList}
         onUndo={undo}

@@ -18,35 +18,32 @@ const cleanupExpiredBuckets = (now: number) => {
 };
 
 /**
- * 1分あたりのアクセス回数を制限する
+ * 現在の1分間のアクセス回数を1つ増やす
  *
- * インスタンス内のメモリだけで判定するため厳密な制御はできませんが、 単一の配信先へ短時間に大量のリクエストが集中する状況を緩和できます。
+ * インスタンス内のメモリだけで数えるため厳密な制御はできませんが、 単一の配信先へ短時間に 大量のリクエストが集中する状況を緩和できます。上限との比較は、上限値を決められる呼び出し側で
+ * 行ってください。
  *
- * @param key 制限の単位となるキー（例: ゲームIDとIPの組み合わせ）
- * @param limitPerMinute 1分あたりに許可するリクエスト数
- * @returns 許可されたかどうかと、超過時の待機秒数
+ * @param key 集計の単位となるキー（例: ゲームIDとIPの組み合わせ）
+ * @returns 今回を含むアクセス回数と、集計がリセットされるまでの秒数
  */
-export const consumeRateLimit = (key: string, limitPerMinute: number) => {
+export const consumeRateLimit = (key: string) => {
   const now = Date.now();
   cleanupExpiredBuckets(now);
 
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return { allowed: true, retryAfterSeconds: 0 } as const;
+    const resetAt = now + WINDOW_MS;
+    buckets.set(key, { count: 1, resetAt });
+    return { count: 1, retryAfterSeconds: Math.ceil(WINDOW_MS / 1000) } as const;
   }
 
   bucket.count += 1;
 
-  if (bucket.count > limitPerMinute) {
-    return {
-      allowed: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
-    } as const;
-  }
-
-  return { allowed: true, retryAfterSeconds: 0 } as const;
+  return {
+    count: bucket.count,
+    retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
+  } as const;
 };
 
 /**

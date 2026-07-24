@@ -613,36 +613,26 @@ export const importGame = async (importData: ImportGameRequestType, userId: stri
     userId,
   });
 
+  // このユーザーが持つ既存のプレイヤーを一度だけ読み込み、IDと名前の両方から引けるようにする
+  const existingPlayers = await DBClient.select({ id: player.id, name: player.name })
+    .from(player)
+    .where(and(eq(player.userId, userId), isNull(player.deletedAt)));
+
+  const playerIdSet = new Set(existingPlayers.map((p) => p.id));
+  const playerIdByName = new Map(existingPlayers.map((p) => [p.name, p.id]));
+
   // インポート元のプレイヤーIDを、このユーザーが持つプレイヤーIDへ対応付ける
   const playerIdMap = new Map<string, string>();
+  const playersToCreate: (typeof player.$inferInsert)[] = [];
 
   for (const importedPlayer of data.players) {
-    const [existingById] = await DBClient.select({ id: player.id })
-      .from(player)
-      .where(
-        and(eq(player.id, importedPlayer.id), eq(player.userId, userId), isNull(player.deletedAt))
-      )
-      .limit(1);
-
-    let playerId = existingById?.id;
-
-    if (!playerId) {
-      const [existingByName] = await DBClient.select({ id: player.id })
-        .from(player)
-        .where(
-          and(
-            eq(player.name, importedPlayer.name),
-            eq(player.userId, userId),
-            isNull(player.deletedAt)
-          )
-        )
-        .limit(1);
-      playerId = existingByName?.id;
-    }
+    let playerId = playerIdSet.has(importedPlayer.id)
+      ? importedPlayer.id
+      : playerIdByName.get(importedPlayer.name);
 
     if (!playerId) {
       playerId = nanoid();
-      await DBClient.insert(player).values({
+      playersToCreate.push({
         id: playerId,
         name: importedPlayer.name,
         displayName: importedPlayer.name,
@@ -650,39 +640,47 @@ export const importGame = async (importData: ImportGameRequestType, userId: stri
         description: importedPlayer.description ?? null,
         userId,
       });
+      // 同じ名前が複数回現れた場合に重複して作らないようにする
+      playerIdByName.set(importedPlayer.name, playerId);
     }
 
     playerIdMap.set(importedPlayer.id, playerId);
-
-    await DBClient.insert(gamePlayer).values({
-      gameId,
-      playerId,
-      displayOrder: importedPlayer.displayOrder,
-      initialScore: importedPlayer.initialScore ?? 0,
-      initialCorrectCount: importedPlayer.initialCorrectCount ?? 0,
-      initialWrongCount: importedPlayer.initialWrongCount ?? 0,
-      baseCorrectPoint: importedPlayer.baseCorrectPoint ?? 1,
-      userId,
-    });
   }
 
-  for (const importedLog of data.logs) {
-    // スルーやスキップのようにプレイヤーが紐づかないログもそのまま復元する
-    const mappedPlayerId = importedLog.playerId
-      ? (playerIdMap.get(importedLog.playerId) ?? null)
-      : null;
+  if (playersToCreate.length > 0) {
+    await DBClient.insert(player).values(playersToCreate);
+  }
 
-    await DBClient.insert(gameLog).values({
-      id: nanoid(),
-      gameId,
-      playerId: mappedPlayerId,
-      questionNumber: importedLog.questionNumber ?? null,
-      actionType: importedLog.actionType,
-      scoreChange: importedLog.scoreChange ?? 0,
-      timestamp: importedLog.timestamp ? new Date(importedLog.timestamp) : new Date(),
-      isSystemAction: importedLog.isSystemAction ?? false,
-      userId,
-    });
+  const gamePlayersToCreate = data.players.map((importedPlayer) => ({
+    gameId,
+    playerId: playerIdMap.get(importedPlayer.id),
+    displayOrder: importedPlayer.displayOrder,
+    initialScore: importedPlayer.initialScore ?? 0,
+    initialCorrectCount: importedPlayer.initialCorrectCount ?? 0,
+    initialWrongCount: importedPlayer.initialWrongCount ?? 0,
+    baseCorrectPoint: importedPlayer.baseCorrectPoint ?? 1,
+    userId,
+  }));
+
+  if (gamePlayersToCreate.length > 0) {
+    await DBClient.insert(gamePlayer).values(gamePlayersToCreate);
+  }
+
+  const logsToCreate = data.logs.map((importedLog) => ({
+    id: nanoid(),
+    gameId,
+    // スルーやスキップのようにプレイヤーが紐づかないログもそのまま復元する
+    playerId: importedLog.playerId ? (playerIdMap.get(importedLog.playerId) ?? null) : null,
+    questionNumber: importedLog.questionNumber ?? null,
+    actionType: importedLog.actionType,
+    scoreChange: importedLog.scoreChange ?? 0,
+    timestamp: importedLog.timestamp ? new Date(importedLog.timestamp) : new Date(),
+    isSystemAction: importedLog.isSystemAction ?? false,
+    userId,
+  }));
+
+  if (logsToCreate.length > 0) {
+    await DBClient.insert(gameLog).values(logsToCreate);
   }
 
   return { gameId, playerCount: data.players.length, logCount: data.logs.length };
