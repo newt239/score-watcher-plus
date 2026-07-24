@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "score-watcher-plus",
+  "main": "workers/app.ts",
+  "compatibility_date": "2026-07-24",
+  // better-auth / drizzle / @libsql/client がNode.js APIを参照するため必須
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "build/client",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  // 観戦モードのボードキャッシュ。従来はREST API経由だったがネイティブバインディングに変更した
+  "kv_namespaces": [
+    {
+      "binding": "BOARD_CACHE",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+    },
+  ],
+}

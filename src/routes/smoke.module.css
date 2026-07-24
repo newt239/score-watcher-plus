@@ -1,0 +1,8 @@
+.smoke_box {
+  padding: var(--mantine-spacing-md);
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+
+  @media (width >= 48em) {
+    padding: var(--mantine-spacing-xl);
+  }
+}
