@@ -4,6 +4,8 @@ import { createFactory } from "hono/factory";
 import { ImportGameRequestSchema } from "@/models/game";
 import { getUserId } from "@/server/repositories/auth";
 import { importGame } from "@/server/repositories/game";
+import { checkCreationLimit } from "@/server/repositories/subscription";
+import { buildPlanLimitError } from "@/server/utils/subscription/limit-response";
 
 const factory = createFactory();
 
@@ -17,6 +19,15 @@ const handler = factory.createHandlers(zValidator("json", ImportGameRequestSchem
     }
 
     const importData = c.req.valid("json");
+
+    const limitCheck = await checkCreationLimit(userId, "game", 1);
+    if (!limitCheck.allowed) {
+      return c.json(
+        buildPlanLimitError("game", limitCheck.planCode, limitCheck.limit, limitCheck.current),
+        403
+      );
+    }
+
     const result = await importGame(importData, userId);
 
     return c.json(

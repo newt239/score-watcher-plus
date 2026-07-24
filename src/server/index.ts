@@ -37,6 +37,10 @@ import getQuizDetailHandler from "./controllers/quiz/get-detail";
 import getQuizListHandler from "./controllers/quiz/get-list";
 import patchUpdateQuizHandler from "./controllers/quiz/patch-update";
 import postCreateQuizHandler from "./controllers/quiz/post-create";
+import postCreateCheckoutSessionHandler from "./controllers/stripe/post-create-checkout-session";
+import postPortalHandler from "./controllers/stripe/post-portal";
+import postWebhookHandler from "./controllers/stripe/post-webhook";
+import getSubscriptionStatusHandler from "./controllers/subscription/get-status";
 import deleteUserHandler from "./controllers/user/delete-user";
 import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
@@ -102,6 +106,11 @@ const app = new Hono()
   .patch("/quizes", ...patchUpdateQuizHandler)
   .delete("/quizes", ...deleteQuizHandler)
   .get("/quizes/:id", ...getQuizDetailHandler)
+  // Subscription API
+  .get("/subscription/status", ...getSubscriptionStatusHandler)
+  .post("/stripe/create-checkout-session", ...postCreateCheckoutSessionHandler)
+  .post("/stripe/portal", ...postPortalHandler)
+  .post("/stripe/webhook", ...postWebhookHandler)
   // Viewer API (認証不要)
   .get("/viewer/games/:gameId/board", ...getViewerBoardDataHandler)
   // e2eテスト用認証

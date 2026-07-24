@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 
 import { ImportGameRequestSchema } from "@/models/game";
 import createApiClient from "@/utils/hono/browser";
+import { notifyApiError } from "@/utils/notify-error";
 
 /** エクスポートしたJSONファイルからゲームを復元するコンポーネント */
 const ImportGame: React.FC = () => {
@@ -53,11 +54,7 @@ const ImportGame: React.FC = () => {
         router.refresh();
       } catch (error) {
         console.error("Failed to import game:", error);
-        notifications.show({
-          title: "エラーが発生しました",
-          message: "ゲームのインポートに失敗しました",
-          color: "red",
-        });
+        notifyApiError(error, "ゲームのインポートに失敗しました");
       }
     });
   };

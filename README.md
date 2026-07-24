@@ -19,6 +19,7 @@ https://plus.score-watcher.com/
 - ゲームを公開設定にすると、認証なしでアクセスできる観戦モード（`/viewer/[game_id]`）で得点状況を共有できます。
 - 問題セットを紐づけると、得点表示画面に問題文と答えを表示できます。
 - Discord Webhook を設定すると、勝ち抜けやリセットのタイミングで通知を送信できます。
+- フリー / プラスの 2 プランがあり、作成できるゲーム・プレイヤー・問題の件数と観戦ページのアクセス上限がプランごとに決まります。
 
 ## 利用に当たって
 
@@ -55,6 +56,10 @@ GOOGLE_CLIENT_SECRET=
 TURSO_DATABASE_URL=
 TURSO_AUTH_TOKEN=
 BETTER_AUTH_SECRET=
+# Stripe（未設定の場合は全ユーザーがフリープランとして扱われます）
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRODUCT_PLUS=
 # 観戦モードのボードキャッシュに使用するCloudflare KV
 CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_KV_NAMESPACE_ID=

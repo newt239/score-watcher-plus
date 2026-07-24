@@ -17,6 +17,7 @@ import {
   tag,
   user,
   userPreference,
+  userSubscription,
 } from "@/utils/drizzle/schema";
 
 import type { UpdateUserPreferencesRequestType } from "@/models/user-preference";
@@ -173,6 +174,7 @@ export const deleteUserWithRelatedData = async (userId: string) => {
     await DBClient.delete(quizQuestion).where(eq(quizQuestion.userId, userId));
     await DBClient.delete(quizSet).where(eq(quizSet.userId, userId));
     await DBClient.delete(userPreference).where(eq(userPreference.userId, userId));
+    await DBClient.delete(userSubscription).where(eq(userSubscription.userId, userId));
     await DBClient.delete(session).where(eq(session.userId, userId));
     await DBClient.delete(account).where(eq(account.userId, userId));
     await DBClient.delete(user).where(eq(user.id, userId));
