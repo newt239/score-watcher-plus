@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, countDistinct, desc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { DBClient } from "@/utils/drizzle/client";
@@ -86,13 +86,15 @@ export const getGames = async (userId: string) => {
     ruleType: game.ruleType,
     updatedAt: game.updatedAt,
     isPublic: game.isPublic,
-    logCount: count(gameLog.id),
-    playerCount: count(gamePlayer.id),
+    // ログとプレイヤーを同時にJOINすると件数が掛け合わされるため、重複を除いて数える
+    logCount: countDistinct(gameLog.id),
+    playerCount: countDistinct(gamePlayer.id),
   })
     .from(game)
-    .leftJoin(gameLog, eq(game.id, gameLog.gameId))
-    .leftJoin(gamePlayer, eq(game.id, gamePlayer.gameId))
+    .leftJoin(gameLog, and(eq(game.id, gameLog.gameId), isNull(gameLog.deletedAt)))
+    .leftJoin(gamePlayer, and(eq(game.id, gamePlayer.gameId), isNull(gamePlayer.deletedAt)))
     .where(and(eq(game.userId, userId), isNull(game.deletedAt)))
+    .groupBy(game.id)
     .orderBy(desc(game.updatedAt));
 
   return games.filter((g) => g.id !== null);

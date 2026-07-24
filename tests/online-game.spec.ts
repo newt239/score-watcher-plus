@@ -125,7 +125,7 @@ test.describe("オンライン版の基本フロー", () => {
     // 更新完了（モーダルが閉じる）を待ち、リロード後に公開状態を確認
     await expect(page.getByRole("button", { name: "公開する" })).toBeHidden();
     await page.reload();
-    await expect(page.getByText("は現在公開中です", { exact: false })).toBeVisible();
+    await expect(page.getByText("は現在公開中です", { exact: false }).first()).toBeVisible();
 
     // 未認証コンテキストからviewer APIにアクセスできる
     const viewerContext = await browser.newContext({ baseURL: "http://localhost:3000" });
@@ -134,10 +134,11 @@ test.describe("オンライン版の基本フロー", () => {
     });
     expect(response.status()).toBe(200);
 
-    // 観戦ページにプレイヤー名が表示される
+    // 観戦ページにプレイヤー名とゲームログが表示される
     const viewerPage = await viewerContext.newPage();
     await viewerPage.goto(`/viewer/${gameId}`);
-    await expect(viewerPage.getByText(/テストプレイヤー[1１]/)).toBeVisible();
+    await expect(viewerPage.getByText("テストプレイヤー1", { exact: true })).toBeVisible();
+    await expect(viewerPage.getByText("正解", { exact: false })).toBeVisible();
     await viewerContext.close();
   });
 
@@ -168,7 +169,8 @@ test.describe("オンライン版の基本フロー", () => {
     await gotoAndDismissUpdateModal(page, `/games/${gameId}/config/other`);
 
     await page.getByRole("button", { name: "リセットする" }).click();
-    await page.getByRole("button", { name: "リセットする" }).last().click();
+    // 確認モーダル内のボタンを押す
+    await page.getByRole("dialog").getByRole("button", { name: "リセットする" }).click();
     await expect(page.getByText("ゲームをリセットしました")).toBeVisible();
 
     // ボードのスコアが初期状態に戻る
