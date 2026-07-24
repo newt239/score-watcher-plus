@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
+import { PRODUCTION_APP_URL, getTrustedOrigins } from "@/utils/app-url";
 import { auth } from "@/utils/auth/auth";
 
 import indexHandler from "./controllers";
@@ -37,6 +38,9 @@ import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
 import getViewerBoardDataHandler from "./controllers/viewer/get-board-data";
 
+// Vercelのプレビューデプロイは動的にURLが変わるため、パターンで許可する
+const VERCEL_PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
+
 // Hono RPCで型をつけるため、チェインさせる必要がある
 const app = new Hono()
   .use(
@@ -44,11 +48,13 @@ const app = new Hono()
     cors({
       // https://hono.dev/docs/middleware/builtin/cors
       origin: (origin, _c) => {
-        return origin.endsWith("newts-projects.vercel.app") ||
-          origin.endsWith("score-watcher.com") ||
-          origin.endsWith("localhost:3000")
-          ? origin
-          : "https://plus.score-watcher.com";
+        if (getTrustedOrigins().includes(origin)) {
+          return origin;
+        }
+        if (VERCEL_PREVIEW_ORIGIN_PATTERN.test(origin)) {
+          return origin;
+        }
+        return PRODUCTION_APP_URL;
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],

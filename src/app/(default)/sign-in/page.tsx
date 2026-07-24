@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 
-import { Alert, Button, Title } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { Alert, Button, Text, Title } from "@mantine/core";
 
+import Link from "@/components/Link";
 import { authClient } from "@/utils/auth/auth-client";
 
 const LoginPage = () => {
@@ -29,9 +29,14 @@ const LoginPage = () => {
   return (
     <main>
       <Title>ログイン</Title>
-      <Alert color="red" title="アルファ版の機能です" icon={<IconInfoCircle />} mt="md">
-        ログイン機能はアルファ版の機能です。この期間に保存されたデータはすべて正式リリース時に削除されます。
-      </Alert>
+      <Text mt="md">
+        Googleアカウントでログインすると、プレイヤーや問題、ゲームのデータをサーバーに保存して
+        どの端末からでも利用できます。
+      </Text>
+      <Text mt="sm" size="sm" c="dimmed">
+        ログインすることで<Link href="/docs/terms_of_service">利用規約</Link>及び
+        <Link href="/docs/privacy_policy">プライバシーポリシー</Link>に同意したものとみなします。
+      </Text>
       <Button mt="lg" onClick={handleLogin} color="blue" loading={isPending} disabled={isPending}>
         Googleでログイン
       </Button>
