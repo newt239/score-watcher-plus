@@ -11,11 +11,18 @@
   "observability": {
     "enabled": true,
   },
+  // 本番のカスタムドメイン。DNSレコードはwranglerが自動で作成する
+  "routes": [
+    {
+      "pattern": "plus.score-watcher.com",
+      "custom_domain": true,
+    },
+  ],
   // 観戦モードのボードキャッシュ。従来はREST API経由だったがネイティブバインディングに変更した
   "kv_namespaces": [
     {
       "binding": "BOARD_CACHE",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+      "id": "a6cf5d0e187f4d7e8e1b86bb306195a6",
     },
   ],
 }
