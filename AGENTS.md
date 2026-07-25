@@ -395,9 +395,11 @@ export type ApiDataType = {
 - **ファイル名規則**: ls-lint（`.ls-lint.yml`）
 - **未使用コード検出**: knip（`knip.json`）。未使用エクスポート・型は警告扱いでベースライン化中
 - **pre-commitフック**: lefthook（`lefthook.yml`）で lint:fix / format:fix / stylelint:fix / ls-lint を実行
-- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`deploy.yml`（mainへのpushでCloudflare Workersへデプロイ）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+- **デプロイ**: **Cloudflare Workers Builds**（CloudflareダッシュボードでGit連携）。`release`ブランチへのpushで本番（`plus.score-watcher.com`）へ自動デプロイされます。GitHub Actionsのデプロイworkflowは使いません。手元から手動でデプロイする場合は `pnpm run deploy`
+- **本番の設定**: Workerランタイムのシークレット（`TURSO_*` / `BETTER_AUTH_SECRET` / `GOOGLE_*` / `STRIPE_*`）は `wrangler secret put` で登録済み。ビルド時にクライアントへ埋め込む `VITE_APP_URL` は Workers Builds のビルド変数に設定します
 - **ビルド**: Vite（`vite.config.ts`）。pnpm構成ではSSRの依存最適化でReactが二重に読み込まれてフックが壊れるため、`resolve.dedupe` の指定を外さないこと
-- **Workers設定**: `wrangler.jsonc`。バインディングを変更したら `pnpm run cf-typegen` で `worker-configuration.d.ts` を再生成すること
+- **Workers設定**: `wrangler.jsonc`。バインディングを変更したら `pnpm run cf-typegen` で `worker-configuration.d.ts` を再生成すること。`BOARD_CACHE`（KV）とカスタムドメイン`plus.score-watcher.com`を定義済み
 - **パッケージ**: ESM-only（`package.json`の`"type": "module"`）。React Router v8 と Cloudflare の各プラグインがESM専用のため外さないこと
 
 ## AGENTS.md更新ルール
