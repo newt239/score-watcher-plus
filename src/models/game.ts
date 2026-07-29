@@ -588,4 +588,6 @@ export type GetViewerBoardDataResponseType = {
   };
   players: ViewerPlayerType[];
   logs: OnlineGameLogType[];
+  /** アタック25の盤面（各パネルの保持プレイヤーID、空きはnull）。attack25のみ設定される */
+  attack25Board?: (string | null)[];
 };

@@ -1,0 +1,94 @@
+.attack25 {
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.players {
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.player_card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  min-width: 6rem;
+  padding: 0.75rem 1rem;
+  background-color: rgb(255 255 255 / 8%);
+  border-radius: var(--mantine-radius-md);
+}
+
+.player_swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid rgb(255 255 255 / 60%);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.player_name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mantine-color-white);
+}
+
+.player_count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mantine-color-yellow-4);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+  width: min(90vw, 32rem);
+}
+
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgb(0 0 0 / 55%);
+  background-color: var(--mantine-color-dark-4);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.panel[data-color="red"] {
+  background-color: var(--mantine-color-red-6);
+}
+
+.panel[data-color="green"] {
+  background-color: var(--mantine-color-green-6);
+}
+
+.panel[data-color="white"] {
+  color: rgb(0 0 0 / 70%);
+  background-color: var(--mantine-color-gray-1);
+}
+
+.panel[data-color="blue"] {
+  background-color: var(--mantine-color-blue-6);
+}
+
+.player_swatch[data-color="red"] {
+  background-color: var(--mantine-color-red-6);
+}
+
+.player_swatch[data-color="green"] {
+  background-color: var(--mantine-color-green-6);
+}
+
+.player_swatch[data-color="white"] {
+  background-color: var(--mantine-color-gray-1);
+}
+
+.player_swatch[data-color="blue"] {
+  background-color: var(--mantine-color-blue-6);
+}
