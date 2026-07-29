@@ -1,5 +1,6 @@
 import {
   AqlOptionSchema,
+  Attack25OptionSchema,
   AttacksurvivalOptionSchema,
   BackstreamOptionSchema,
   DivideOptionSchema,
@@ -153,6 +154,13 @@ export const parseGameOption = (game: Game) => {
         ruleType: "aql",
         option: aqlOption,
       } as const;
+    case "attack25":
+      const attack25Option = Attack25OptionSchema.parse(gameOption);
+      return {
+        ...game,
+        ruleType: "attack25",
+        option: attack25Option,
+      } as const;
     default:
       return null;
   }
@@ -209,6 +217,8 @@ export const setupDefaultGameOption = (game: Partial<Pick<Game, "ruleType" | "op
     case "aql":
       const aqlOption = AqlOptionSchema.parse(gameOption);
       return aqlOption;
+    case "attack25":
+      return Attack25OptionSchema.parse(gameOption);
     default:
       return null;
   }

@@ -20,7 +20,8 @@ export type RuleNames =
   | "freezex"
   | "endless-chance"
   | "variables"
-  | "aql";
+  | "aql"
+  | "attack25";
 
 /** 操作の種類の型定義 */
 export type Variants =
@@ -273,6 +274,8 @@ const ImportGameLogSchema = z.object({
   questionNumber: z.number().int().nullable().optional(),
   scoreChange: z.number().int().nullable().optional(),
   isSystemAction: z.boolean().nullable().optional(),
+  panel: z.number().int().nullable().optional(),
+  removedPanel: z.number().int().nullable().optional(),
   timestamp: z.string().optional(),
 });
 
@@ -320,6 +323,10 @@ export const AddGameLogRequestSchema = z.object({
   actionType: z.string() as z.ZodSchema<Variants>,
   scoreChange: z.number().int().default(0),
   isSystemAction: z.boolean().default(false),
+  // アタック25で獲得したパネル番号(0-24)
+  panel: z.number().int().min(0).max(24).optional(),
+  // アタック25のアタックチャンスで消去したパネル番号(0-24)
+  removedPanel: z.number().int().min(0).max(24).optional(),
 });
 
 /** ゲーム数取得リクエストのスキーマ */

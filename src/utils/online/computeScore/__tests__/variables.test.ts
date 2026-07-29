@@ -63,6 +63,8 @@ const createLog = (
   scoreChange: 0,
   timestamp: `2024-01-01T00:00:0${index}.000Z`,
   isSystemAction: false,
+  panel: null,
+  removedPanel: null,
   deletedAt: null,
   userId: "user-1",
 });
