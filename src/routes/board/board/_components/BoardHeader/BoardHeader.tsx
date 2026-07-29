@@ -177,7 +177,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
             >
               一つ戻す
             </Menu.Item>
-            {game.ruleType !== "aql" && (
+            {game.ruleType !== "aql" && game.ruleType !== "attack25" && (
               <Menu.Item
                 closeMenuOnClick={false}
                 leftSection={editable ? <IconSquareCheck /> : <IconSquare />}
