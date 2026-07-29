@@ -1,26 +1,31 @@
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 
 import { auth } from "@/utils/auth/auth";
 import { DBClient, session, user } from "@/utils/drizzle/client";
 
-export const getUserId = async () => {
+/**
+ * リクエストヘッダーからログイン中のユーザーIDを取得する
+ *
+ * @param headers リクエストのヘッダー
+ * @returns ユーザーID。未ログインの場合はnull
+ */
+export const getUserId = async (headers: Headers) => {
   // テスト環境での認証バイパス
-  const headersList = await headers();
-  const isPlaywrightTest = headersList.get("x-playwright-test") === "true";
-  const testUserId = headersList.get("x-test-user-id");
+  const isPlaywrightTest = headers.get("x-playwright-test") === "true";
+  const testUserId = headers.get("x-test-user-id");
 
   if (
-    (process.env.NODE_ENV !== "production" || isPlaywrightTest) &&
+    (!import.meta.env.PROD || isPlaywrightTest) &&
     testUserId === process.env.PLAYWRIGHT_TEST_USER_ID
   ) {
     return process.env.PLAYWRIGHT_TEST_USER_ID;
   }
 
-  const session = await auth.api.getSession({ headers: headersList });
+  const session = await auth.api.getSession({ headers });
   if (!session) {
     return null;
   }
+
   return session.user.id;
 };
 

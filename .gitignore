@@ -12,12 +12,17 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
+# react-router / vite
+/.react-router/
 /build
+
+# cloudflare workers
+/.wrangler/
+.dev.vars
+
+# TODO: Next.js移行前のビルド残骸。ローカルから削除したらこの2行も消すこと
+/.next/
+next-env.d.ts
 
 # misc
 .DS_Store
@@ -31,18 +36,8 @@ yarn-error.log*
 # local env files
 .env*.local
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-
-# next-pwa
-**/public/sw.js
-**/public/sw.js.map
-**/public/workbox-*.js
-**/public/workbox-*.js.map
 
 # Sentry Config File
 .env.sentry-build-plugin

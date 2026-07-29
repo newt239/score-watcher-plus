@@ -12,7 +12,7 @@ const handler = factory.createHandlers(
   zValidator("param", DeleteGameRequestParamSchema),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
       if (!userId) {
         return c.json({ error: "ユーザーが見つかりません" } as const, 404);
       }

@@ -1,0 +1,45 @@
+import { useEffect } from "react";
+
+import { Burger } from "@mantine/core";
+import { useDisclosure, useWindowEvent } from "@mantine/hooks";
+import { useLocation } from "react-router";
+
+import classes from "./Hamburger.module.css";
+
+type Props = {
+  children?: React.ReactNode;
+};
+
+const Hamburger: React.FC<Props> = ({ children }) => {
+  const [opened, { toggle }] = useDisclosure();
+  const pathname = useLocation().pathname;
+
+  useEffect(() => {
+    if (opened) toggle();
+  }, [pathname]);
+
+  useWindowEvent("keydown", (event) => {
+    if (!window.location.pathname.endsWith("board")) {
+      if (event.code === "Escape" && opened) {
+        toggle();
+      }
+    }
+  });
+
+  return (
+    <>
+      <Burger
+        color="white"
+        className={classes.burger}
+        opened={opened}
+        onClick={toggle}
+        aria-label="メニューを開く"
+      />
+      <nav className={classes.burger_menu} data-show={opened}>
+        {children}
+      </nav>
+    </>
+  );
+};
+
+export default Hamburger;

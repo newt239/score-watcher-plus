@@ -7,7 +7,7 @@ const factory = createFactory();
 
 /** プレイヤー詳細取得APIハンドラー */
 const handler = factory.createHandlers(async (c) => {
-  const userId = await getUserId();
+  const userId = await getUserId(c.req.raw.headers);
   if (!userId) {
     return c.json({ error: "認証が必要です" } as const, 401);
   }

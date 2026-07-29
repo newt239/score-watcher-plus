@@ -41,16 +41,17 @@ https://plus.score-watcher.com/
 
 `.env.example` をコピーして `.env` を作成し、値を設定してください。
 
+`VITE_` で始まる値はビルド時にクライアントへ埋め込まれます。それ以外はサーバー専用で、本番では `wrangler secret put` に登録します。
+
 ```env
 # アプリのバージョン（アップデート告知モーダルの表示判定に使用）
-NEXT_PUBLIC_APP_VERSION=
+VITE_APP_VERSION=
 # アプリの公開URL（本番は https://plus.score-watcher.com）
-NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_GA_ID=
-NEXT_PUBLIC_TAG_ID=
-NEXT_PUBLIC_SENTRY_DSN=
+VITE_APP_URL=
+VITE_GTM_ID=
+VITE_GA_ID=
 SENTRY_AUTH_TOKEN=
-# Google OAuth（リダイレクトURIに ${NEXT_PUBLIC_APP_URL}/api/auth/callback/google を登録すること）
+# Google OAuth（リダイレクトURIに ${VITE_APP_URL}/api/auth/callback/google を登録すること）
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 TURSO_DATABASE_URL=
@@ -60,11 +61,9 @@ BETTER_AUTH_SECRET=
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 STRIPE_PRODUCT_PLUS=
-# 観戦モードのボードキャッシュに使用するCloudflare KV
-CLOUDFLARE_ACCOUNT_ID=
-CLOUDFLARE_KV_NAMESPACE_ID=
-CLOUDFLARE_KV_API_TOKEN=
 ```
+
+観戦モードのボードキャッシュに使う Cloudflare KV は、REST API ではなく `wrangler.jsonc` の `BOARD_CACHE` バインディング経由で利用するため環境変数は不要です。
 
 ### 起動方法
 

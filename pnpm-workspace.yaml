@@ -6,3 +6,6 @@ ignoredBuiltDependencies:
   - "esbuild"
   - "lefthook"
   - "sharp"
+# workerd は Workers ランタイム本体のバイナリを postinstall で展開するため実行が必須
+onlyBuiltDependencies:
+  - "workerd"

@@ -17,7 +17,7 @@ export default factory.createHandlers(
   zValidator("json", UpdateGameOptionsRequestJsonSchema),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
       if (!userId) {
         return c.json(
           {

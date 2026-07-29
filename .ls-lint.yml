@@ -28,6 +28,12 @@ ignore:
   - generated
   - node_modules
   - .git
+  # React Routerのtypegen出力（+types など独自の命名規則を使う）
+  - .react-router
+  # wranglerのローカル状態（miniflareのストレージ）
+  - .wrangler
+  - build
+  # TODO: Next.js移行前のビルド残骸。ローカルから削除したらこの行も消すこと
   - .next
   - .claude
   - .vscode

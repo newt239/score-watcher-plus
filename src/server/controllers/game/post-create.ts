@@ -12,7 +12,7 @@ const factory = createFactory();
 /** ゲーム作成 */
 const handler = factory.createHandlers(zValidator("json", CreateGameRequestSchema), async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
     if (!userId) {
       return c.json({ error: "認証が必要です" } as const, 401);
     }

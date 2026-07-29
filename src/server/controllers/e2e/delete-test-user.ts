@@ -8,7 +8,7 @@ const factory = createFactory();
 /** テスト専用ユーザー削除エンドポイント E2Eテストでのみ使用される */
 export default factory.createHandlers(async (c) => {
   // 本番環境では無効
-  if (process.env.NODE_ENV === "production") {
+  if (import.meta.env.PROD) {
     return c.json({ error: "このエンドポイントは利用できません" }, 403);
   }
 

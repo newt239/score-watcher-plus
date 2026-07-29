@@ -10,7 +10,7 @@ const factory = createFactory();
 /** Stripeのカスタマーポータルへのリンクを発行する */
 const handler = factory.createHandlers(async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
 
     if (!userId) {
       return c.json({ error: "認証が必要です" } as const, 401);

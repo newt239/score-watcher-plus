@@ -5,10 +5,10 @@
     "@css-modules-kit/stylelint-plugin",
     "@typescript/native-preview",
     "dotenv",
-    "import-in-the-middle",
-    "require-in-the-middle",
     "lefthook",
-    "postcss-load-config"
+    "postcss-load-config",
+    "@react-router/node",
+    "cloudflare"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {

@@ -10,7 +10,7 @@ const factory = createFactory();
 /** プレイヤー更新 */
 const handler = factory.createHandlers(zValidator("json", UpdatePlayerRequestSchema), async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
     if (!userId) {
       return c.json({ success: false, error: "ユーザーが見つかりません" } as const, 404);
     }

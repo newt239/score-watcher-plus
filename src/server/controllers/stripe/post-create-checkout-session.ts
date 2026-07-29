@@ -16,7 +16,7 @@ const handler = factory.createHandlers(
   zValidator("json", CreateCheckoutSessionRequestSchema),
   async (c) => {
     try {
-      const userId = await getUserId();
+      const userId = await getUserId(c.req.raw.headers);
 
       if (!userId) {
         return c.json({ error: "認証が必要です" } as const, 401);
@@ -48,7 +48,7 @@ const handler = factory.createHandlers(
       let customerId = subscription.stripeCustomerId;
 
       if (!customerId) {
-        const user = await getUser();
+        const user = await getUser(c.req.raw.headers);
         const customer = await stripe.customers.create({
           email: user?.email,
           metadata: { userId },

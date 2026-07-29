@@ -10,7 +10,7 @@ const factory = createFactory();
 /** アカウントと保存データをすべて削除する（退会） */
 const handler = factory.createHandlers(zValidator("param", UserIdParamSchema), async (c) => {
   try {
-    const userId = await getUserId();
+    const userId = await getUserId(c.req.raw.headers);
 
     if (!userId) {
       return c.json({ error: "認証が必要です" } as const, 401);

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { PRODUCTION_APP_URL, getTrustedOrigins } from "@/utils/app-url";
+import { getTrustedOrigins, PRODUCTION_APP_URL, WORKERS_DEV_ORIGIN_PATTERN } from "@/utils/app-url";
 import { auth } from "@/utils/auth/auth";
 
 import indexHandler from "./controllers";
@@ -25,6 +25,7 @@ import postAddPlayerHandler from "./controllers/game/post-add-player";
 import postCopyPlayersHandler from "./controllers/game/post-copy-players";
 import postCreateGameHandler from "./controllers/game/post-create";
 import postImportGameHandler from "./controllers/game/post-import";
+import postSentryTunnelHandler from "./controllers/monitoring/post-tunnel";
 import deletePlayerHandler from "./controllers/player/delete-player";
 import deletePlayerTagHandler from "./controllers/player/delete-tag";
 import getPlayerDetailHandler from "./controllers/player/get-detail";
@@ -46,9 +47,6 @@ import getUserPreferencesHandler from "./controllers/user/get-preferences";
 import updateUserPreferencesHandler from "./controllers/user/update-preferences";
 import getViewerBoardDataHandler from "./controllers/viewer/get-board-data";
 
-// Vercelのプレビューデプロイは動的にURLが変わるため、パターンで許可する
-const VERCEL_PREVIEW_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
-
 // Hono RPCで型をつけるため、チェインさせる必要がある
 const app = new Hono()
   .use(
@@ -59,7 +57,7 @@ const app = new Hono()
         if (getTrustedOrigins().includes(origin)) {
           return origin;
         }
-        if (VERCEL_PREVIEW_ORIGIN_PATTERN.test(origin)) {
+        if (WORKERS_DEV_ORIGIN_PATTERN.test(origin)) {
           return origin;
         }
         return PRODUCTION_APP_URL;
@@ -113,6 +111,8 @@ const app = new Hono()
   .post("/stripe/webhook", ...postWebhookHandler)
   // Viewer API (認証不要)
   .get("/viewer/games/:gameId/board", ...getViewerBoardDataHandler)
+  // Sentryのイベント中継（認証不要）
+  .post("/monitoring", ...postSentryTunnelHandler)
   // e2eテスト用認証
   .post("/e2e/test-login", ...postTestLoginHandler)
   .delete("/e2e/test-user", ...deleteTestUserHandler)
