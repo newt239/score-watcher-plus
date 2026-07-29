@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { Box, Button, Card, Group, Modal, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconCirclePlus } from "@tabler/icons-react";
+import { IconCirclePlus, IconSearch } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
 import { useNavigate } from "react-router";
 
@@ -23,6 +23,7 @@ const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState<RuleNames | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
   const apiClient = createApiClient();
 
@@ -40,7 +41,16 @@ const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
     },
   });
 
-  const ruleNameList = Object.keys(rules) as RuleNames[];
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const ruleNameList = (Object.keys(rules) as RuleNames[]).filter((rule_name) => {
+    if (normalizedQuery === "") return true;
+    const { name, short_description } = rules[rule_name];
+    return (
+      name.toLowerCase().includes(normalizedQuery) ||
+      short_description.toLowerCase().includes(normalizedQuery) ||
+      rule_name.toLowerCase().includes(normalizedQuery)
+    );
+  });
 
   const onClick = (rule_name: RuleNames) => {
     if (!isLoggedIn) {
@@ -106,28 +116,42 @@ const RuleList: React.FC<RuleListProps> = ({ isLoggedIn }) => {
       <Text size="sm" c="dimmed" mb="md">
         形式を選択してゲームを作成してください。
       </Text>
-      <Box className={classes.rule_list_grid}>
-        {ruleNameList.map((rule_name) => {
-          const description = rules[rule_name].short_description;
-          return (
-            <Card shadow="xs" key={rule_name} withBorder>
-              <Card.Section withBorder inheritPadding className={classes.rule_name}>
-                {rules[rule_name].name}
-              </Card.Section>
-              <Card.Section className={classes.rule_description}>{description}</Card.Section>
-              <Group justify="flex-end">
-                <Button
-                  onClick={() => onClick(rule_name)}
-                  size="sm"
-                  leftSection={<IconCirclePlus />}
-                >
-                  作る
-                </Button>
-              </Group>
-            </Card>
-          );
-        })}
-      </Box>
+      <TextInput
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.currentTarget.value)}
+        placeholder="形式名や説明で検索"
+        leftSection={<IconSearch size="1rem" />}
+        mb="md"
+        aria-label="形式を検索"
+      />
+      {ruleNameList.length === 0 ? (
+        <Text c="dimmed" py="lg" ta="center">
+          「{searchQuery}」に一致する形式が見つかりませんでした。
+        </Text>
+      ) : (
+        <Box className={classes.rule_list_grid}>
+          {ruleNameList.map((rule_name) => {
+            const description = rules[rule_name].short_description;
+            return (
+              <Card shadow="xs" key={rule_name} withBorder>
+                <Card.Section withBorder inheritPadding className={classes.rule_name}>
+                  {rules[rule_name].name}
+                </Card.Section>
+                <Card.Section className={classes.rule_description}>{description}</Card.Section>
+                <Group justify="flex-end">
+                  <Button
+                    onClick={() => onClick(rule_name)}
+                    size="sm"
+                    leftSection={<IconCirclePlus />}
+                  >
+                    作る
+                  </Button>
+                </Group>
+              </Card>
+            );
+          })}
+        </Box>
+      )}
 
       <Modal
         opened={createModalOpen}
