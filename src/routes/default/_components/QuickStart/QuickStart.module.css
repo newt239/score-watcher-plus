@@ -1,0 +1,74 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 34rem;
+  padding: 1.5rem;
+  margin-block: 2rem;
+  background-color: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.card_title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--mantine-primary-color-filled);
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (width >= 48em) {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.rule_select {
+  display: none;
+
+  @media (width >= 48em) {
+    display: block;
+    flex: 1 1 auto;
+  }
+}
+
+.rule_native_select {
+  display: block;
+
+  @media (width >= 48em) {
+    display: none;
+  }
+}
+
+.player_input {
+  @media (width >= 48em) {
+    flex: 0 0 9.5rem;
+  }
+}
+
+.player_input_field {
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @media (width >= 48em) {
+    flex-direction: row-reverse;
+    gap: 1rem;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}
+
+.detail_link {
+  align-self: center;
+}
