@@ -10,6 +10,7 @@ export default [
     index("routes/default/route.tsx"),
     route("sign-in", "routes/default/sign-in/route.tsx"),
     route("rules", "routes/default/rules/route.tsx"),
+    route("changelog", "routes/default/changelog/route.tsx"),
     ...prefix("docs", [
       index("routes/default/docs/route.tsx"),
       route("for_commercial_use", "routes/default/docs/for_commercial_use/route.tsx"),
