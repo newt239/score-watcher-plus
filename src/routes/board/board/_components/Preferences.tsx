@@ -114,6 +114,7 @@ const Preferences: React.FC<PreferencesProps> = ({ userId, initialPreferences })
         <Skeleton height={36} radius="sm" />
         <Skeleton height={36} radius="sm" />
         <Skeleton height={60} radius="sm" />
+        <Skeleton height={60} radius="sm" />
       </Flex>
     );
   }
@@ -156,6 +157,15 @@ const Preferences: React.FC<PreferencesProps> = ({ userId, initialPreferences })
           updateSetting("showQn", event.currentTarget.checked, "show_qn");
         }}
         label="ヘッダーに問題番号を表示"
+        size="md"
+      />
+      <Switch
+        checked={preferences.showPreviousQn}
+        onChange={(event) => {
+          updateSetting("showPreviousQn", event.currentTarget.checked, "show_previous_qn");
+        }}
+        label="一つ前の問題番号を表示する"
+        description="ヘッダーの問題番号と問題が一致するようになります。"
         size="md"
       />
       <Switch

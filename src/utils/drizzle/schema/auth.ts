@@ -90,6 +90,7 @@ export const userPreference = sqliteTable("user_preference", {
     .default(true),
   showBoardHeader: integer("show_board_header", { mode: "boolean" }).notNull().default(true),
   showQn: integer("show_qn", { mode: "boolean" }).notNull().default(false),
+  showPreviousQn: integer("show_previous_qn", { mode: "boolean" }).notNull().default(false),
   showSignString: integer("show_sign_string", { mode: "boolean" }).notNull().default(true),
   reversePlayerInfo: integer("reverse_player_info", { mode: "boolean" }).notNull().default(false),
   wrongNumber: integer("wrong_number", { mode: "boolean" }).notNull().default(true),

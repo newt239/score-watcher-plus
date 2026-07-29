@@ -67,6 +67,8 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
   // API経由で設定を取得（デフォルト値を設定）
   const showBoardHeader = preferences?.showBoardHeader ?? true;
   const showQn = preferences?.showQn ?? false;
+  // ONのとき、表示中の問題文（直前に読まれた問題）と番号を一致させるため+1しない
+  const showPreviousQn = preferences?.showPreviousQn ?? false;
 
   useEffect(() => {
     // クライアントサイドでのみフルスクリーン機能の有効性をチェック
@@ -85,7 +87,7 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
 
   if (!showBoardHeader) return null;
 
-  const displayedQuestionNumber = questionNumber + 1 + manualQuizShift;
+  const displayedQuestionNumber = questionNumber + (showPreviousQn ? 0 : 1) + manualQuizShift;
   const displayedQuizPosition = quizPosition + manualQuizShift;
 
   return (

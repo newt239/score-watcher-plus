@@ -6,6 +6,7 @@ export type UserPreferencesType = {
   showWinthroughPopup: boolean;
   showBoardHeader: boolean;
   showQn: boolean;
+  showPreviousQn: boolean;
   showSignString: boolean;
   reversePlayerInfo: boolean;
   wrongNumber: boolean;
@@ -17,6 +18,7 @@ export const defaultUserPreferences: UserPreferencesType = {
   showWinthroughPopup: true,
   showBoardHeader: true,
   showQn: false,
+  showPreviousQn: false,
   showSignString: true,
   reversePlayerInfo: false,
   wrongNumber: true,
@@ -36,6 +38,7 @@ export const UpdateUserPreferencesRequestSchema = z.object({
   showWinthroughPopup: z.boolean().optional(),
   showBoardHeader: z.boolean().optional(),
   showQn: z.boolean().optional(),
+  showPreviousQn: z.boolean().optional(),
   showSignString: z.boolean().optional(),
   reversePlayerInfo: z.boolean().optional(),
   wrongNumber: z.boolean().optional(),
