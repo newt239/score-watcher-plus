@@ -7,8 +7,7 @@ import * as schema from "./schema/index";
 /**
  * Drizzleクライアントを生成する
  *
- * Workersではモジュール読み込み時に環境変数（シークレット）がまだ利用できないため、
- * トップレベルではなく初回アクセス時に生成します。
+ * Workersではモジュール読み込み時に環境変数（シークレット）がまだ利用できないため、 トップレベルではなく初回アクセス時に生成します。
  *
  * @returns Drizzleクライアント
  */
@@ -41,8 +40,7 @@ const getDrizzleClient = (): DrizzleDB => {
 /**
  * Drizzleクライアント
  *
- * 実際のクライアント生成を初回のプロパティアクセスまで遅延させるためProxyでラップしています。
- * これによりモジュール読み込み時（Worker起動時の検証を含む）に環境変数を要求しなくなります。
+ * 実際のクライアント生成を初回のプロパティアクセスまで遅延させるためProxyでラップしています。 これによりモジュール読み込み時（Worker起動時の検証を含む）に環境変数を要求しなくなります。
  */
 export const DBClient = new Proxy({} as DrizzleDB, {
   get(_target, prop) {

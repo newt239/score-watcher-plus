@@ -22,6 +22,9 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
+      # workerd ランタイムにシェルのprocess.env（=下記secret）を取り込ませる。
+      # ローカルは .env から読むが、CIには .env が無いためこのフラグが必須
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"
       VITE_APP_VERSION: ${{ secrets.VITE_APP_VERSION }}
       VITE_GTM_ID: ${{ secrets.VITE_GTM_ID }}
       VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
