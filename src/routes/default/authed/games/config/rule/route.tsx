@@ -40,7 +40,7 @@ const RulePage = ({ loaderData }: Route.ComponentProps) => {
     nomx: { name: "勝ち抜けポイント", max: 1000, min: undefined },
     "nomx-ad": { name: "勝ち抜けポイント", max: 1000, min: undefined },
     nomr: { name: "休み(M)", max: 100, min: undefined },
-    "endless-chance": { name: "失格誤答数", max: 100, min: undefined },
+    "endless-chance": { name: "勝ち抜け正解数", max: 100, min: undefined },
     ny: { name: "勝ち抜けポイント", max: 1000, min: 3 },
     variables: { name: "勝ち抜けポイント", max: 1000, min: 3 },
     nbyn: { name: "N", max: 10, min: undefined },
