@@ -43,6 +43,20 @@
       "when": 1784889449764,
       "tag": "0005_grey_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1785316033757,
+      "tag": "0006_smooth_tana_nile",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1785316922809,
+      "tag": "0007_panoramic_leopardon",
+      "breakpoints": true
     }
   ]
 }

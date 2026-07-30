@@ -1,0 +1,1 @@
+ALTER TABLE `user_preference` ADD `show_previous_qn` integer DEFAULT false NOT NULL;

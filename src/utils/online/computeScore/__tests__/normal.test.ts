@@ -196,6 +196,8 @@ describe("online normal形式", () => {
         scoreChange: 0,
         timestamp: "2024-01-01T00:00:01.000Z",
         isSystemAction: false,
+        panel: null,
+        removedPanel: null,
         deletedAt: null,
         userId: "user-1",
       },

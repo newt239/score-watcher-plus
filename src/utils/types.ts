@@ -15,7 +15,8 @@ export type RuleNames =
   | "freezex"
   | "endless-chance"
   | "variables"
-  | "aql";
+  | "aql"
+  | "attack25";
 
 export type GameDBPlayerProps = {
   id: string;
@@ -32,7 +33,7 @@ export type GameDBQuizProps = {
 };
 
 export type GameOptionProps = {
-  [key in Exclude<RuleNames, "nomx-ad" | "endless-chance" | "aql">]: undefined;
+  [key in Exclude<RuleNames, "nomx-ad" | "endless-chance" | "aql" | "attack25">]: undefined;
 } & {
   "nomx-ad": {
     streak_over3: boolean;
@@ -43,6 +44,9 @@ export type GameOptionProps = {
   aql: {
     left_team: string;
     right_team: string;
+  };
+  attack25: {
+    attack_chance: boolean;
   };
 };
 

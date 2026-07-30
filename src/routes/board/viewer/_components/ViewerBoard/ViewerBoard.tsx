@@ -6,6 +6,7 @@ import createApiClient from "@/utils/hono/browser";
 import { rules } from "@/utils/rules";
 
 import ViewerAQLBoard from "../ViewerAQLBoard/ViewerAQLBoard";
+import ViewerAttack25Board from "../ViewerAttack25Board/ViewerAttack25Board";
 import ViewerPlayer from "../ViewerPlayer/ViewerPlayer";
 import classes from "./ViewerBoard.module.css";
 
@@ -96,6 +97,8 @@ const ViewerBoard = ({ gameId, initialData }: ViewerBoardProps) => {
           <div className={classes.aql_board}>
             <ViewerAQLBoard players={players} />
           </div>
+        ) : gameData.game.ruleType === "attack25" ? (
+          <ViewerAttack25Board players={players} board={gameData.attack25Board ?? []} />
         ) : (
           <div className={classes.players_list}>
             {players.map((player) => (

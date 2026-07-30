@@ -22,6 +22,7 @@ export const gameRuleValues = [
   "endless-chance",
   "variables",
   "aql",
+  "attack25",
 ] as const;
 
 export type RuleNames = (typeof gameRuleValues)[number];
@@ -208,6 +209,10 @@ export const gameLog = sqliteTable("game_log", {
   questionNumber: integer("question_number"),
   actionType: text("action_type", { enum: actionTypeValues }).notNull(),
   scoreChange: integer("score_change").default(0),
+  // アタック25で獲得したパネル番号(0-24)
+  panel: integer("panel"),
+  // アタック25のアタックチャンスで消去したパネル番号(0-24)
+  removedPanel: integer("removed_panel"),
   timestamp: integer("timestamp", { mode: "timestamp" })
     .default(sql`(unixepoch())`)
     .notNull(),

@@ -72,7 +72,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           >
             一つ戻す
           </Button>
-          {game.ruleType !== "aql" && (
+          {game.ruleType !== "aql" && game.ruleType !== "attack25" && (
             <Button
               visibleFrom="md"
               size="xs"

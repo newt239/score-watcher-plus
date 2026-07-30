@@ -1,4 +1,5 @@
 import { cacheBoardData } from "@/utils/cache/cache-service";
+import { computeAttack25Board } from "@/utils/online/attack25";
 import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineScore";
 
 import type {
@@ -62,6 +63,12 @@ export const buildBoardData = (gameData: GameWithRelations): GetViewerBoardDataR
   const { game, players, logs } = serializeGameForCompute(gameData);
   const { scores } = computeOnlineScore(game, players, logs);
 
+  // アタック25は観戦画面で盤面を描画するため、サーバー側で盤面を計算して添える
+  const attack25Board =
+    game.ruleType === "attack25"
+      ? computeAttack25Board(logs, game.option.attack_chance).board
+      : undefined;
+
   return {
     game: {
       id: gameData.id,
@@ -71,6 +78,7 @@ export const buildBoardData = (gameData: GameWithRelations): GetViewerBoardDataR
       createdAt: gameData.createdAt?.toISOString(),
       updatedAt: gameData.updatedAt?.toISOString(),
     },
+    attack25Board,
     // 観戦画面ではプレイヤー名を表示するため、スコアに名前と所属を添える
     players: scores.map((score) => {
       const player = gameData.players.find((p) => p.id === score.player_id);

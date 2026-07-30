@@ -259,6 +259,8 @@ export const addGameLog = async (logData: AddGameLogRequestType, userId: string)
     actionType: logData.actionType,
     scoreChange: logData.scoreChange || 0,
     isSystemAction: logData.isSystemAction || false,
+    panel: logData.panel,
+    removedPanel: logData.removedPanel,
     userId,
   });
 
@@ -674,6 +676,8 @@ export const importGame = async (importData: ImportGameRequestType, userId: stri
     questionNumber: importedLog.questionNumber ?? null,
     actionType: importedLog.actionType,
     scoreChange: importedLog.scoreChange ?? 0,
+    panel: importedLog.panel ?? null,
+    removedPanel: importedLog.removedPanel ?? null,
     timestamp: importedLog.timestamp ? new Date(importedLog.timestamp) : new Date(),
     isSystemAction: importedLog.isSystemAction ?? false,
     userId,

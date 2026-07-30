@@ -47,6 +47,10 @@ const GameStartButton: React.FC<GameStartButtonProps> = ({
     errorMessages.push("AQLは10人でプレイする必要があります。");
   }
 
+  if (ruleType === "attack25" && playerCount !== 4) {
+    errorMessages.push("アタック25は4人でプレイする必要があります。");
+  }
+
   const playButtonIsDisabled =
     errorMessages.filter((t) => t.indexOf("ゲームが開始済み") === -1).length !== 0;
 

@@ -1,5 +1,6 @@
 // 各ゲーム形式のコンピュータをインポート
 import computeAql from "./aql";
+import computeAttack25 from "./attack25";
 import computeAttackSurvival from "./attacksurvival";
 import computeBackstream from "./backstream";
 import computeDivide from "./divide";
@@ -121,6 +122,8 @@ const computeByRule = (
       return computeVariables(game, initialState, logs);
     case "aql":
       return computeAql(game, initialState, logs);
+    case "attack25":
+      return computeAttack25(game, initialState, logs);
     default:
       // 未対応形式の場合は初期状態を返す
       const scores = initialState.map((score, index) => ({

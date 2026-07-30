@@ -10,8 +10,10 @@ import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineSco
 
 import ActionButtons from "../ActionButtons/ActionButtons";
 import AQL from "../AQL/AQL";
+import Attack25 from "../Attack25/Attack25";
 import BoardHeader from "../BoardHeader/BoardHeader";
 import GameLogs from "../GameLogs/GameLogs";
+import InAppBrowserWarning from "../InAppBrowserWarning/InAppBrowserWarning";
 import Players from "../Players/Players";
 import WinModal from "../WinModal/WinModal";
 import classes from "./Board.module.css";
@@ -89,7 +91,11 @@ const Board: React.FC<BoardProps> = ({
   }, [gameId]);
 
   const addLog = useCallback(
-    async (playerId: string, actionType: LogDBProps["variant"]) => {
+    async (
+      playerId: string,
+      actionType: LogDBProps["variant"],
+      options?: { panel?: number; removedPanel?: number }
+    ) => {
       startTransition(async () => {
         await parseResponse(
           apiClient.games.logs.$post({
@@ -98,6 +104,8 @@ const Board: React.FC<BoardProps> = ({
               playerId,
               actionType,
               isSystemAction: false,
+              panel: options?.panel,
+              removedPanel: options?.removedPanel,
             },
           })
         );
@@ -238,6 +246,13 @@ const Board: React.FC<BoardProps> = ({
       if (!initialGame) return;
       // 手動更新モードではスコアを直接入力するため、ショートカットを無効にする
       if (editable) return;
+      // アタック25は盤面のパネル選択で解答するため、数字キーの解答は無効にする
+      if (initialGame.ruleType === "attack25") {
+        if (event.code === "Comma" || (event.code === "KeyZ" && (event.ctrlKey || event.metaKey))) {
+          undo();
+        }
+        return;
+      }
       if (event.code.startsWith("Digit") || event.code.startsWith("Numpad")) {
         const code = event.code.startsWith("Digit") ? event.code[5] : event.code[6];
         const idx = Number(code);
@@ -313,6 +328,7 @@ const Board: React.FC<BoardProps> = ({
 
   return (
     <>
+      <InAppBrowserWarning />
       <BoardHeader
         game={{
           id: initialGame.id,
@@ -339,7 +355,16 @@ const Board: React.FC<BoardProps> = ({
           }}
         />
       )}
-      {initialGame.ruleType === "aql" ? (
+      {initialGame.ruleType === "attack25" ? (
+        <Attack25
+          players={players}
+          logs={logs}
+          isPending={isPending}
+          onAddLog={addLog}
+          attackChance={initialGame.option.attack_chance}
+          show_header={preferences?.showBoardHeader ?? true}
+        />
+      ) : initialGame.ruleType === "aql" ? (
         <AQL
           scores={scores}
           players={players}
