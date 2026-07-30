@@ -220,7 +220,7 @@ src/
 │   ├── drizzle/           # Drizzle ORM設定・スキーマ
 │   ├── hono/              # Honoクライアント設定
 │   ├── online/            # ドメインロジック
-│   │   ├── computeScore/  # 17種類のゲーム形式の計算ロジック
+│   │   ├── computeScore/  # 18種類のゲーム形式の計算ロジック
 │   │   └── discord.ts     # Discord Webhook通知
 │   ├── types.ts           # TypeScript型定義
 │   ├── functions.ts       # 共通ユーティリティ関数
@@ -237,7 +237,7 @@ src/
 
 **対応ゲーム形式:**
 
-- normal, nomx, ny, swedish, backstream, z, aql, linear等の17形式
+- normal, nomx, ny, swedish, backstream, z, aql, attack25, linear等の18形式
 - 各形式は独立したファイルで実装
 - 共通インターフェースを使用して統一的に処理
 - テストは`src/utils/online/computeScore/__tests__/`にあり、`pnpm run test`で実行

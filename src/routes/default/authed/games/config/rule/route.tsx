@@ -40,7 +40,7 @@ const RulePage = ({ loaderData }: Route.ComponentProps) => {
     nomx: { name: "勝ち抜けポイント", max: 1000, min: undefined },
     "nomx-ad": { name: "勝ち抜けポイント", max: 1000, min: undefined },
     nomr: { name: "休み(M)", max: 100, min: undefined },
-    "endless-chance": { name: "失格誤答数", max: 100, min: undefined },
+    "endless-chance": { name: "勝ち抜け正解数", max: 100, min: undefined },
     ny: { name: "勝ち抜けポイント", max: 1000, min: 3 },
     variables: { name: "勝ち抜けポイント", max: 1000, min: 3 },
     nbyn: { name: "N", max: 10, min: undefined },
@@ -149,8 +149,19 @@ const RulePage = ({ loaderData }: Route.ComponentProps) => {
       {/* AQL形式のチーム設定 */}
       {game.ruleType === "aql" && <AQLOptions gameId={game.id} settings={game.option} />}
 
-      {/* 限定問題数の設定（AQLは対象外） */}
-      {ruleType !== "aql" && (
+      {/* アタック25のアタックチャンス設定 */}
+      {game.ruleType === "attack25" && (
+        <ConfigBooleanInput
+          gameId={game.id}
+          label="アタックチャンスを有効にする"
+          helperText="残り5枚以下で最初に正解した人が、相手のパネルを1枚消せるようになります。"
+          value={game.option.attack_chance}
+          fieldName="attack_chance"
+        />
+      )}
+
+      {/* 限定問題数の設定（AQL・アタック25は対象外） */}
+      {ruleType !== "aql" && ruleType !== "attack25" && (
         <ConfigLimit
           gameId={game.id}
           limit={"limit" in game.option ? game.option.limit : undefined}

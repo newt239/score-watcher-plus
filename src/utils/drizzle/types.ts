@@ -295,6 +295,17 @@ export const AqlOptionKeySchema = z.enum(["left_team", "right_team", "limit", "w
 export type AqlOption = z.infer<typeof AqlOptionSchema>;
 export type AqlOptionKey = keyof AqlOption;
 
+export const Attack25OptionSchema = z
+  .object({
+    attack_chance: z.boolean().default(true),
+    limit: z.number().optional(),
+    win_through: z.number().optional(),
+  })
+  .default({ attack_chance: true });
+export const Attack25OptionKeySchema = z.enum(["attack_chance", "limit", "win_through"]);
+export type Attack25Option = z.infer<typeof Attack25OptionSchema>;
+export type Attack25OptionKey = keyof Attack25Option;
+
 export const GameOptionSchema = z.union([
   NormalOptionSchema,
   NomxOptionSchema,
@@ -313,6 +324,7 @@ export const GameOptionSchema = z.union([
   EndlessChanceOptionSchema,
   VariablesOptionSchema,
   AqlOptionSchema,
+  Attack25OptionSchema,
 ]);
 export const GameOptionKeySchema = z.union([
   NormalOptionKeySchema,
@@ -332,6 +344,7 @@ export const GameOptionKeySchema = z.union([
   EndlessChanceOptionKeySchema,
   VariablesOptionKeySchema,
   AqlOptionKeySchema,
+  Attack25OptionKeySchema,
 ]);
 export type GameOptionKey =
   | NormalOptionKey
@@ -350,7 +363,8 @@ export type GameOptionKey =
   | FreezexOptionKey
   | EndlessChanceOptionKey
   | VariablesOptionKey
-  | AqlOptionKey;
+  | AqlOptionKey
+  | Attack25OptionKey;
 
 // 日付を文字列に変換
 export type SeriarizedGame = DeepDateToString<Game>;
@@ -413,7 +427,12 @@ export type TypedGame<T extends RuleNames = RuleNames> = T extends "normal"
                                       ruleType: "aql";
                                       option: AqlOption;
                                     }
-                                  : never;
+                                  : T extends "attack25"
+                                    ? SeriarizedGame & {
+                                        ruleType: "attack25";
+                                        option: Attack25Option;
+                                      }
+                                    : never;
 
 export type TypedGameOption =
   | NormalOption
@@ -432,7 +451,8 @@ export type TypedGameOption =
   | FreezexOption
   | EndlessChanceOption
   | VariablesOption
-  | AqlOption;
+  | AqlOption
+  | Attack25Option;
 
 export type DeepDateToString<T> = T extends Date
   ? string

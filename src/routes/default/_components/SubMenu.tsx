@@ -6,6 +6,7 @@ import {
   IconList,
   IconListDetails,
   IconQuestionMark,
+  IconSparkles,
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
@@ -22,6 +23,7 @@ const getLinkList = (): { text: string; path: string; icon: React.ReactNode }[] 
   { path: "/games", text: "作成したゲーム", icon: <IconList /> },
   { path: "/players", text: "プレイヤー管理", icon: <IconUsers /> },
   { path: "/quizes", text: "問題管理", icon: <IconQuestionMark /> },
+  { path: "/changelog", text: "アップデート履歴", icon: <IconSparkles /> },
   { path: "/docs", text: "アプリ情報", icon: <IconInfoCircle /> },
   {
     path: "https://docs.score-watcher.com/",

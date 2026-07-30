@@ -23,6 +23,14 @@ const AppInfoPage = () => {
         各種表記
       </Title>
       <SimpleGrid cols={2}>
+        <Link to="/changelog" style={{ textDecoration: "none" }}>
+          <Card shadow="sm" withBorder>
+            <Group justify="space-between">
+              <Box>アップデート履歴</Box>
+              <IconArrowRight />
+            </Group>
+          </Card>
+        </Link>
         <Link to="/docs/terms_of_service" style={{ textDecoration: "none" }}>
           <Card shadow="sm" withBorder>
             <Group justify="space-between">
