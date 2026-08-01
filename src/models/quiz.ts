@@ -45,50 +45,17 @@ export const GetQuizzesQuerySchema = z.object({
   search: z.string().optional(),
 });
 
-/** クイズセット名一覧取得レスポンスのスキーマ */
-export const GetQuizSetsResponseSchema = z.object({
-  setNames: z.array(z.string()),
-});
-
 /** クイズ問題作成の基本型 */
 export type CreateQuizType = z.infer<typeof CreateQuizSchema>;
 
 /** クイズ問題作成リクエストの型 */
 export type CreateQuizRequestType = z.infer<typeof CreateQuizRequestSchema>;
 
-/** クイズ問題更新の基本型 */
-export type UpdateQuizType = z.infer<typeof UpdateQuizSchema>;
-
 /** クイズ問題更新リクエストの型 */
 export type UpdateQuizRequestType = z.infer<typeof UpdateQuizRequestSchema>;
 
 /** クイズ問題削除リクエストの型 */
 export type DeleteQuizRequestType = z.infer<typeof DeleteQuizRequestSchema>;
-
-/** クイズ問題取得クエリの型 */
-export type GetQuizzesQueryType = z.infer<typeof GetQuizzesQuerySchema>;
-
-/** クイズセット名一覧取得レスポンスの型 */
-export type GetQuizSetsResponseType = z.infer<typeof GetQuizSetsResponseSchema>;
-
-/** クイズ問題作成レスポンスの型 */
-export type CreateQuizResponseType = {
-  ids: string[];
-  createdCount: number;
-  message: string;
-};
-
-/** クイズ問題更新レスポンスの型 */
-export type UpdateQuizResponseType = {
-  updatedCount: number;
-  message: string;
-};
-
-/** クイズ問題削除レスポンスの型 */
-export type DeleteQuizResponseType = {
-  deletedCount: number;
-  message: string;
-};
 
 /** APIレスポンス用のクイズ問題型 */
 export type ApiQuizType = {
@@ -103,32 +70,8 @@ export type ApiQuizType = {
   updatedAt?: string;
 };
 
-/** クイズ問題取得レスポンスの型 */
-export type GetQuizzesResponseType = {
-  data: {
-    items: ApiQuizType[];
-    total: number;
-    hasMore: boolean;
-  };
-  message: string;
-};
-
-/** クイズ問題詳細レスポンスの型 */
-export type QuizDetailResponseType = {
-  id: string;
-  question: string;
-  answer: string;
-  annotation: string;
-  category: string;
-  setName: string;
-  questionNumber: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
 // レガシー互換性のためのエイリアス
 export type ApiQuizDataType = ApiQuizType;
-export type GetQuizesListRequestType = GetQuizzesQueryType;
 export type GetQuizesListResponseType = {
   quizes: ApiQuizType[];
   total: number;

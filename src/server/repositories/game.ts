@@ -14,7 +14,6 @@ import type {
   UpdateGamePlayerRequestJsonType,
   UpdateGamePlayerType,
   UpdateGameRequestJsonType,
-  UpdateGameSettingsRequestType,
 } from "@/models/game";
 
 /** 特定のゲーム情報を取得 */
@@ -292,30 +291,6 @@ export const removeAllGameLogs = async (gameId: string, userId: string) => {
   );
 
   return { deletedCount: result.rowsAffected };
-};
-
-/** ゲームの名前かDiscord Webhook URLを更新 */
-export const updateGameSettings = async (
-  gameId: string,
-  settingsData: UpdateGameSettingsRequestType,
-  userId: string
-): Promise<boolean> => {
-  try {
-    const gameData = await getGameById(gameId, userId);
-    if (!gameData) return false;
-
-    await DBClient.update(game)
-      .set({
-        ...settingsData,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(game.id, gameId), eq(game.userId, userId)));
-
-    return true;
-  } catch (error) {
-    console.error("Failed to update game settings:", error);
-    return false;
-  }
 };
 
 /** ゲームプレイヤー一括更新 */

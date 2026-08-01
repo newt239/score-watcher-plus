@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "ignore": ["drizzle.config.ts"],
   "ignoreDependencies": [
     "@css-modules-kit/stylelint-plugin",
     "@typescript/native-preview",
@@ -15,6 +14,5 @@
     "exports": "warn",
     "types": "warn",
     "duplicates": "warn"
-  },
-  "drizzle": false
+  }
 }

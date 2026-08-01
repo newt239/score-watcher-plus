@@ -21,5 +21,3 @@ export const authClient = createAuthClient({
   baseURL: resolveAuthBaseUrl(),
   basePath: "/api/auth",
 });
-
-export { authClient as client };
