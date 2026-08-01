@@ -14,7 +14,6 @@
   filter: grayscale(1) contrast(1.05) brightness(0.92);
 }
 
-/* 本家に合わせ、明るくしたグレースケール画像にteal-6をmultiplyで重ねてデュオトーンにする */
 .hero_overlay {
   position: absolute;
   inset: 0;

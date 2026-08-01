@@ -19,7 +19,6 @@ import type { NumberInputHandlers } from "@mantine/core";
 /** 人数を変更できる上限 */
 const MAX_PLAYER_COUNT = 20;
 
-/** ログイン導線を跨いでクイックスタートの選択を復元するためのsessionStorageキー */
 const PENDING_QUICKSTART_KEY = "scorew-pending-quickstart";
 
 /** 人数が形式側で固定される形式のデフォルト人数 */
@@ -89,7 +88,6 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     if (typeof fixed === "number") setPlayers(fixed);
   };
 
-  /** 指定した形式・人数でゲーム（と任意でプレイヤー）を作成し設定画面へ遷移する */
   const createGame = (ruleName: RuleNames, playerCount: number, withPlayers: boolean) => {
     startTransition(async () => {
       try {
@@ -140,10 +138,8 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     });
   };
 
-  /** ゲームを作成し設定画面へ遷移する。未ログイン時は選択内容を保持してログインへ誘導し、 ログイン後に自動で作成を再開する。 */
   const startGame = (withPlayers: boolean) => {
     if (!isLoggedIn) {
-      // OAuthのリダイレクトを跨いでも復元できるようsessionStorageへ保存する
       sessionStorage.setItem(
         PENDING_QUICKSTART_KEY,
         JSON.stringify({ rule, players, withPlayers })
@@ -155,7 +151,6 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     createGame(rule, players, withPlayers);
   };
 
-  // ログイン後、保存しておいたクイックスタートの選択があれば自動で作成を再開する
   useEffect(() => {
     if (!isLoggedIn || resumedRef.current) return;
     const raw = sessionStorage.getItem(PENDING_QUICKSTART_KEY);
@@ -173,10 +168,8 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
       setPlayers(intent.players);
       createGame(intent.rule, intent.players, intent.withPlayers);
     } catch {
-      // 壊れたデータは無視する
+      return;
     }
-    // ログイン状態が確定した初回だけ復元すればよい
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   return (

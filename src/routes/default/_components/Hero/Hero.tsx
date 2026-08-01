@@ -10,12 +10,6 @@ type HeroProps = {
   isLoggedIn: boolean;
 };
 
-/**
- * トップページのファーストビュー。本家に合わせて画像へ緑のオーバーレイをかけ、 右下にクイックスタートカードを重ねて表示する。未ログイン時はログインへの導線を出す。
- *
- * @param isLoggedIn ログイン済みかどうか（未ログイン時はログインボタンを表示する）
- * @returns ヒーローセクション
- */
 const Hero = ({ isLoggedIn }: HeroProps) => {
   return (
     <Box className={classes.hero}>
