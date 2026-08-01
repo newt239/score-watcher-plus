@@ -13,11 +13,13 @@ type HeroProps = {
 const Hero = ({ isLoggedIn }: HeroProps) => {
   return (
     <Box className={classes.hero}>
-      <Image alt="大会画像" src="/images/hero.webp" className={classes.hero_image} />
-      <Box aria-hidden className={classes.hero_overlay} />
+      <Box className={classes.hero_media}>
+        <Image alt="大会画像" src="/images/hero.webp" className={classes.hero_image} />
+        <Box aria-hidden className={classes.hero_tint} />
+      </Box>
       <Box className={classes.hero_content}>
-        <Box className={classes.hero_text_area}>
-          <Box className={classes.hero_text}>
+        <Box className={classes.hero_text}>
+          <Box className={classes.hero_heading}>
             <Box>競技クイズのための</Box>
             <Box>得点表示アプリ</Box>
           </Box>
@@ -38,7 +40,7 @@ const Hero = ({ isLoggedIn }: HeroProps) => {
             </Button>
           )}
         </Box>
-        <Box className={classes.card_slot}>
+        <Box className={classes.hero_card}>
           <QuickStart isLoggedIn={isLoggedIn} />
         </Box>
       </Box>
