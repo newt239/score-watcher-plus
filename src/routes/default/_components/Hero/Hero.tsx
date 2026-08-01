@@ -1,29 +1,52 @@
 import { Box, Button, Image } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconLogin2 } from "@tabler/icons-react";
 
 import ClientLink from "@/components/ClientLink/ClientLink";
 
+import QuickStart from "../QuickStart/QuickStart";
 import classes from "./Hero.module.css";
 
-const Hero = () => {
+type HeroProps = {
+  isLoggedIn: boolean;
+};
+
+/**
+ * トップページのファーストビュー。本家に合わせて画像へ緑のオーバーレイをかけ、 右下にクイックスタートカードを重ねて表示する。未ログイン時はログインへの導線を出す。
+ *
+ * @param isLoggedIn ログイン済みかどうか（未ログイン時はログインボタンを表示する）
+ * @returns ヒーローセクション
+ */
+const Hero = ({ isLoggedIn }: HeroProps) => {
   return (
     <Box className={classes.hero}>
-      <Image alt="大会画像" radius="xl" src="/images/hero.webp" className={classes.hero_image} />
-      <Box className={classes.hero_text_area}>
-        <Box className={classes.hero_text}>
-          <Box>競技クイズのための</Box>
-          <Box>
-            <Box className={classes.marked_text}>得点表示</Box>
-            アプリ
+      <Image alt="大会画像" src="/images/hero.webp" className={classes.hero_image} />
+      <Box aria-hidden className={classes.hero_overlay} />
+      <Box className={classes.hero_content}>
+        <Box className={classes.hero_text_area}>
+          <Box className={classes.hero_text}>
+            <Box>競技クイズのための</Box>
+            <Box>得点表示アプリ</Box>
           </Box>
+          <Box className={classes.hero_description}>
+            <p>スコアの表示だけでなく、勝ち抜け・敗退状態や</p>
+            <p>問題文の表示にも対応</p>
+          </Box>
+          {!isLoggedIn && (
+            <Button
+              className={classes.login_button}
+              component={ClientLink}
+              href="/sign-in"
+              leftSection={<IconLogin2 />}
+              size="lg"
+              variant="white"
+            >
+              ログインして始める
+            </Button>
+          )}
         </Box>
-        <Box my="lg">
-          <p>Score Watcherは、競技クイズの得点表示に特化したWebアプリケーションです。</p>
-          <p>スコアの表示だけでなく、勝ち抜け・敗退状態や問題文の表示にも対応しています。</p>
+        <Box className={classes.card_slot}>
+          <QuickStart isLoggedIn={isLoggedIn} />
         </Box>
-        <Button component={ClientLink} href="/rules" size="lg" rightSection={<IconArrowRight />}>
-          ゲームを作る
-        </Button>
       </Box>
     </Box>
   );

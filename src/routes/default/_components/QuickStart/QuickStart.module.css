@@ -5,7 +5,6 @@
   width: 100%;
   max-width: 34rem;
   padding: 1.5rem;
-  margin-block: 2rem;
   background-color: var(--mantine-color-body);
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-lg);
