@@ -11,16 +11,16 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(0.2);
+  filter: grayscale(1) brightness(0.95);
 }
 
+/* 本家に合わせ、画像の輝度を保ったままteal単色へ着色するデュオトーン */
 .hero_overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
   background-color: var(--mantine-primary-color-filled);
-  mix-blend-mode: multiply;
-  opacity: 0.6;
+  mix-blend-mode: color;
 }
 
 .hero_content {
