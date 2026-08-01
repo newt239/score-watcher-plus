@@ -1,4 +1,4 @@
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ActionIcon, Box, Button, NativeSelect, NumberInput, Select } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -18,6 +18,9 @@ import type { NumberInputHandlers } from "@mantine/core";
 
 /** 人数を変更できる上限 */
 const MAX_PLAYER_COUNT = 20;
+
+/** ログイン導線を跨いでクイックスタートの選択を復元するためのsessionStorageキー */
+const PENDING_QUICKSTART_KEY = "scorew-pending-quickstart";
 
 /** 人数が形式側で固定される形式のデフォルト人数 */
 const FIXED_PLAYER_COUNTS: Partial<Record<RuleNames, number>> = {
@@ -67,6 +70,7 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
   const [players, setPlayers] = useState<number>(5);
   const [isPending, startTransition] = useTransition();
   const handlersRef = useRef<NumberInputHandlers>(null);
+  const resumedRef = useRef(false);
   const apiClient = createApiClient();
 
   const ruleNames = Object.keys(rules) as RuleNames[];
@@ -85,18 +89,13 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     if (typeof fixed === "number") setPlayers(fixed);
   };
 
-  /** ゲームを作成し、人数分のプレイヤーも追加するかどうかを選んで設定画面へ遷移する */
-  const startGame = (withPlayers: boolean) => {
-    if (!isLoggedIn) {
-      navigate("/sign-in");
-      return;
-    }
-
+  /** 指定した形式・人数でゲーム（と任意でプレイヤー）を作成し設定画面へ遷移する */
+  const createGame = (ruleName: RuleNames, playerCount: number, withPlayers: boolean) => {
     startTransition(async () => {
       try {
         const result = await parseResponse(
           apiClient["games"].$post({
-            json: [{ name: rules[rule].name, ruleType: rule }],
+            json: [{ name: rules[ruleName].name, ruleType: ruleName }],
           })
         );
 
@@ -106,10 +105,10 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
 
         const gameId = result.data.ids[0];
 
-        if (withPlayers && players > 0) {
+        if (withPlayers && playerCount > 0) {
           const createdPlayers = await parseResponse(
             apiClient.players.$post({
-              json: Array.from({ length: players }, (_, i) => ({
+              json: Array.from({ length: playerCount }, (_, i) => ({
                 name: `プレイヤー${i + 1}`,
               })),
             })
@@ -140,6 +139,45 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
       }
     });
   };
+
+  /** ゲームを作成し設定画面へ遷移する。未ログイン時は選択内容を保持してログインへ誘導し、 ログイン後に自動で作成を再開する。 */
+  const startGame = (withPlayers: boolean) => {
+    if (!isLoggedIn) {
+      // OAuthのリダイレクトを跨いでも復元できるようsessionStorageへ保存する
+      sessionStorage.setItem(
+        PENDING_QUICKSTART_KEY,
+        JSON.stringify({ rule, players, withPlayers })
+      );
+      navigate("/sign-in");
+      return;
+    }
+
+    createGame(rule, players, withPlayers);
+  };
+
+  // ログイン後、保存しておいたクイックスタートの選択があれば自動で作成を再開する
+  useEffect(() => {
+    if (!isLoggedIn || resumedRef.current) return;
+    const raw = sessionStorage.getItem(PENDING_QUICKSTART_KEY);
+    if (!raw) return;
+    resumedRef.current = true;
+    sessionStorage.removeItem(PENDING_QUICKSTART_KEY);
+    try {
+      const intent = JSON.parse(raw) as {
+        rule: RuleNames;
+        players: number;
+        withPlayers: boolean;
+      };
+      if (!(intent.rule in rules)) return;
+      setRule(intent.rule);
+      setPlayers(intent.players);
+      createGame(intent.rule, intent.players, intent.withPlayers);
+    } catch {
+      // 壊れたデータは無視する
+    }
+    // ログイン状態が確定した初回だけ復元すればよい
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   return (
     <Box className={classes.card}>
