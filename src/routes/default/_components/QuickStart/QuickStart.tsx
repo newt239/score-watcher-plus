@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { ActionIcon, Box, Button, NativeSelect, NumberInput, Select } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconArrowRight, IconMinus, IconPlus, IconSettings } from "@tabler/icons-react";
-import { parseResponse } from "hono/client";
 import { useNavigate } from "react-router";
 
-import createApiClient from "@/utils/hono/browser";
 import { notifyApiError } from "@/utils/notify-error";
 import { rules } from "@/utils/rules";
 
+import { PENDING_QUICKSTART_KEY, createGameWithPlayers } from "./create-game";
 import classes from "./QuickStart.module.css";
 
 import type { RuleNames } from "@/models/game";
@@ -18,8 +17,6 @@ import type { NumberInputHandlers } from "@mantine/core";
 
 /** 人数を変更できる上限 */
 const MAX_PLAYER_COUNT = 20;
-
-const PENDING_QUICKSTART_KEY = "scorew-pending-quickstart";
 
 /** 人数が形式側で固定される形式のデフォルト人数 */
 const FIXED_PLAYER_COUNTS: Partial<Record<RuleNames, number>> = {
@@ -69,8 +66,6 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
   const [players, setPlayers] = useState<number>(5);
   const [isPending, startTransition] = useTransition();
   const handlersRef = useRef<NumberInputHandlers>(null);
-  const resumedRef = useRef(false);
-  const apiClient = createApiClient();
 
   const ruleNames = Object.keys(rules) as RuleNames[];
   const ruleOptions = ruleNames.map((ruleName) => ({
@@ -88,44 +83,19 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     if (typeof fixed === "number") setPlayers(fixed);
   };
 
-  const createGame = (ruleName: RuleNames, playerCount: number, withPlayers: boolean) => {
+  const startGame = (withPlayers: boolean) => {
+    if (!isLoggedIn) {
+      sessionStorage.setItem(
+        PENDING_QUICKSTART_KEY,
+        JSON.stringify({ rule, players, withPlayers })
+      );
+      navigate("/sign-in");
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const result = await parseResponse(
-          apiClient["games"].$post({
-            json: [{ name: rules[ruleName].name, ruleType: ruleName }],
-          })
-        );
-
-        if ("error" in result) {
-          throw new Error(String(result.error));
-        }
-
-        const gameId = result.data.ids[0];
-
-        if (withPlayers && playerCount > 0) {
-          const createdPlayers = await parseResponse(
-            apiClient.players.$post({
-              json: Array.from({ length: playerCount }, (_, i) => ({
-                name: `プレイヤー${i + 1}`,
-              })),
-            })
-          );
-
-          if ("success" in createdPlayers && createdPlayers.success) {
-            await Promise.all(
-              createdPlayers.data.ids.map((playerId, i) =>
-                parseResponse(
-                  apiClient.games[":gameId"].players.$post({
-                    param: { gameId },
-                    json: { playerId, displayOrder: i },
-                  })
-                )
-              )
-            );
-          }
-        }
-
+        const gameId = await createGameWithPlayers(rule, players, withPlayers);
         notifications.show({
           title: "成功",
           message: "ゲームを作成しました",
@@ -137,40 +107,6 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
       }
     });
   };
-
-  const startGame = (withPlayers: boolean) => {
-    if (!isLoggedIn) {
-      sessionStorage.setItem(
-        PENDING_QUICKSTART_KEY,
-        JSON.stringify({ rule, players, withPlayers })
-      );
-      navigate("/sign-in");
-      return;
-    }
-
-    createGame(rule, players, withPlayers);
-  };
-
-  useEffect(() => {
-    if (!isLoggedIn || resumedRef.current) return;
-    const raw = sessionStorage.getItem(PENDING_QUICKSTART_KEY);
-    if (!raw) return;
-    resumedRef.current = true;
-    sessionStorage.removeItem(PENDING_QUICKSTART_KEY);
-    try {
-      const intent = JSON.parse(raw) as {
-        rule: RuleNames;
-        players: number;
-        withPlayers: boolean;
-      };
-      if (!(intent.rule in rules)) return;
-      setRule(intent.rule);
-      setPlayers(intent.players);
-      createGame(intent.rule, intent.players, intent.withPlayers);
-    } catch {
-      return;
-    }
-  }, [isLoggedIn]);
 
   return (
     <Box className={classes.card}>

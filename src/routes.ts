@@ -9,6 +9,7 @@ export default [
   layout("routes/default/layout.tsx", [
     index("routes/default/route.tsx"),
     route("sign-in", "routes/default/sign-in/route.tsx"),
+    route("quickstart", "routes/default/quickstart/route.tsx"),
     route("rules", "routes/default/rules/route.tsx"),
     route("changelog", "routes/default/changelog/route.tsx"),
     ...prefix("docs", [
