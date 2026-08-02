@@ -33,31 +33,6 @@ export type Variants =
   | "skip"
   | "blank";
 
-/** オンライン版での GameProps 型（ローカル版の GamePropsUnion に相当） */
-export type OnlineGameProps = {
-  id: string;
-  name: string;
-  rule: RuleNames;
-  discord_webhook_url: string;
-  correct_me: number;
-  wrong_me: number;
-  options?: {
-    left_team?: string;
-    right_team?: string;
-  };
-  editable: boolean;
-  last_open: string;
-};
-
-/** オンライン版でのプレイヤーDB型（ローカル版の PlayerDBProps に相当） */
-export type OnlinePlayerDBProps = {
-  id: string;
-  name: string;
-  text: string;
-  belong: string;
-  tags: string[];
-};
-
 /** プレイヤーの状態の型定義 */
 export type States = "win" | "lose" | "playing";
 
@@ -131,9 +106,6 @@ export const CreateGameSchema = z.object({
 export const CopyPlayersFromGameRequestSchema = z.object({
   sourceGameId: z.string().min(1),
 });
-
-/** 既存ゲームからプレイヤーをコピーするリクエスト型 */
-export type CopyPlayersFromGameRequestType = z.infer<typeof CopyPlayersFromGameRequestSchema>;
 
 /** ゲーム作成リクエストのスキーマ */
 export const CreateGameRequestSchema = z
@@ -329,121 +301,23 @@ export const AddGameLogRequestSchema = z.object({
   removedPanel: z.number().int().min(0).max(24).optional(),
 });
 
-/** ゲーム数取得リクエストのスキーマ */
-export const GetGameCountsRequestSchema = z.object({
-  gameIds: z
-    .array(z.string().min(1, "Game ID cannot be empty"))
-    .min(0, "Game IDs array is required"),
-});
-
-/** ゲーム作成の基本型 */
-export type CreateGameType = z.infer<typeof CreateGameSchema>;
-
 /** ゲーム作成リクエストの型 */
 export type CreateGameRequestType = z.infer<typeof CreateGameRequestSchema>;
 
 /** プレイヤー設定更新の型 */
 export type UpdateGamePlayerType = z.infer<typeof UpdateGamePlayerSchema>;
 
-/** クイズ設定更新の型 */
-export type UpdateGameQuizType = z.infer<typeof UpdateGameQuizSchema>;
-
 /** ゲーム更新リクエストの型 */
 export type UpdateGameRequestJsonType = z.infer<typeof UpdateGameRequestJsonSchema>;
-
-/** ゲームプレイヤー更新リクエストのパラメータ型 */
-export type UpdateGamePlayerRequestParamType = z.infer<typeof UpdateGamePlayerRequestParamSchema>;
 
 /** ゲームプレイヤー更新リクエストのjson型 */
 export type UpdateGamePlayerRequestJsonType = z.infer<typeof UpdateGamePlayerRequestJsonSchema>;
 
-/** ゲームプレイヤー一括更新リクエストのパラメータ型 */
-export type UpdateGamePlayersRequestParamType = z.infer<typeof UpdateGamePlayersRequestParamSchema>;
-
-/** ゲームプレイヤー一括更新リクエストのjson型 */
-export type UpdateGamePlayersRequestJsonType = z.infer<typeof UpdateGamePlayersRequestJsonSchema>;
-
-/** ゲーム削除リクエストの型 */
-export type DeleteGameRequestParamType = z.infer<typeof DeleteGameRequestParamSchema>;
-
 /** ゲームにプレイヤー追加リクエストの型 */
 export type AddPlayerToGameRequestType = z.infer<typeof AddPlayerToGameRequestSchema>;
 
-/** ゲームプレイヤー削除リクエストのパラメータ型 */
-export type RemoveGamePlayersRequestParamType = z.infer<typeof RemoveGamePlayersRequestParamSchema>;
-
-/** ゲームプレイヤー削除リクエストのJSON型 */
-export type RemoveGamePlayersRequestJsonType = z.infer<typeof RemoveGamePlayersRequestJsonSchema>;
-
 /** ゲームログ追加リクエストの型 */
 export type AddGameLogRequestType = z.infer<typeof AddGameLogRequestSchema>;
-
-/** ゲーム数取得リクエストの型 */
-export type GetGameCountsRequestType = z.infer<typeof GetGameCountsRequestSchema>;
-
-/** ゲーム作成レスポンスの型 */
-export type CreateGameResponseType = {
-  ids: string[];
-  createdCount: number;
-  message: string;
-};
-
-/** ゲーム更新レスポンスの型 */
-export type UpdateGameResponseType = {
-  updatedCount: number;
-  message: string;
-};
-
-/** ゲーム削除レスポンスの型 */
-export type DeleteGameResponseType = {
-  deletedCount: number;
-  message: string;
-};
-
-/** ゲーム設定取得レスポンスのスキーマ */
-export const GetGameSettingsResponseSchema = z.object({
-  name: z.string(),
-  discordWebhookUrl: z.string().nullable().optional(),
-  winPoint: z.number().int().optional(),
-  losePoint: z.number().int().optional(),
-  targetPoint: z.number().int().optional(),
-  restCount: z.number().int().optional(),
-  basePoint: z.number().int().optional(),
-  initialPoint: z.number().int().optional(),
-  loseThreshold: z.number().int().optional(),
-  attackPoint: z.number().int().optional(),
-  squareSize: z.number().int().optional(),
-  winCondition: z.number().int().optional(),
-  zonePoint: z.number().int().optional(),
-  freezePoint: z.number().int().optional(),
-  loseCount: z.number().int().optional(),
-  useR: z.boolean().optional(),
-  streakOver3: z.boolean().optional(),
-  leftTeam: z.string().optional(),
-  rightTeam: z.string().optional(),
-});
-
-/** ゲーム設定更新リクエストのスキーマ */
-export const UpdateGameSettingsRequestSchema = z.union([
-  z.object({
-    name: z.string().min(1),
-  }),
-  z.object({
-    discordWebhookUrl: z.string(),
-  }),
-]);
-
-/** ゲーム設定取得レスポンスの型 */
-export type GetGameSettingsResponseType = z.infer<typeof GetGameSettingsResponseSchema>;
-
-/** ゲーム設定更新リクエストの型 */
-export type UpdateGameSettingsRequestType = z.infer<typeof UpdateGameSettingsRequestSchema>;
-
-/** ゲーム設定更新レスポンスの型 */
-export type UpdateGameSettingsResponseType = {
-  updated: boolean;
-  message: string;
-};
 
 /** ゲームオプション更新リクエストのスキーマ */
 export const UpdateGameOptionsRequestParamSchema = z.object({
@@ -456,92 +330,11 @@ export const UpdateGameOptionsRequestJsonSchema = z.object({
   value: z.union([z.number(), z.string(), z.boolean()]),
 });
 
-/** ゲームオプション更新リクエストの型 */
-export type UpdateGameOptionsRequestParamType = z.infer<typeof UpdateGameOptionsRequestParamSchema>;
-
-/** ゲームオプション更新リクエストのjson型 */
-export type UpdateGameOptionsRequestJsonType = z.infer<typeof UpdateGameOptionsRequestJsonSchema>;
-
-/** ゲームオプション更新レスポンスの型 */
-export type UpdateGameOptionsResponseType = {
-  updated: boolean;
-  message: string;
-};
-
-/** プレイヤー一括更新レスポンスの型 */
-export type UpdateGamePlayersResponseType = {
-  updated: boolean;
-  updatedCount: number;
-  message: string;
-};
-
 /** ゲームプレイヤー削除レスポンスの型 */
 export type RemoveGamePlayersResponseType = {
   removed: boolean;
   deletedCount: number;
   message: string;
-};
-
-/** ゲームプレイヤー更新レスポンスの型 */
-export type UpdateGamePlayerResponseType = {
-  updated: boolean;
-  message: string;
-};
-
-/** クイズ設定更新レスポンスの型 */
-export type UpdateGameQuizResponseType = {
-  updated: boolean;
-  message: string;
-};
-
-/** 既存ゲームからプレイヤーコピーレスポンスの型 */
-export type CopyPlayersFromGameResponseType = {
-  copied: boolean;
-  copiedCount: number;
-  message: string;
-};
-
-/** オンラインゲーム情報の型（API専用） */
-export type OnlineGameType = {
-  id: string;
-  name: string;
-  ruleType: RuleNames;
-  createdAt?: string;
-  updatedAt?: string;
-  discordWebhookUrl?: string | null;
-  isPublic?: boolean;
-};
-
-/** APIレスポンス用のプレイヤー型（変換前） */
-export type ApiPlayerResponseType = {
-  id: string;
-  name: string;
-  initialCorrectCount?: number;
-  initialWrongCount?: number;
-  displayOrder?: number;
-  initialScore?: number;
-};
-
-/** オンラインゲームプレイヤー情報の型（API専用） */
-export type OnlineGamePlayerType = {
-  id: string;
-  name: string;
-  displayOrder: number;
-  initialScore: number;
-  initialCorrectCount: number;
-  initialWrongCount: number;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-/** オンラインゲーム実行時のプレイヤー型（ローカルDBのGameDBPlayerPropsと同等） */
-export type OnlineGameExecutionPlayerType = {
-  id: string;
-  name: string;
-  initial_correct: number;
-  initial_wrong: number;
-  base_correct_point: number;
-  base_wrong_point: number;
 };
 
 /** オンラインゲームログ情報の型（API専用） */
@@ -566,9 +359,6 @@ export type OnlineUserType = {
 export const GetViewerBoardDataParamSchema = z.object({
   gameId: z.string().min(1),
 });
-
-/** Viewer用ボードデータ取得パラメータ型 */
-export type GetViewerBoardDataParamType = z.infer<typeof GetViewerBoardDataParamSchema>;
 
 /** 観戦モードで表示するプレイヤー（スコア計算結果に表示用の情報を加えたもの） */
 export type ViewerPlayerType = ComputedScoreProps & {

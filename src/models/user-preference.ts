@@ -43,14 +43,3 @@ export const UpdateUserPreferencesRequestSchema = z.object({
   reversePlayerInfo: z.boolean().optional(),
   wrongNumber: z.boolean().optional(),
 });
-
-/** ユーザーIDパラメータの型 */
-export type UserIdParamType = z.infer<typeof UserIdParamSchema>;
-
-/** ユーザー設定取得レスポンスの型 */
-export type GetUserPreferencesResponseType = UserPreferencesType;
-
-/** ユーザー設定更新レスポンスの型 */
-export type UpdateUserPreferencesResponseType = {
-  message: string;
-};

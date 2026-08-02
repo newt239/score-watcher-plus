@@ -2,7 +2,6 @@ import { getUser } from "@/utils/auth/auth-helpers";
 
 import Features from "./_components/Features/Features";
 import Hero from "./_components/Hero/Hero";
-import QuickStart from "./_components/QuickStart/QuickStart";
 import Term from "./_components/Term";
 
 import type { Route } from "./+types/route";
@@ -23,8 +22,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 const HomePage = ({ loaderData }: Route.ComponentProps) => {
   return (
     <>
-      <Hero />
-      <QuickStart isLoggedIn={loaderData.isLoggedIn} />
+      <Hero isLoggedIn={loaderData.isLoggedIn} />
       <Features />
       <Term />
     </>

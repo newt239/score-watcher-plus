@@ -5,6 +5,8 @@ import { Alert, Button, Text, Title } from "@mantine/core";
 import Link from "@/components/Link";
 import { authClient } from "@/utils/auth/auth-client";
 
+import { PENDING_QUICKSTART_KEY } from "../_components/QuickStart/create-game";
+
 const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -13,9 +15,10 @@ const LoginPage = () => {
     setError(null);
     startTransition(async () => {
       try {
+        const hasPendingQuickStart = sessionStorage.getItem(PENDING_QUICKSTART_KEY) !== null;
         await authClient.signIn.social({
           provider: "google",
-          callbackURL: "/",
+          callbackURL: hasPendingQuickStart ? "/quickstart" : "/",
         });
       } catch (err) {
         console.error("サインインエラー:", err);
