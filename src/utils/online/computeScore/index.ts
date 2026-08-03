@@ -1,9 +1,4 @@
-import type {
-  ComputedScoreProps,
-  GamePlayerProps,
-  GetGameDetailResponseType,
-  States,
-} from "@/models/game";
+import type { ComputedScoreProps, GamePlayerProps, GetGameDetailResponseType } from "@/models/game";
 
 /** プレイヤーの初期状態を生成 */
 export const getInitialPlayersStateForOnline = (
@@ -129,5 +124,3 @@ export const generateScoreText = (score: ComputedScoreProps, order: number): str
   }
   return String(score.score);
 };
-
-export type { States };

@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { DBClient } from "@/utils/drizzle/client";
@@ -8,9 +8,7 @@ import type {
   AddPlayerTagRequestType,
   ApiPlayerDataType,
   CreatePlayerRequestType,
-  CreatePlayerType,
   DeletePlayerRequestType,
-  GetPlayersListResponseType,
   RemovePlayerTagRequestType,
   UpdatePlayerRequestType,
   UpdatePlayerType,
@@ -59,44 +57,6 @@ export const getPlayers = async (userId: string) => {
   return mappedPlayers;
 };
 
-/** プレイヤー一覧取得（ページネーション対応） */
-export const getPlayersWithPagination = async (
-  userId: string,
-  limit = 50,
-  offset = 0
-): Promise<GetPlayersListResponseType> => {
-  // プレイヤー一覧を取得
-  const players = await DBClient.select()
-    .from(player)
-    .where(and(eq(player.userId, userId), isNull(player.deletedAt)))
-    .orderBy(asc(player.name))
-    .limit(limit)
-    .offset(offset);
-
-  // 総数を取得
-  const [totalResult] = await DBClient.select({ count: count() })
-    .from(player)
-    .where(and(eq(player.userId, userId), isNull(player.deletedAt)));
-
-  // レスポンス形式に変換（タグ付き）
-  const playersResponse: ApiPlayerDataType[] = await Promise.all(
-    players.map(async (p) => ({
-      id: p.id,
-      name: p.name,
-      text: p.displayName,
-      belong: p.affiliation || "",
-      tags: await getPlayerTags(p.id),
-      createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt.toISOString(),
-    }))
-  );
-
-  return {
-    players: playersResponse,
-    total: totalResult.count,
-  } as const;
-};
-
 /** プレイヤー詳細取得 */
 export const getPlayerById = async (
   playerId: string,
@@ -119,25 +79,6 @@ export const getPlayerById = async (
     createdAt: playerResult.createdAt.toISOString(),
     updatedAt: playerResult.updatedAt.toISOString(),
   } as const;
-};
-
-/** 単一プレイヤー作成 */
-export const createSinglePlayer = async (
-  playerData: CreatePlayerType,
-  userId: string
-): Promise<string> => {
-  const playerId = nanoid();
-
-  await DBClient.insert(player).values({
-    id: playerId,
-    name: playerData.name,
-    displayName: playerData.name,
-    affiliation: playerData.affiliation,
-    description: playerData.description,
-    userId,
-  });
-
-  return playerId;
 };
 
 /** プレイヤー作成（複数対応） */

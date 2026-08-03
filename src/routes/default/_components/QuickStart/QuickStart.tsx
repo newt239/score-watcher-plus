@@ -3,13 +3,12 @@ import { useRef, useState, useTransition } from "react";
 import { ActionIcon, Box, Button, NativeSelect, NumberInput, Select } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconArrowRight, IconMinus, IconPlus, IconSettings } from "@tabler/icons-react";
-import { parseResponse } from "hono/client";
 import { useNavigate } from "react-router";
 
-import createApiClient from "@/utils/hono/browser";
 import { notifyApiError } from "@/utils/notify-error";
 import { rules } from "@/utils/rules";
 
+import { PENDING_QUICKSTART_KEY, createGameWithPlayers } from "./create-game";
 import classes from "./QuickStart.module.css";
 
 import type { RuleNames } from "@/models/game";
@@ -67,7 +66,6 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
   const [players, setPlayers] = useState<number>(5);
   const [isPending, startTransition] = useTransition();
   const handlersRef = useRef<NumberInputHandlers>(null);
-  const apiClient = createApiClient();
 
   const ruleNames = Object.keys(rules) as RuleNames[];
   const ruleOptions = ruleNames.map((ruleName) => ({
@@ -85,50 +83,19 @@ const QuickStart = ({ isLoggedIn }: QuickStartProps) => {
     if (typeof fixed === "number") setPlayers(fixed);
   };
 
-  /** ゲームを作成し、人数分のプレイヤーも追加するかどうかを選んで設定画面へ遷移する */
   const startGame = (withPlayers: boolean) => {
     if (!isLoggedIn) {
+      sessionStorage.setItem(
+        PENDING_QUICKSTART_KEY,
+        JSON.stringify({ rule, players, withPlayers })
+      );
       navigate("/sign-in");
       return;
     }
 
     startTransition(async () => {
       try {
-        const result = await parseResponse(
-          apiClient["games"].$post({
-            json: [{ name: rules[rule].name, ruleType: rule }],
-          })
-        );
-
-        if ("error" in result) {
-          throw new Error(String(result.error));
-        }
-
-        const gameId = result.data.ids[0];
-
-        if (withPlayers && players > 0) {
-          const createdPlayers = await parseResponse(
-            apiClient.players.$post({
-              json: Array.from({ length: players }, (_, i) => ({
-                name: `プレイヤー${i + 1}`,
-              })),
-            })
-          );
-
-          if ("success" in createdPlayers && createdPlayers.success) {
-            await Promise.all(
-              createdPlayers.data.ids.map((playerId, i) =>
-                parseResponse(
-                  apiClient.games[":gameId"].players.$post({
-                    param: { gameId },
-                    json: { playerId, displayOrder: i },
-                  })
-                )
-              )
-            );
-          }
-        }
-
+        const gameId = await createGameWithPlayers(rule, players, withPlayers);
         notifications.show({
           title: "成功",
           message: "ゲームを作成しました",

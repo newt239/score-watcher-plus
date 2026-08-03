@@ -18,9 +18,6 @@ export const CreateCheckoutSessionRequestSchema = z.object({
   interval: BillingIntervalSchema,
 });
 
-/** Checkoutセッション作成リクエストの型 */
-export type CreateCheckoutSessionRequestType = z.infer<typeof CreateCheckoutSessionRequestSchema>;
-
 /** 課金間隔の型 */
 export type BillingIntervalType = z.infer<typeof BillingIntervalSchema>;
 

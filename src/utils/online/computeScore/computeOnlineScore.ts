@@ -134,5 +134,3 @@ const computeByRule = (
       return { scores, winPlayers: [] as WinPlayerProps[] } as const;
   }
 };
-
-export default computeOnlineScore;

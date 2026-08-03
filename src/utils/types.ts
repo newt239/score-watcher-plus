@@ -82,8 +82,6 @@ export type PlayerDBProps = {
   tags: string[];
 };
 
-export type States = "win" | "lose" | "playing";
-
 export type QuizDBProps = {
   id: string;
   n: number;
