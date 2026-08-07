@@ -57,21 +57,21 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-router": "8.3.0",
-    "stripe": "22.3.2",
+    "stripe": "22.4.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.48.0",
+    "@cloudflare/vite-plugin": "1.49.0",
     "@css-modules-kit/codegen": "1.4.0",
     "@css-modules-kit/stylelint-plugin": "1.4.0",
     "@hono/zod-validator": "0.9.0",
     "@ls-lint/ls-lint": "2.3.1",
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.62.1",
     "@react-router/dev": "8.3.0",
     "@types/encoding-japanese": "2.2.1",
     "@types/node": "26.1.2",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/ui": "4.1.10",
     "dotenv": "17.4.2",
@@ -87,9 +87,9 @@
     "stylelint-config-recess-order": "7.7.0",
     "stylelint-config-standard": "40.0.0",
     "typescript": "7.0.2",
-    "vite": "8.1.5",
+    "vite": "8.2.0",
     "vitest": "4.1.10",
-    "wrangler": "4.115.0"
+    "wrangler": "4.116.0"
   },
   "engines": {
     "node": ">=26"
