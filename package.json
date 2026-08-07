@@ -23,7 +23,7 @@
     "playwright": "playwright test",
     "preinstall": "npx only-allow pnpm",
     "preview": "pnpm run build && wrangler dev",
-    "setup": "corepack enable pnpm",
+    "setup": "mise install",
     "stylelint": "stylelint \"./**/*.css\" --ignore-path .gitignore",
     "stylelint:fix": "stylelint \"./**/*.css\" --ignore-path .gitignore --fix",
     "test": "vitest run",
@@ -92,7 +92,7 @@
     "wrangler": "4.115.0"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   },
-  "packageManager": "pnpm@10.24.0"
+  "packageManager": "pnpm@11.20.0"
 }
