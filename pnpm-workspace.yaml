@@ -2,6 +2,9 @@ packages:
   - "."
 saveExact: true
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - "@tanstack/react-table@9.0.0"
+  - "@tanstack/table-core@9.0.0"
 allowBuilds:
   "@sentry/cli": false
   esbuild: false
