@@ -391,6 +391,9 @@ export type ApiDataType = {
 ## リポジトリ設定
 
 - **Node.js**: バージョンは`.node-version`（mise利用時は`mise.toml`）で固定。CIも`node-version-file`を参照
+- **pnpm**: バージョンは`package.json`の`packageManager`で固定し、ローカルは`mise.toml`（`pnpm run setup` = `mise install`）、CIは`pnpm/action-setup`で導入します。Node 26以降はcorepackが同梱されないため`corepack enable`は使いません
+- **pnpm設定**: pnpm 11以降`.npmrc`は認証・レジストリ専用のため、それ以外の設定（`saveExact`など）は`pnpm-workspace.yaml`に書きます。ビルドスクリプトの許可は`allowBuilds`（旧`onlyBuiltDependencies` / `ignoredBuiltDependencies`）で指定します
+- **依存のcooldown**: 公開直後のパッケージを取り込まないよう、`pnpm-workspace.yaml`の`minimumReleaseAge`と`dependabot.yml`の`cooldown.default-days`を7日で揃えています
 - **フォーマット**: oxfmt（`.oxfmtrc.json`）。importソート・package.jsonのscriptsソート・JSDoc整形が有効
 - **Lint**: oxlint（`.oxlintrc.json`、type-aware）
 - **ファイル名規則**: ls-lint（`.ls-lint.yml`）
@@ -398,7 +401,7 @@ export type ApiDataType = {
 - **pre-commitフック**: lefthook（`lefthook.yml`）で lint:fix / format:fix / stylelint:fix / ls-lint を実行
 - **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
 - **デプロイ**: **Cloudflare Workers Builds**（CloudflareダッシュボードでGit連携）。`release`ブランチへのpushで本番（`plus.score-watcher.com`）へ自動デプロイされます。GitHub Actionsのデプロイworkflowは使いません。手元から手動でデプロイする場合は `pnpm run deploy`
-- **本番の設定**: Workerランタイムのシークレット（`TURSO_*` / `BETTER_AUTH_SECRET` / `GOOGLE_*` / `STRIPE_*`）は `wrangler secret put` で登録済み。ビルド時にクライアントへ埋め込む `VITE_APP_URL` は Workers Builds のビルド変数に設定します
+- **本番の設定**: Workerランタイムのシークレット（`TURSO_*` / `BETTER_AUTH_SECRET` / `GOOGLE_*` / `STRIPE_*`）は `wrangler secret put` で登録済み。ビルド時にクライアントへ埋め込む `VITE_APP_URL` は Workers Builds のビルド変数に設定します。Workers Builds のビルドイメージはNodeを`.node-version`から読みますが、pnpmはイメージ同梱の古い版が使われるため、ビルド変数`PNPM_VERSION`に`packageManager`と同じバージョンを設定します
 - **ビルド**: Vite（`vite.config.ts`）。pnpm構成ではSSRの依存最適化でReactが二重に読み込まれてフックが壊れるため、`resolve.dedupe` の指定を外さないこと
 - **Workers設定**: `wrangler.jsonc`。バインディングを変更したら `pnpm run cf-typegen` で `worker-configuration.d.ts` を再生成すること。`BOARD_CACHE`（KV）とカスタムドメイン`plus.score-watcher.com`を定義済み
 - **パッケージ**: ESM-only（`package.json`の`"type": "module"`）。React Router v8 と Cloudflare の各プラグインがESM専用のため外さないこと

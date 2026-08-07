@@ -1,11 +1,11 @@
 packages:
   - "."
-minimumReleaseAge: 720
-ignoredBuiltDependencies:
-  - "@sentry/cli"
-  - "esbuild"
-  - "lefthook"
-  - "sharp"
-# workerd は Workers ランタイム本体のバイナリを postinstall で展開するため実行が必須
-onlyBuiltDependencies:
-  - "workerd"
+saveExact: true
+minimumReleaseAge: 10080
+allowBuilds:
+  "@sentry/cli": false
+  esbuild: false
+  lefthook: false
+  sharp: false
+  # workerd は Workers ランタイム本体のバイナリを postinstall で展開するため実行が必須
+  workerd: true

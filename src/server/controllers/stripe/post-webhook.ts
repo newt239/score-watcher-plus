@@ -6,10 +6,14 @@ import {
 } from "@/server/repositories/subscription";
 import { resolvePlanCodeByProductId } from "@/server/utils/subscription/config";
 import { getStripeClient } from "@/server/utils/subscription/stripe";
+import { subscriptionStatusValues } from "@/utils/drizzle/schema";
 
 import type Stripe from "stripe";
 
 const factory = createFactory();
+
+const toSubscriptionStatus = (status: Stripe.Subscription.Status) =>
+  subscriptionStatusValues.find((value) => value === status) ?? null;
 
 /** サブスクリプションの状態をDBへ反映する */
 const applySubscription = async (subscription: Stripe.Subscription) => {
@@ -35,7 +39,7 @@ const applySubscription = async (subscription: Stripe.Subscription) => {
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     stripePriceId: item?.price.id ?? null,
-    status: subscription.status,
+    status: toSubscriptionStatus(subscription.status),
     currentPeriodEnd: item?.current_period_end ? new Date(item.current_period_end * 1000) : null,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   });

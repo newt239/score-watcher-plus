@@ -1,6 +1,10 @@
 import Stripe from "stripe";
 
-import type { BillingIntervalType } from "@/models/subscription";
+import { getProductIdByPlanCode } from "./config";
+
+import type { PlanCode } from "./config";
+
+import type { BillingIntervalType, PlanPricesType } from "@/models/subscription";
 
 let stripeClient: Stripe | null = null;
 
@@ -43,4 +47,40 @@ export const findPriceByInterval = async (
   const prices = await stripe.prices.list({ product: productId, active: true, limit: 100 });
 
   return prices.data.find((price) => price.recurring?.interval === interval) ?? null;
+};
+
+/**
+ * プランの月払い・週払いの価格を取得する
+ *
+ * Stripeが未設定の場合やProductが見つからない場合は、各間隔をnullとして返します。
+ *
+ * @param planCode プランコード
+ * @returns 課金間隔ごとの価格
+ */
+export const getPlanPrices = async (planCode: PlanCode): Promise<PlanPricesType> => {
+  const empty: PlanPricesType = { month: null, week: null };
+
+  const stripe = getStripeClient();
+  const productId = getProductIdByPlanCode(planCode);
+
+  if (!stripe || !productId) {
+    return empty;
+  }
+
+  try {
+    const prices = await stripe.prices.list({ product: productId, active: true, limit: 100 });
+
+    const pick = (interval: BillingIntervalType) => {
+      const price = prices.data.find((p) => p.recurring?.interval === interval);
+      if (!price || price.unit_amount === null) {
+        return null;
+      }
+      return { amount: price.unit_amount, currency: price.currency } as const;
+    };
+
+    return { month: pick("month"), week: pick("week") };
+  } catch (error) {
+    console.error("Failed to fetch plan prices:", error);
+    return empty;
+  }
 };

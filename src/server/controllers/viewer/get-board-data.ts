@@ -4,8 +4,12 @@ import { createFactory } from "hono/factory";
 import { GetViewerBoardDataParamSchema } from "@/models/game";
 import { getUserSubscription } from "@/server/repositories/subscription";
 import { buildBoardData } from "@/server/utils/board-data";
-import { consumeRateLimit, getClientIdentifier } from "@/server/utils/rate-limit";
 import { PLAN_LIMITS } from "@/server/utils/subscription/config";
+import {
+  consumeViewerRateLimit,
+  getClientIp,
+  hashClientIp,
+} from "@/server/utils/viewer-rate-limit";
 import { cacheBoardData, getCachedBoardData } from "@/utils/cache/cache-service";
 
 import { getPublicGameById } from "../../repositories/game";
@@ -22,9 +26,8 @@ const handler = factory.createHandlers(
     try {
       const { gameId } = c.req.valid("param");
 
-      const { count, retryAfterSeconds } = consumeRateLimit(
-        `viewer:${gameId}:${getClientIdentifier(c.req.raw.headers)}`
-      );
+      const ipHash = await hashClientIp(getClientIp(c.req.raw.headers));
+      const { count, retryAfterSeconds } = await consumeViewerRateLimit(gameId, ipHash);
 
       // フリープランの上限内であれば、キャッシュだけで応答してデータベースへの問い合わせを避ける
       if (count <= PLAN_LIMITS.free.viewerRateLimitPerMinute) {
