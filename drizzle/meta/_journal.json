@@ -57,6 +57,13 @@
       "when": 1785316922809,
       "tag": "0007_panoramic_leopardon",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789190802733,
+      "tag": "0008_fair_chat",
+      "breakpoints": true
     }
   ]
 }

@@ -23,6 +23,7 @@ export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
+  issuer: text("issuer").notNull().default(""),
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
