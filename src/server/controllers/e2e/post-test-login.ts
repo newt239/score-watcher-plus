@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { createFactory } from "hono/factory";
 
 import { TestLoginRequestSchema } from "@/models/e2e";
+import { deleteTestUser, getTestUserState } from "@/server/repositories/auth";
 import { auth } from "@/utils/auth/auth";
 
 const factory = createFactory();
@@ -23,32 +24,41 @@ export default factory.createHandlers(zValidator("json", TestLoginRequestSchema)
     return c.json({ error: "認証情報が正しくありません" }, 401);
   }
 
-  try {
-    // Better Auth APIを使用してユーザーとcredential accountを作成
-    await auth.api.signUpEmail({
-      body: {
-        email,
-        password,
-        name: "E2Eテストユーザー",
-      },
-      headers: c.req.raw.headers,
-    });
-  } catch {
-    // ユーザーが既に存在する場合はエラーが発生する
-  }
-
   // Better Auth APIを使用してサインインし、署名付きセッションcookieをそのまま転送する。
   // asResponseではなくreturnHeadersを使うことで、レスポンス本文に型がついたまま
   // set-cookieヘッダーも取得できる
-  try {
-    const { headers: signInHeaders, response: signInResult } = await auth.api.signInEmail({
-      body: {
-        email,
-        password,
-      },
+  const signIn = async () =>
+    auth.api.signInEmail({
+      body: { email, password },
       headers: c.req.raw.headers,
       returnHeaders: true,
     });
+
+  // credential accountを失ったuser行が残っているとサインアップもサインインも失敗するため、
+  // その状態のときだけ作り直す。正常なユーザーのデータを消さないよう状態を確認してから分岐する
+  const signInOrRecreate = async () => {
+    try {
+      return await signIn();
+    } catch (error) {
+      const state = await getTestUserState(email);
+      if (state === "ready") {
+        throw error;
+      }
+      if (state === "broken") {
+        await deleteTestUser(email);
+      }
+
+      await auth.api.signUpEmail({
+        body: { email, password, name: "E2Eテストユーザー" },
+        headers: c.req.raw.headers,
+      });
+
+      return await signIn();
+    }
+  };
+
+  try {
+    const { headers: signInHeaders, response: signInResult } = await signInOrRecreate();
 
     const setCookieHeader = signInHeaders.get("set-cookie");
     if (setCookieHeader) {
