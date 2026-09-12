@@ -74,8 +74,6 @@
         "react/react-in-jsx-scope": "off",
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "off",
-        "@next/next/no-html-link-for-pages": "warn",
-        "@next/next/no-sync-scripts": "warn",
         "import/no-anonymous-default-export": "warn",
         "jsx-a11y/alt-text": [
           "warn",
