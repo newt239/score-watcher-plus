@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "ignoreBinaries": ["mise"],
   "ignoreDependencies": [
     "@css-modules-kit/stylelint-plugin",
     "@typescript/native-preview",
