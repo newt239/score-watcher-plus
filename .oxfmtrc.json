@@ -1,4 +1,5 @@
 {
+  "ignorePatterns": ["worker-configuration.d.ts"],
   "semi": true,
   "singleQuote": false,
   "quoteProps": "as-needed",
