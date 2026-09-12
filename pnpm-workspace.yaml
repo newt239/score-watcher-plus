@@ -8,7 +8,7 @@ minimumReleaseAgeExclude:
 allowBuilds:
   "@sentry/cli": false
   esbuild: false
-  lefthook: false
+  lefthook: true
   sharp: false
   # workerd は Workers ランタイム本体のバイナリを postinstall で展開するため実行が必須
   workerd: true
