@@ -390,18 +390,18 @@ export type ApiDataType = {
 
 ## リポジトリ設定
 
-- **Node.js**: バージョンは`.node-version`（mise利用時は`mise.toml`）で固定。CIも`node-version-file`を参照
-- **pnpm**: バージョンは`package.json`の`packageManager`で固定し、ローカルは`mise.toml`（`pnpm run setup` = `mise install`）、CIは`pnpm/action-setup`で導入します。Node 26以降はcorepackが同梱されないため`corepack enable`は使いません
+- **Node.js**: バージョンは`package.json`の`devEngines.runtime`で固定します（これが正）。CIは`node-version-file: "package.json"`から解決し、ローカルではpnpmが`onFail: "download"`に従って該当バージョンを取得するため、`pnpm exec`／`pnpm run`経由なら常に固定版が使われます。`.node-version`はCloudflare Workers Buildsが`package.json`を読めないためのミラーで、`devEngines.runtime.version`と必ず同値に保ってください
+- **pnpm**: バージョンは`package.json`の`packageManager`で固定します。ローカルはpnpm本体をstandaloneで入れれば（`curl -fsSL https://pnpm.io/install.sh | sh -`）pnpm自身が指定バージョンへ切り替わります。CIは`pnpm/action-setup`がバージョン指定なしで`packageManager`を読みます。Node 26以降はcorepackが同梱されないため`corepack enable`は使いません。miseは使いません
 - **pnpm設定**: pnpm 11以降`.npmrc`は認証・レジストリ専用のため、それ以外の設定（`saveExact`など）は`pnpm-workspace.yaml`に書きます。ビルドスクリプトの許可は`allowBuilds`（旧`onlyBuiltDependencies` / `ignoredBuiltDependencies`）で指定します
-- **依存のcooldown**: 公開直後のパッケージを取り込まないよう、`pnpm-workspace.yaml`の`minimumReleaseAge`と`dependabot.yml`の`cooldown.default-days`を7日で揃えています
-- **フォーマット**: oxfmt（`.oxfmtrc.json`）。importソート・package.jsonのscriptsソート・JSDoc整形が有効
+- **依存のcooldown**: 公開直後のパッケージを取り込まないよう、`pnpm-workspace.yaml`の`minimumReleaseAge`と`dependabot.yml`の`cooldown.default-days`を7日で揃えています。ただし`packageManager`で指定したpnpm自身は取得できないと困るため、`minimumReleaseAgeExclude`で`@pnpm/exe.*`を除外しています
+- **フォーマット**: oxfmt（`.oxfmtrc.json`）。importソート・package.jsonのscriptsソート・JSDoc整形が有効。`wrangler types`が生成する`worker-configuration.d.ts`は`ignorePatterns`で対象外にしています
 - **Lint**: oxlint（`.oxlintrc.json`、type-aware）
 - **ファイル名規則**: ls-lint（`.ls-lint.yml`）
 - **未使用コード検出**: knip（`knip.json`）。未使用エクスポート・型は警告扱いでベースライン化中
 - **pre-commitフック**: lefthook（`lefthook.yml`）で lint:fix / format:fix / stylelint:fix / ls-lint を実行
-- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による週次依存更新と自動マージ
+- **CI**: `.github/workflows/codecheck.yml`（typecheck/lint/format/stylelint/ls-lint/knip）、`playwright.yml`（E2E）、`actionlint.yml`、`dependabot.yml`による月次依存更新（npm / github-actions、自動マージはせず手動でレビューします）
 - **デプロイ**: **Cloudflare Workers Builds**（CloudflareダッシュボードでGit連携）。`release`ブランチへのpushで本番（`plus.score-watcher.com`）へ自動デプロイされます。GitHub Actionsのデプロイworkflowは使いません。手元から手動でデプロイする場合は `pnpm run deploy`
-- **本番の設定**: Workerランタイムのシークレット（`TURSO_*` / `BETTER_AUTH_SECRET` / `GOOGLE_*` / `STRIPE_*`）は `wrangler secret put` で登録済み。ビルド時にクライアントへ埋め込む `VITE_APP_URL` は Workers Builds のビルド変数に設定します。Workers Builds のビルドイメージはNodeを`.node-version`から読みますが、pnpmはイメージ同梱の古い版が使われるため、ビルド変数`PNPM_VERSION`に`packageManager`と同じバージョンを設定します
+- **本番の設定**: Workerランタイムのシークレット（`TURSO_*` / `BETTER_AUTH_SECRET` / `GOOGLE_*` / `STRIPE_*`）は `wrangler secret put` で登録済み。ビルド時にクライアントへ埋め込む `VITE_APP_URL` は Workers Builds のビルド変数に設定します。Workers Builds のビルドイメージはNodeを`.node-version`から読みます（`package.json`は読みません）。pnpmはビルド変数`PNPM_VERSION`に`11.26.0`を設定します。これはブートストラップ用の固定値で、実際に使われる版は`packageManager`が決めるため、pnpmを更新してもこの変数は変更不要です。イメージ同梱のpnpm 10系は`packageManager`の版へ自己切替しようとしますがpnpm 12へは失敗します（JS配布は`pnpm`自身のpostinstallが`--allow-build=@pnpm/exe`でブロックされ`ENOEXEC`、バイナリ配布はプラットフォームパッケージが`@pnpm/linux-x64`から`@pnpm/exe.linux-x64`へ改名され旧名が11系で打ち止め）。pnpm 11.26.0は両方の配布形態から12系へ切替できることを確認済みです
 - **ビルド**: Vite（`vite.config.ts`）。pnpm構成ではSSRの依存最適化でReactが二重に読み込まれてフックが壊れるため、`resolve.dedupe` の指定を外さないこと
 - **Workers設定**: `wrangler.jsonc`。バインディングを変更したら `pnpm run cf-typegen` で `worker-configuration.d.ts` を再生成すること。`BOARD_CACHE`（KV）とカスタムドメイン`plus.score-watcher.com`を定義済み
 - **パッケージ**: ESM-only（`package.json`の`"type": "module"`）。React Router v8 と Cloudflare の各プラグインがESM専用のため外さないこと

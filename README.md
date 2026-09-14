@@ -32,7 +32,7 @@ https://plus.score-watcher.com/
 
 ### 起動に必要なもの
 
-- Node.js (v24 以降)
+- Node.js (v26 以降)
 - pnpm
 - Turso（libSQL）のデータベース
 - Google OAuth のクライアント ID / シークレット

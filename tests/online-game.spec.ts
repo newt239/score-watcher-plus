@@ -79,6 +79,11 @@ test.describe("オンライン版の基本フロー", () => {
       data: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
 
+    // プレイヤーが0人だとDrawerの導線が出ないため、先に1人だけAPIで用意する
+    await page.request.post("/api/players", {
+      data: [{ name: "テストプレイヤー0" }],
+    });
+
     await gotoAndDismissUpdateModal(page, `/games/${gameId}/config/player`);
 
     // プレイヤー選択Drawerを開き、「新しく追加」からプレイヤーを作成
