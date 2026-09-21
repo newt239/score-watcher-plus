@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Flex, Text, Tooltip } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
+import { useLiveQuery } from "@tanstack/react-db";
 import { parseResponse } from "hono/client";
 import { nanoid } from "nanoid";
 
 import { nextLogTimestamp } from "@/utils/db/log-timestamp";
 import createApiClient from "@/utils/hono/browser";
+import { notifyApiError } from "@/utils/notify-error";
 import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineScore";
 
+import { useBoardDb } from "../../_hooks/use-board-db";
 import ActionButtons from "../ActionButtons/ActionButtons";
 import AQL from "../AQL/AQL";
 import Attack25 from "../Attack25/Attack25";
@@ -22,16 +24,13 @@ import classes from "./Board.module.css";
 
 import type {
   BoardQuizType,
+  GameLogRowType,
   GamePlayerProps,
   GetGameDetailResponseType,
   LogDBProps,
   OnlineUserType,
 } from "@/models/game";
 import type { UserPreferencesType } from "@/models/user-preference";
-import type { SeriarizedGameLog } from "@/utils/drizzle/types";
-
-/** 他端末の操作を取り込むためのログ取得間隔（ミリ秒） */
-const LOG_POLLING_INTERVAL_MS = 3000;
 
 type BoardProps = {
   gameId: string;
@@ -48,28 +47,26 @@ const Board: React.FC<BoardProps> = ({
   initialPreferences,
   quizList,
 }) => {
-  const [players] = useState<GamePlayerProps[]>(initialGame.players);
-  const [logs, setLogs] = useState<SeriarizedGameLog[]>(initialGame.logs);
-  const [isPending, startTransition] = useTransition();
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
-  const [skipSuggest, setSkipSuggest] = useState(false);
-  const [editable, setEditable] = useState(initialGame.editable);
-
-  // サーバーから取得した設定を使用
-  const [preferences] = useState<UserPreferencesType | null>(initialPreferences);
-
-  // 勝ち抜けモーダル制御
-  const [winTroughPlayer, setWinTroughPlayer] = useState<{
-    name: string;
-    text: string;
-  }>({
-    name: "",
-    text: "",
+  const { logsCollection, runLogMutation, pausePolling } = useBoardDb();
+  const { data: logs } = useLiveQuery({
+    query: (q) =>
+      q
+        .from({ log: logsCollection })
+        .orderBy(({ log }) => log.timestamp, "asc")
+        .orderBy(({ log }) => log.id, "asc"),
   });
 
-  const apiClient = createApiClient();
+  const [players] = useState<GamePlayerProps[]>(initialGame.players);
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [editable, setEditable] = useState(initialGame.editable);
+  const [preferences] = useState<UserPreferencesType | null>(initialPreferences);
+  const [dismissedWinPlayerId, setDismissedWinPlayerId] = useState<string | null>(null);
+  const [dismissedSkipSuggestLogId, setDismissedSkipSuggestLogId] = useState<string | null>(null);
 
-  const { scores } = computeOnlineScore(initialGame, players, logs);
+  const { scores, winPlayers } = useMemo(
+    () => computeOnlineScore(initialGame, players, logs),
+    [initialGame, players, logs]
+  );
 
   // エンドレスチャンスの誤答は同じ問題への解答なので、問題番号を進めない
   const questionNumber = logs.filter((log) => log.actionType !== "multiple_wrong").length;
@@ -79,44 +76,54 @@ const Board: React.FC<BoardProps> = ({
   ).length;
   const quizPosition = initialGame.quizOffset + answeredCount - 1;
 
-  const refreshLogs = useCallback(async () => {
-    const res = await parseResponse(
-      apiClient.games[":gameId"].logs.$get({
-        param: { gameId },
-      })
-    );
-    if ("error" in res) {
-      console.error("Failed to fetch logs:", res.error);
-      return;
-    }
-    setLogs(res.logs);
-  }, [gameId]);
+  const winPlayer = winPlayers?.[0];
+  const winPlayerName = winPlayer
+    ? players.find((player) => player.id === winPlayer.player_id)?.name
+    : undefined;
+  const showWinModal =
+    Boolean(winPlayer && winPlayerName) && winPlayer?.player_id !== dismissedWinPlayerId;
+
+  const skipSuggestLogId = useMemo(() => {
+    const last = logs[logs.length - 1];
+    if (!last) return null;
+
+    const playingPlayers = scores.filter((score) => score.state === "playing");
+    const incapacityPlayers = playingPlayers.filter((score) => score.is_incapacity);
+
+    const allWrong =
+      last.actionType === "multiple_wrong" &&
+      typeof last.playerId === "string" &&
+      last.playerId.split(",").length === playingPlayers.length;
+    const allRest = playingPlayers.length > 0 && playingPlayers.length === incapacityPlayers.length;
+
+    return allWrong || allRest ? last.id : null;
+  }, [logs, scores]);
+  const skipSuggest = skipSuggestLogId !== null && skipSuggestLogId !== dismissedSkipSuggestLogId;
 
   const addLog = useCallback(
-    async (
+    (
       playerId: string,
       actionType: LogDBProps["variant"],
       options?: { panel?: number; removedPanel?: number }
     ) => {
-      startTransition(async () => {
-        await parseResponse(
-          apiClient.games.logs.$post({
-            json: {
-              id: nanoid(),
-              timestamp: nextLogTimestamp(),
-              gameId,
-              playerId,
-              actionType,
-              isSystemAction: false,
-              panel: options?.panel,
-              removedPanel: options?.removedPanel,
-            },
-          })
-        );
-        await refreshLogs();
-      });
+      const log: GameLogRowType = {
+        id: nanoid(),
+        gameId,
+        playerId,
+        questionNumber: null,
+        actionType,
+        scoreChange: 0,
+        panel: options?.panel ?? null,
+        removedPanel: options?.removedPanel ?? null,
+        timestamp: new Date(nextLogTimestamp()).toISOString(),
+        isSystemAction: false,
+        deletedAt: null,
+        userId: user?.id ?? null,
+      };
+
+      runLogMutation(() => logsCollection.insert(log));
     },
-    [gameId, refreshLogs]
+    [gameId, user, logsCollection, runLogMutation]
   );
 
   const addThrough = useCallback(() => {
@@ -132,119 +139,62 @@ const Board: React.FC<BoardProps> = ({
     (playerId: string) => {
       const lastLog = logs[logs.length - 1];
 
-      startTransition(async () => {
-        try {
-          if (lastLog?.actionType === "multiple_wrong") {
-            const answeredIds = (lastLog.playerId ?? "").split(",").filter((id) => id !== "");
+      if (lastLog?.actionType !== "multiple_wrong") {
+        addLog(playerId, "multiple_wrong");
+        return;
+      }
 
-            if (answeredIds.includes(playerId)) {
-              const remainingIds = answeredIds.filter((id) => id !== playerId);
+      const answeredIds = (lastLog.playerId ?? "").split(",").filter((id) => id !== "");
 
-              if (remainingIds.length === 0) {
-                await parseResponse(
-                  apiClient.games.logs[":logId"].$delete({
-                    param: { logId: String(lastLog.id) },
-                  })
-                );
-              } else {
-                await parseResponse(
-                  apiClient.games.logs[":logId"].$patch({
-                    param: { logId: String(lastLog.id) },
-                    json: { playerId: remainingIds.join(",") },
-                  })
-                );
-              }
-            } else {
-              await parseResponse(
-                apiClient.games.logs[":logId"].$patch({
-                  param: { logId: String(lastLog.id) },
-                  json: { playerId: [...answeredIds, playerId].join(",") },
-                })
-              );
-            }
-          } else {
-            await parseResponse(
-              apiClient.games.logs.$post({
-                json: {
-                  id: nanoid(),
-                  timestamp: nextLogTimestamp(),
-                  gameId,
-                  playerId,
-                  actionType: "multiple_wrong",
-                  isSystemAction: false,
-                },
-              })
-            );
-          }
+      if (!answeredIds.includes(playerId)) {
+        runLogMutation(() =>
+          logsCollection.update(lastLog.id, (draft) => {
+            draft.playerId = [...answeredIds, playerId].join(",");
+          })
+        );
+        return;
+      }
 
-          await refreshLogs();
-        } catch (e) {
-          console.error("Failed to toggle multiple wrong:", e);
-          notifications.show({
-            title: "エラー",
-            message: "誤答の記録に失敗しました",
-            color: "red",
-          });
-        }
-      });
+      const remainingIds = answeredIds.filter((id) => id !== playerId);
+
+      if (remainingIds.length === 0) {
+        runLogMutation(() => logsCollection.delete(lastLog.id));
+        return;
+      }
+
+      runLogMutation(() =>
+        logsCollection.update(lastLog.id, (draft) => {
+          draft.playerId = remainingIds.join(",");
+        })
+      );
     },
-    [logs, gameId, refreshLogs]
+    [logs, addLog, logsCollection, runLogMutation]
   );
 
   const toggleEditable = useCallback(() => {
     const nextValue = !editable;
-    setEditable(nextValue);
-    startTransition(async () => {
-      try {
-        await parseResponse(
-          apiClient.games[":gameId"].$patch({
-            param: { gameId },
-            json: { key: "editable", value: nextValue },
-          })
-        );
-      } catch (e) {
-        console.error("Failed to switch editable mode:", e);
-        setEditable(!nextValue);
-        notifications.show({
-          title: "エラー",
-          message: "スコアの手動更新モードの切り替えに失敗しました",
-          color: "red",
-        });
-      }
-    });
-  }, [editable, gameId]);
 
-  const undo = useCallback(async () => {
+    setEditable(nextValue);
+    pausePolling(nextValue);
+
+    void parseResponse(
+      createApiClient().games[":gameId"].$patch({
+        param: { gameId },
+        json: { key: "editable", value: nextValue },
+      })
+    ).catch((error: unknown) => {
+      setEditable(!nextValue);
+      pausePolling(!nextValue);
+      notifyApiError(error, "スコアの手動更新モードの切り替えに失敗しました");
+    });
+  }, [editable, gameId, pausePolling]);
+
+  const undo = useCallback(() => {
     const last = logs[logs.length - 1];
     if (!last) return;
-    startTransition(async () => {
-      try {
-        await parseResponse(
-          apiClient.games.logs[":logId"].$delete({
-            param: { logId: String(last.id) },
-          })
-        );
-        await refreshLogs();
-      } catch (e) {
-        console.error("Failed to undo log:", e);
-        notifications.show({
-          title: "エラー",
-          message: "操作の取り消しに失敗しました",
-          color: "red",
-        });
-      }
-    });
-  }, [logs, refreshLogs]);
 
-  // 他の端末からの操作を反映するため、一定間隔でログを取り直す
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // 自分の操作の反映中や手動更新モード中は取得しない
-      if (isPending || editable) return;
-      refreshLogs();
-    }, LOG_POLLING_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [refreshLogs, isPending, editable]);
+    runLogMutation(() => logsCollection.delete(last.id));
+  }, [logs, logsCollection, runLogMutation]);
 
   // キーボードショートカット
   useEffect(() => {
@@ -291,39 +241,6 @@ const Board: React.FC<BoardProps> = ({
     return () => window.removeEventListener("keydown", handler);
   }, [players, addLog, undo, initialGame, editable, toggleMultipleWrong]);
 
-  // useEffectを先に定義
-  useEffect(() => {
-    if (!initialGame || !players.length) return;
-
-    const { winPlayers } = computeOnlineScore(initialGame, players, logs);
-
-    if (winPlayers && winPlayers.length > 0) {
-      const first = winPlayers[0];
-      const player = players.find((p) => p.id === first.player_id);
-      if (player?.name) {
-        setWinTroughPlayer({ name: player.name, text: first.text });
-      }
-    }
-
-    // スキップサジェスト判定
-    const playingPlayers = scores.filter((s) => s.state === "playing");
-    const incapacityPlayers = scores.filter((s) => s.state === "playing" && s.is_incapacity);
-    const last = logs[logs.length - 1];
-    if (!last) return;
-
-    const allWrong =
-      last.actionType === "multiple_wrong" &&
-      typeof last.playerId === "string" &&
-      last.playerId.split(",").length === playingPlayers.length;
-    const allRest = playingPlayers.length > 0 && playingPlayers.length === incapacityPlayers.length;
-
-    if (allWrong || allRest) {
-      setSkipSuggest(true);
-    } else {
-      setSkipSuggest(false);
-    }
-  }, [logs, initialGame, players]);
-
   if (!user) {
     return (
       <Box className={classes.error}>
@@ -365,7 +282,7 @@ const Board: React.FC<BoardProps> = ({
         <Attack25
           players={players}
           logs={logs}
-          isPending={isPending}
+          isPending={false}
           onAddLog={addLog}
           attackChance={initialGame.option.attack_chance}
           show_header={preferences?.showBoardHeader ?? true}
@@ -374,7 +291,7 @@ const Board: React.FC<BoardProps> = ({
         <AQL
           scores={scores}
           players={players}
-          isPending={isPending}
+          isPending={false}
           onAddLog={addLog}
           team_name={{
             left_team: initialGame.option.left_team ?? "",
@@ -387,7 +304,7 @@ const Board: React.FC<BoardProps> = ({
           game={initialGame}
           scores={scores}
           players={players}
-          isPending={isPending}
+          isPending={false}
           onAddLog={addLog}
           preferences={preferences}
           showQuiz={quizList.length > 0}
@@ -417,8 +334,12 @@ const Board: React.FC<BoardProps> = ({
       />
 
       <WinModal
-        onClose={() => setWinTroughPlayer({ name: "", text: "" })}
-        winTroughPlayer={winTroughPlayer}
+        onClose={() => setDismissedWinPlayerId(winPlayer?.player_id ?? null)}
+        winTroughPlayer={
+          showWinModal && winPlayerName && winPlayer
+            ? { name: winPlayerName, text: winPlayer.text }
+            : { name: "", text: "" }
+        }
         roundName=""
       />
 
@@ -438,7 +359,7 @@ const Board: React.FC<BoardProps> = ({
             </Box>
             <Button
               leftSection={<IconX />}
-              onClick={() => setSkipSuggest(false)}
+              onClick={() => setDismissedSkipSuggestLogId(skipSuggestLogId)}
               size="sm"
               color="red"
             >

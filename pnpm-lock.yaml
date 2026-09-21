@@ -199,6 +199,21 @@ importers:
       '@tabler/icons-react':
         specifier: 3.46.0
         version: 3.46.0(react@19.2.8)
+      '@tanstack/db':
+        specifier: 0.9.0
+        version: 0.9.0(typescript@7.0.2)
+      '@tanstack/offline-transactions':
+        specifier: 1.0.54
+        version: 1.0.54(typescript@7.0.2)
+      '@tanstack/query-core':
+        specifier: 5.102.8
+        version: 5.102.8
+      '@tanstack/query-db-collection':
+        specifier: 1.2.13
+        version: 1.2.13(@tanstack/query-core@5.102.8)(typescript@7.0.2)
+      '@tanstack/react-db':
+        specifier: 0.3.8
+        version: 0.3.8(react@19.2.8)(typescript@7.0.2)
       '@tanstack/react-table':
         specifier: 9.2.4
         version: 9.2.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2217,6 +2232,45 @@ packages:
   '@tabler/icons@3.46.0':
     resolution: {integrity: sha512-f2RYFl3fzPwj5WO82x6en0dmkjefxEfOm16D1ByM6cj/McNiwOkL4VaPUoP9VVIrXAD9WnTSVFr70px703b//A==}
 
+  '@tanstack/db-ivm@0.1.20':
+    resolution: {integrity: sha512-Rpol77pI6JgVO4CtuKXZ/SQAzK4+BuiTSebRsIBo5qiiswtHKrvmiLNfbMXSHpXUF2xJkohFrJq9ndsMP1jAuA==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/db@0.9.0':
+    resolution: {integrity: sha512-wV8ln5zqTSM0Cn9eu+ePHExvzCa3A3cS+kxgRGryeBjDbMuLHrcTU1uGE8/6Etp+60LSfJFbhlojOZgj/kH/eQ==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/offline-transactions@1.0.54':
+    resolution: {integrity: sha512-Ma2zFV23kX7kKb3+kKjEKrE4ShRaVuEdmU7aCPj91A2tSYYf5kCKzZDAfkn+UKnHE+7sSmlYXm4BBL/RS/ZQvw==}
+    peerDependencies:
+      '@react-native-community/netinfo': '>=11.0.0'
+      react-native: '>=0.70.0'
+    peerDependenciesMeta:
+      '@react-native-community/netinfo':
+        optional: true
+      react-native:
+        optional: true
+
+  '@tanstack/pacer-lite@0.2.2':
+    resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
+    engines: {node: '>=18'}
+
+  '@tanstack/query-core@5.102.8':
+    resolution: {integrity: sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg==}
+
+  '@tanstack/query-db-collection@1.2.13':
+    resolution: {integrity: sha512-/q7vmFAm8Z/mMuBpFERbVxGpdNH2tgIPESGKmnGPIWr9iDZxoUT9XQx6kR7muafNi8SwS7KS6JLheav//lb6kA==}
+    peerDependencies:
+      '@tanstack/query-core': ^5.0.0
+      typescript: '>=4.7'
+
+  '@tanstack/react-db@0.3.8':
+    resolution: {integrity: sha512-RzsjljPjICaBeBZ9OvnIqXK4JN1f7JC75Nokl9bc0mhTh3VURwDqIoUHI06PGTBnJ0Bx2NPrW2fPXbx9JwZOwQ==}
+    peerDependencies:
+      react: '>=16.8.0'
+
   '@tanstack/react-store@0.11.1':
     resolution: {integrity: sha512-HaIGKI3YLmjBYIvy5DFDY23oNaYZIsTZfngey07Uh5iLVJgM3bIGCnZeOFOqzjFld9JHWcaHJnasD/bKoGKwJQ==}
     peerDependencies:
@@ -2930,6 +2984,10 @@ packages:
     resolution: {integrity: sha512-7CXJtIIA0zy/u12StsYk25qVKxvdLA2ep2sTNxK3ov0mGNIIDqIvAXDSgTnAfDJFsPfWjuz0WjfYSdpvnLA5Tg==}
     engines: {node: '>=18.3.0'}
     hasBin: true
+
+  fractional-indexing@3.4.0:
+    resolution: {integrity: sha512-8J3glhz2rrpKG6KmI7wmJo3zH1VjeOpN+vTJSw1fOyO+Viqq3zX6/5NGh6oaZB2qIAYdOYuu5Dz9xp4faOO0Pg==}
+    engines: {node: ^14.13.1 || >=16.0.0}
 
   fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
@@ -3820,6 +3878,9 @@ packages:
   smol-toml@1.8.0:
     resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
     engines: {node: '>= 18'}
+
+  sorted-btree@1.8.1:
+    resolution: {integrity: sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5544,6 +5605,44 @@ snapshots:
 
   '@tabler/icons@3.46.0': {}
 
+  '@tanstack/db-ivm@0.1.20(typescript@7.0.2)':
+    dependencies:
+      fractional-indexing: 3.4.0
+      sorted-btree: 1.8.1
+      typescript: 7.0.2
+
+  '@tanstack/db@0.9.0(typescript@7.0.2)':
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@tanstack/db-ivm': 0.1.20(typescript@7.0.2)
+      '@tanstack/pacer-lite': 0.2.2
+      typescript: 7.0.2
+
+  '@tanstack/offline-transactions@1.0.54(typescript@7.0.2)':
+    dependencies:
+      '@tanstack/db': 0.9.0(typescript@7.0.2)
+    transitivePeerDependencies:
+      - typescript
+
+  '@tanstack/pacer-lite@0.2.2': {}
+
+  '@tanstack/query-core@5.102.8': {}
+
+  '@tanstack/query-db-collection@1.2.13(@tanstack/query-core@5.102.8)(typescript@7.0.2)':
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@tanstack/db': 0.9.0(typescript@7.0.2)
+      '@tanstack/query-core': 5.102.8
+      typescript: 7.0.2
+
+  '@tanstack/react-db@0.3.8(react@19.2.8)(typescript@7.0.2)':
+    dependencies:
+      '@tanstack/db': 0.9.0(typescript@7.0.2)
+      react: 19.2.8
+      use-sync-external-store: 1.6.0(react@19.2.8)
+    transitivePeerDependencies:
+      - typescript
+
   '@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@tanstack/store': 0.11.1
@@ -6094,6 +6193,8 @@ snapshots:
     dependencies:
       fd-package-json: 2.0.0
       package-manager-detector: 1.8.0
+
+  fractional-indexing@3.4.0: {}
 
   fsevents@2.3.2:
     optional: true
@@ -6842,6 +6943,8 @@ snapshots:
       is-fullwidth-code-point: 3.0.0
 
   smol-toml@1.8.0: {}
+
+  sorted-btree@1.8.1: {}
 
   source-map-js@1.2.1: {}
 

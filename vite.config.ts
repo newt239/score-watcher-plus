@@ -16,7 +16,14 @@ export default defineConfig({
   ],
   resolve: {
     // pnpmの構成だとSSRの依存最適化でReactが二重に読み込まれ、フックが壊れるため明示的に束ねる
-    dedupe: ["react", "react-dom", "react-router"],
+    dedupe: [
+      "react",
+      "react-dom",
+      "react-router",
+      "@tanstack/db",
+      "@tanstack/react-db",
+      "@tanstack/query-core",
+    ],
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
