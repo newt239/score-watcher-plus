@@ -205,7 +205,7 @@ export const gameLog = sqliteTable("game_log", {
     .primaryKey()
     .$defaultFn(() => nanoid()),
   gameId: text("game_id").references(() => game.id),
-  playerId: text("player_id").references(() => player.id),
+  playerId: text("player_id"),
   questionNumber: integer("question_number"),
   actionType: text("action_type", { enum: actionTypeValues }).notNull(),
   scoreChange: integer("score_change").default(0),
