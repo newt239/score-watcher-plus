@@ -94,6 +94,18 @@ Score Watcher は競技クイズのスコア可視化Webアプリケーション
 Reactのガイドも参考にしてください：
 https://react.dev/learn/you-might-not-need-an-effect
 
+### クライアント状態（TanStack DB）
+
+スコアボード（`/games/:game_id/board`）のゲームログは **TanStack DB** のコレクションで保持し、`@tanstack/offline-transactions` の IndexedDB アウトボックスで未送信の操作を永続化します。
+
+- コレクションの定義は `src/utils/db/game-logs-collection.ts`、`DbClient` の生成とプロバイダは `src/routes/board/board/_components/BoardDbProvider/` です
+- `DbProvider` は `src/root.tsx` ではなくボードルート配下にだけ置きます
+- loader が返した初期データは `dbClient.collection(descriptor, { initialData })` で流し込みます。`startSync` は指定せず、`enabled: typeof window !== "undefined"` を付けて、SSR中にWorkerが自分自身のAPIを叩かないようにします
+- 読み取りは `useLiveQuery({ query })` の設定オブジェクト形式で書きます。依存配列形式と `fn.where` は1.0で廃止されるため使いません
+- 書き込みは手動トランザクション経由です。手動トランザクションでは `onInsert` / `onUpdate` / `onDelete` が呼ばれないため、コレクション側にハンドラーは定義せず、サーバーの確定後に `collection.utils.writeUpsert()` / `writeDelete()` で同期済みストアへ反映します
+- **`transaction.commit()` を `await` してはいけません。** オフライン中は永久に解決しません
+- 恒久エラー（400/401/403/404/409/422）は `NonRetriableError` に変換してアウトボックスから捨てます（`src/utils/db/offline-error.ts`）。プラン上限との関係は `docs/subscription.md` の「TanStack DB との整合」を参照してください
+
 ### スタイリング
 
 UIコンポーネントライブラリの一つである**Mantine**を使用します。新しいUIを実装する際はまずMantineのコンポーネントの使用を検討してください。

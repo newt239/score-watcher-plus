@@ -1,3 +1,4 @@
+import { Anchor } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 
 import { PLAN_LIMIT_REACHED } from "@/models/subscription";
@@ -6,7 +7,7 @@ import { extractApiErrorBody } from "@/utils/hono/error";
 /**
  * APIエラーを通知として表示する
  *
- * プランの上限に達した場合はサーバーから返された案内文をそのまま表示します。
+ * プランの上限に達した場合はサーバーから返された案内文とアップグレード導線を表示します。
  *
  * @param error 捕捉した例外
  * @param fallbackMessage 上記で判別できない場合に表示するメッセージ
@@ -15,9 +16,20 @@ export const notifyApiError = (error: unknown, fallbackMessage: string) => {
   const body = extractApiErrorBody(error);
 
   if (body?.code === PLAN_LIMIT_REACHED) {
+    const message = typeof body.error === "string" ? body.error : fallbackMessage;
+
     notifications.show({
       title: typeof body.title === "string" ? body.title : "上限に達しました",
-      message: typeof body.error === "string" ? body.error : fallbackMessage,
+      message:
+        typeof body.actionUrl === "string" ? (
+          <>
+            {message}
+            <br />
+            <Anchor href={body.actionUrl}>プランを確認する</Anchor>
+          </>
+        ) : (
+          message
+        ),
       color: "orange",
       autoClose: 15000,
       withCloseButton: true,

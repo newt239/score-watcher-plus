@@ -166,6 +166,45 @@ test.describe("オンライン版の基本フロー", () => {
     await expect(page.getByRole("button", { name: /^○\s*1$/ })).toBeVisible();
   });
 
+  test("オフライン中の得点操作がアウトボックスに残り、復帰後に送信される", async ({
+    page,
+    context,
+  }) => {
+    await page.request.post("/api/e2e/test-login", {
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
+    });
+
+    await gotoAndDismissUpdateModal(page, `/games/${gameId}/board`);
+    const scoreButton = page.getByRole("button", { name: /^○\s*\d+$/ }).first();
+    await expect(scoreButton).toBeVisible();
+    // オフラインアウトボックスの初期化を待つ
+    await expect(page.getByText(/未送信|送信中/)).toHaveCount(0);
+
+    const before = Number(((await scoreButton.textContent()) ?? "").replace(/\D/g, ""));
+
+    await context.setOffline(true);
+
+    // オフラインでも操作は即座に盤面へ反映される
+    await scoreButton.click();
+    await expect(scoreButton).toHaveText(new RegExp(`○\\s*${before + 1}`));
+    await scoreButton.click();
+    await expect(scoreButton).toHaveText(new RegExp(`○\\s*${before + 2}`));
+
+    // 未送信件数が表示される
+    await expect(page.getByText(/オフライン・未送信2件/)).toBeVisible();
+
+    await context.setOffline(false);
+
+    // 復帰すると送信が完了し、バッジが消える
+    await expect(page.getByText(/未送信|送信中/)).toHaveCount(0, { timeout: 30000 });
+
+    // リロードしてもサーバーに反映されている
+    await gotoAndDismissUpdateModal(page, `/games/${gameId}/board`);
+    await expect(page.getByRole("button", { name: /^○\s*\d+$/ }).first()).toHaveText(
+      new RegExp(`○\\s*${before + 2}`)
+    );
+  });
+
   test("ゲームをリセットするとプレイログが削除される", async ({ page }) => {
     await page.request.post("/api/e2e/test-login", {
       data: { email: TEST_EMAIL, password: TEST_PASSWORD },

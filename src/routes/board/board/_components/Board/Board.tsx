@@ -18,6 +18,7 @@ import Attack25 from "../Attack25/Attack25";
 import BoardHeader from "../BoardHeader/BoardHeader";
 import GameLogs from "../GameLogs/GameLogs";
 import InAppBrowserWarning from "../InAppBrowserWarning/InAppBrowserWarning";
+import OfflineStatus from "../OfflineStatus/OfflineStatus";
 import Players from "../Players/Players";
 import WinModal from "../WinModal/WinModal";
 import classes from "./Board.module.css";
@@ -252,6 +253,7 @@ const Board: React.FC<BoardProps> = ({
   return (
     <>
       <InAppBrowserWarning />
+      <OfflineStatus />
       <BoardHeader
         game={{
           id: initialGame.id,
