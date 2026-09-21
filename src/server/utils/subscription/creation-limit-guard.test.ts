@@ -19,7 +19,7 @@ const readController = (relativePath: string) =>
   readFileSync(join(CONTROLLERS_DIR, relativePath), "utf8");
 
 describe("プラン上限ガードの適用範囲", () => {
-  it("checkCreationLimitを呼ぶのは作成系の4エンドポイントだけ", () => {
+  it("checkCreationLimitを呼ぶのは作成系の5エンドポイントだけ", () => {
     const callers = listControllerFiles(CONTROLLERS_DIR)
       .filter((path) => readFileSync(path, "utf8").includes("checkCreationLimit"))
       .map(toRelative)
@@ -28,6 +28,7 @@ describe("プラン上限ガードの適用範囲", () => {
     expect(callers).toEqual([
       "game/post-create.ts",
       "game/post-import.ts",
+      "migration/post-import.ts",
       "player/post-create.ts",
       "quiz/post-create.ts",
     ]);
