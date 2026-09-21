@@ -30,14 +30,14 @@ const toDate = (value: string | null | undefined) => {
 };
 
 /** ローカル版のログのplayer_idをPlusのプレイヤーIDへ変換する。エンドレスチャンスの誤答はカンマ区切りで複数持つ */
-const toLogPlayerIds = (localPlayerId: string, playerIdMap: Map<string, string>) => {
+const toLogPlayerId = (localPlayerId: string, playerIdMap: Map<string, string>) => {
   const resolved = localPlayerId.split(",").flatMap((localId) => {
     const playerId = playerIdMap.get(localId.trim());
 
     return playerId ? [playerId] : [];
   });
 
-  return resolved.length > 0 ? resolved : [null];
+  return resolved.length > 0 ? resolved.join(",") : null;
 };
 
 /**
@@ -277,31 +277,26 @@ export const prepareLocalDataImport = async (data: ImportLocalDataRequestType, u
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime() || a.index - b.index);
 
     let previousTime = 0;
-    let questionNumber = 0;
 
-    for (const { log, timestamp } of sortedLogs) {
-      // player_idはplayerテーブルへの外部キーなので、複数の解答者は解答者ごとの行に分ける
-      for (const playerId of toLogPlayerIds(log.player_id, playerIdMap)) {
-        // 取得時はtimestamp昇順で並べ直されるため、元の並び順を保てるように重複を避ける
-        const time = Math.max(previousTime + 1, timestamp.getTime());
-        previousTime = time;
+    sortedLogs.forEach(({ log, timestamp }, questionNumber) => {
+      // 取得時はtimestamp昇順で並べ直されるため、元の並び順を保てるように重複を避ける
+      const time = Math.max(previousTime + 1, timestamp.getTime());
+      previousTime = time;
 
-        logsToCreate.push({
-          id: nanoid(),
-          gameId,
-          playerId,
-          questionNumber,
-          actionType: log.variant,
-          scoreChange: 0,
-          panel: log.detail?.panel ?? null,
-          removedPanel: log.detail?.removed_panel ?? null,
-          timestamp: new Date(time),
-          isSystemAction: log.system === 1,
-          userId,
-        });
-        questionNumber += 1;
-      }
-    }
+      logsToCreate.push({
+        id: nanoid(),
+        gameId,
+        playerId: toLogPlayerId(log.player_id, playerIdMap),
+        questionNumber,
+        actionType: log.variant,
+        scoreChange: 0,
+        panel: log.detail?.panel ?? null,
+        removedPanel: log.detail?.removed_panel ?? null,
+        timestamp: new Date(time),
+        isSystemAction: log.system === 1,
+        userId,
+      });
+    });
   }
 
   return {
