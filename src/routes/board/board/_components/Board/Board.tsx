@@ -282,7 +282,6 @@ const Board: React.FC<BoardProps> = ({
         <Attack25
           players={players}
           logs={logs}
-          isPending={false}
           onAddLog={addLog}
           attackChance={initialGame.option.attack_chance}
           show_header={preferences?.showBoardHeader ?? true}
