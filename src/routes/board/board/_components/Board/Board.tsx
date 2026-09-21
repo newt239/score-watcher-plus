@@ -4,7 +4,9 @@ import { Box, Button, Flex, Text, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
+import { nanoid } from "nanoid";
 
+import { nextLogTimestamp } from "@/utils/db/log-timestamp";
 import createApiClient from "@/utils/hono/browser";
 import { computeOnlineScore } from "@/utils/online/computeScore/computeOnlineScore";
 
@@ -100,6 +102,8 @@ const Board: React.FC<BoardProps> = ({
         await parseResponse(
           apiClient.games.logs.$post({
             json: {
+              id: nanoid(),
+              timestamp: nextLogTimestamp(),
               gameId,
               playerId,
               actionType,
@@ -162,6 +166,8 @@ const Board: React.FC<BoardProps> = ({
             await parseResponse(
               apiClient.games.logs.$post({
                 json: {
+                  id: nanoid(),
+                  timestamp: nextLogTimestamp(),
                   gameId,
                   playerId,
                   actionType: "multiple_wrong",

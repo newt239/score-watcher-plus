@@ -213,8 +213,8 @@ export const gameLog = sqliteTable("game_log", {
   panel: integer("panel"),
   // アタック25のアタックチャンスで消去したパネル番号(0-24)
   removedPanel: integer("removed_panel"),
-  timestamp: integer("timestamp", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
+  timestamp: integer("timestamp", { mode: "timestamp_ms" })
+    .default(sql`(unixepoch('subsec') * 1000)`)
     .notNull(),
   isSystemAction: integer("is_system_action", { mode: "boolean" }).default(false),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
