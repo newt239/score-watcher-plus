@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DbClient } from "@tanstack/db";
+import { startOfflineExecutor } from "@tanstack/offline-transactions";
 import { DbProvider } from "@tanstack/react-db";
 
 import { createGameLogsCollectionOptions } from "@/utils/db/game-logs-collection";
@@ -47,28 +48,21 @@ const BoardDbProvider: React.FC<BoardDbProviderProps> = ({ gameId, initialLogs, 
   const [mutationFn] = useState(() => createGameLogsMutationFn(logsCollection.utils));
 
   useEffect(() => {
-    let disposed = false;
+    executorRef.current = startOfflineExecutor({
+      collections: { gameLogs: logsCollection },
+      mutationFns: { [GAME_LOGS_MUTATION_FN]: mutationFn },
+      onLeadershipChange: setIsLeader,
+      beforeRetry: (transactions) =>
+        transactions.filter((transaction) => {
+          if (transaction.retryCount <= MAX_OUTBOX_RETRY_COUNT) return true;
 
-    void import("@tanstack/offline-transactions").then(({ startOfflineExecutor }) => {
-      if (disposed) return;
-
-      executorRef.current = startOfflineExecutor({
-        collections: { gameLogs: logsCollection },
-        mutationFns: { [GAME_LOGS_MUTATION_FN]: mutationFn },
-        onLeadershipChange: setIsLeader,
-        beforeRetry: (transactions) =>
-          transactions.filter((transaction) => {
-            if (transaction.retryCount <= MAX_OUTBOX_RETRY_COUNT) return true;
-
-            void executorRef.current?.removeFromOutbox(transaction.id);
-            return false;
-          }),
-      });
-      setIsOfflineReady(true);
+          void executorRef.current?.removeFromOutbox(transaction.id);
+          return false;
+        }),
     });
+    setIsOfflineReady(true);
 
     return () => {
-      disposed = true;
       executorRef.current?.dispose();
       executorRef.current = null;
       setIsOfflineReady(false);
