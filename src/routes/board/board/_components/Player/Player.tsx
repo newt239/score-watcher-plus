@@ -31,7 +31,6 @@ type Props = {
   player: GamePlayerProps;
   index: number;
   score: ComputedScoreProps | undefined;
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
   totalPlayers: number;
@@ -46,7 +45,6 @@ const Player: React.FC<Props> = ({
   player,
   index,
   score,
-  isPending,
   onAddLog,
   preferences,
   totalPlayers,
@@ -125,7 +123,6 @@ const Player: React.FC<Props> = ({
       <PlayerScore
         game={game}
         player={displayedScore}
-        isPending={isPending}
         onAddLog={onAddLog}
         preferences={preferences}
         editable={editable}

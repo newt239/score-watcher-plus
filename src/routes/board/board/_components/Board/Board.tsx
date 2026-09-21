@@ -291,7 +291,6 @@ const Board: React.FC<BoardProps> = ({
         <AQL
           scores={scores}
           players={players}
-          isPending={false}
           onAddLog={addLog}
           team_name={{
             left_team: initialGame.option.left_team ?? "",
@@ -304,7 +303,6 @@ const Board: React.FC<BoardProps> = ({
           game={initialGame}
           scores={scores}
           players={players}
-          isPending={false}
           onAddLog={addLog}
           preferences={preferences}
           showQuiz={quizList.length > 0}

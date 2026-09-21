@@ -17,7 +17,6 @@ type PlayersProps = {
   game: OnlineGame;
   scores: ComputedScoreProps[];
   players: GamePlayerProps[];
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
   /** ヘッダーに問題文を表示しているかどうか */
@@ -33,7 +32,6 @@ const Players: React.FC<PlayersProps> = ({
   game,
   scores,
   players,
-  isPending,
   onAddLog,
   preferences,
   showQuiz,
@@ -54,7 +52,6 @@ const Players: React.FC<PlayersProps> = ({
           key={`online-player-${i}-${player.id}`}
           player={player}
           score={scores.find((score) => score.player_id === player.id)}
-          isPending={isPending}
           onAddLog={onAddLog}
           preferences={preferences}
           totalPlayers={players.length}

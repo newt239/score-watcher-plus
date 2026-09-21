@@ -11,7 +11,6 @@ type PlayerScoreButtonProps = {
   filled?: boolean;
   compact?: boolean;
   playerId: string;
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   disabled?: boolean;
   /** スコアの手動更新モードが有効かどうか */
@@ -27,7 +26,6 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
   filled = false,
   compact = false,
   playerId,
-  isPending,
   onAddLog,
   disabled,
   editable = false,
@@ -61,7 +59,7 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
               : "yellow.3";
 
   const handleClick = () => {
-    if (color === "green" || disabled || isPending) return;
+    if (color === "green" || disabled) return;
 
     if (onClick) {
       onClick();
@@ -96,12 +94,12 @@ const PlayerScoreButton: React.FC<PlayerScoreButtonProps> = ({
       className={classes.player_score_button}
       data-signed={numberSign !== "none"}
       data-compact={compact}
-      data-disabled={disabled || isPending}
+      data-disabled={disabled}
       style={{
         cursor:
           disabled && color !== "green"
             ? "not-allowed"
-            : disabled || color === "green" || isPending
+            : disabled || color === "green"
               ? "default"
               : "pointer",
       }}
