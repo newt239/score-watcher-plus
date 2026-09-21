@@ -30,6 +30,7 @@ export default [
           route("other", "routes/default/authed/games/config/other/route.tsx"),
         ]),
       ]),
+      route("migration", "routes/default/authed/migration/route.tsx"),
       route("players", "routes/default/authed/players/route.tsx"),
       route("quizes", "routes/default/authed/quizes/route.tsx"),
       ...prefix("user", [
