@@ -34,13 +34,21 @@ test.describe("オンライン版の基本フロー", () => {
     page,
   }) => {
     await page.goto("/games");
-    await page.waitForURL("**/sign-in");
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await page.waitForURL(/\/sign-in\?next=%2Fgames$/);
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fgames$/);
+  });
+
+  test("未ログインで/migrationにアクセスするとログイン後に戻れる形でリダイレクトされる", async ({
+    page,
+  }) => {
+    await page.goto("/migration");
+    await page.waitForURL(/\/sign-in\?next=%2Fmigration$/);
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fmigration$/);
   });
 
   test("旧URL(/online/games)は新URL(/games)へリダイレクトされる", async ({ page }) => {
     await page.goto("/online/games");
-    await expect(page).toHaveURL(/\/(games|sign-in)$/);
+    await expect(page).toHaveURL(/\/games$|\/sign-in\?next=%2Fgames$/);
   });
 
   test("形式一覧からゲームを作成して設定ページへ遷移できる", async ({ page }) => {
