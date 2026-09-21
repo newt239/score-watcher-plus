@@ -4,10 +4,17 @@ import type { GameLogRowType } from "@/models/game";
 
 import type { Collection } from "@tanstack/db";
 
+export type BoardOfflineState = {
+  isReady: boolean;
+  isLeader: boolean;
+};
+
 export type BoardDbContextValue = {
   logsCollection: Collection<GameLogRowType, string>;
   runLogMutation: (mutate: () => void) => void;
   pausePolling: (paused: boolean) => void;
+  offlineState: BoardOfflineState;
+  getPendingCount: () => number;
 };
 
 export const BoardDbContext = createContext<BoardDbContextValue | null>(null);

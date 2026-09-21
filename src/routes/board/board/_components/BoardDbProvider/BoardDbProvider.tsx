@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DbClient } from "@tanstack/db";
 import { DbProvider } from "@tanstack/react-db";
@@ -6,11 +6,14 @@ import { DbProvider } from "@tanstack/react-db";
 import { createGameLogsCollectionOptions } from "@/utils/db/game-logs-collection";
 import { createGameLogsMutationFn, GAME_LOGS_MUTATION_FN } from "@/utils/db/game-logs-mutation";
 import { createBoardQueryClient } from "@/utils/db/query-client";
-import { notifyApiError } from "@/utils/notify-error";
 
 import { BoardDbContext } from "../../_hooks/use-board-db";
 
 import type { GameLogRowType } from "@/models/game";
+
+import type { OfflineExecutor } from "@tanstack/offline-transactions";
+
+const MAX_OUTBOX_RETRY_COUNT = 10;
 
 type BoardDbProviderProps = {
   gameId: string;
@@ -20,6 +23,10 @@ type BoardDbProviderProps = {
 
 const BoardDbProvider: React.FC<BoardDbProviderProps> = ({ gameId, initialLogs, children }) => {
   const pollingPausedRef = useRef(false);
+  const executorRef = useRef<OfflineExecutor | null>(null);
+
+  const [isOfflineReady, setIsOfflineReady] = useState(false);
+  const [isLeader, setIsLeader] = useState(true);
 
   const pausePolling = useCallback((paused: boolean) => {
     pollingPausedRef.current = paused;
@@ -39,25 +46,62 @@ const BoardDbProvider: React.FC<BoardDbProviderProps> = ({ gameId, initialLogs, 
 
   const [mutationFn] = useState(() => createGameLogsMutationFn(logsCollection.utils));
 
+  useEffect(() => {
+    let disposed = false;
+
+    void import("@tanstack/offline-transactions").then(({ startOfflineExecutor }) => {
+      if (disposed) return;
+
+      executorRef.current = startOfflineExecutor({
+        collections: { gameLogs: logsCollection },
+        mutationFns: { [GAME_LOGS_MUTATION_FN]: mutationFn },
+        onLeadershipChange: setIsLeader,
+        beforeRetry: (transactions) =>
+          transactions.filter((transaction) => {
+            if (transaction.retryCount <= MAX_OUTBOX_RETRY_COUNT) return true;
+
+            void executorRef.current?.removeFromOutbox(transaction.id);
+            return false;
+          }),
+      });
+      setIsOfflineReady(true);
+    });
+
+    return () => {
+      disposed = true;
+      executorRef.current?.dispose();
+      executorRef.current = null;
+      setIsOfflineReady(false);
+    };
+  }, [logsCollection, mutationFn]);
+
   const runLogMutation = useCallback(
     (mutate: () => void) => {
-      const transaction = dbClient.createTransaction({
-        autoCommit: false,
-        mutationFn,
-        metadata: { mutationFnName: GAME_LOGS_MUTATION_FN },
-      });
+      const executor = executorRef.current;
+      const transaction = executor
+        ? executor.createOfflineTransaction({
+            mutationFnName: GAME_LOGS_MUTATION_FN,
+            autoCommit: false,
+          })
+        : dbClient.createTransaction({ autoCommit: false, mutationFn });
 
       transaction.mutate(mutate);
-      void transaction
-        .commit()
-        .catch((error: unknown) => notifyApiError(error, "操作を保存できませんでした"));
+      void transaction.commit().catch((error: unknown) => {
+        console.error("Failed to persist game log mutation:", error);
+      });
     },
     [dbClient, mutationFn]
   );
 
   const contextValue = useMemo(
-    () => ({ logsCollection, runLogMutation, pausePolling }),
-    [logsCollection, runLogMutation, pausePolling]
+    () => ({
+      logsCollection,
+      runLogMutation,
+      pausePolling,
+      offlineState: { isReady: isOfflineReady, isLeader },
+      getPendingCount: () => executorRef.current?.getPendingCount() ?? 0,
+    }),
+    [logsCollection, runLogMutation, pausePolling, isOfflineReady, isLeader]
   );
 
   return (
