@@ -118,7 +118,11 @@ test.describe("オンライン版の基本フロー", () => {
     await expect(page.getByRole("button", { name: /^○\s*1$/ })).toBeVisible();
   });
 
-  test("ゲームを公開すると認証なしで観戦APIにアクセスできる", async ({ page, browser }) => {
+  test("ゲームを公開すると認証なしで観戦APIにアクセスできる", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
     await page.request.post("/api/e2e/test-login", {
       data: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
@@ -133,7 +137,7 @@ test.describe("オンライン版の基本フロー", () => {
     await expect(page.getByText("は現在公開中です", { exact: false }).first()).toBeVisible();
 
     // 未認証コンテキストからviewer APIにアクセスできる
-    const viewerContext = await browser.newContext({ baseURL: "http://localhost:3000" });
+    const viewerContext = await browser.newContext({ baseURL });
     const response = await viewerContext.request.get(`/api/viewer/games/${gameId}/board`, {
       headers: { "x-playwright-test": "true" },
     });

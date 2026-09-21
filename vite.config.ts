@@ -14,6 +14,18 @@ export default defineConfig({
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     reactRouter(),
   ],
+  // ボードルートは遅延読み込みのため、依存の発見が遷移中に起きて画面がリロードされる。事前バンドルで防ぐ
+  optimizeDeps: {
+    include: [
+      "@tanstack/db",
+      "@tanstack/react-db",
+      "@tanstack/query-core",
+      "@tanstack/query-db-collection",
+      "@tanstack/offline-transactions",
+      "cdate",
+      "nanoid",
+    ],
+  },
   resolve: {
     // pnpmの構成だとSSRの依存最適化でReactが二重に読み込まれ、フックが壊れるため明示的に束ねる
     dedupe: [
