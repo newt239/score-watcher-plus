@@ -9,6 +9,7 @@ import { getUserPreferences } from "@/server/repositories/user";
 import { serializeGameForCompute } from "@/server/utils/board-data";
 
 import Board from "./_components/Board/Board";
+import BoardDbProvider from "./_components/BoardDbProvider/BoardDbProvider";
 
 import type { Route } from "./+types/route";
 
@@ -53,13 +54,15 @@ const BoardPage = ({ params, loaderData }: Route.ComponentProps) => {
   return (
     <>
       <ThemeSync theme={preferences.theme} />
-      <Board
-        gameId={params.game_id}
-        user={user}
-        initialGame={game}
-        initialPreferences={preferences}
-        quizList={quizList}
-      />
+      <BoardDbProvider gameId={params.game_id} initialLogs={game.logs}>
+        <Board
+          gameId={params.game_id}
+          user={user}
+          initialGame={game}
+          initialPreferences={preferences}
+          quizList={quizList}
+        />
+      </BoardDbProvider>
     </>
   );
 };

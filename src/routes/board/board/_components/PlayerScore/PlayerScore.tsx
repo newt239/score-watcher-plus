@@ -16,7 +16,6 @@ type OnlineGame = {
 type PlayerScoreProps = {
   game: OnlineGame;
   player: ComputedScoreProps;
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   preferences: UserPreferencesType | null;
   /** スコアの手動更新モードが有効かどうか */
@@ -30,7 +29,6 @@ type PlayerScoreProps = {
 const PlayerScore: React.FC<PlayerScoreProps> = ({
   game,
   player,
-  isPending,
   onAddLog,
   preferences,
   editable,
@@ -39,7 +37,6 @@ const PlayerScore: React.FC<PlayerScoreProps> = ({
 }) => {
   const props = {
     playerId: player.player_id,
-    isPending,
     onAddLog,
     editable,
   };

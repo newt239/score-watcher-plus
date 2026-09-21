@@ -14,18 +14,10 @@ type AQLPlayerProps = {
   index: number;
   score: ComputedScoreProps | undefined;
   isIncapacity: boolean;
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
 };
 
-const AQLPlayer: React.FC<AQLPlayerProps> = ({
-  player,
-  index,
-  score,
-  isIncapacity,
-  isPending,
-  onAddLog,
-}) => {
+const AQLPlayer: React.FC<AQLPlayerProps> = ({ player, index, score, isIncapacity, onAddLog }) => {
   const computedColorScheme = useComputedColorScheme("light");
 
   if (!score) return null;
@@ -74,7 +66,6 @@ const AQLPlayer: React.FC<AQLPlayerProps> = ({
         <PlayerScoreButton
           color={isIncapacity ? "black" : "green"}
           playerId={player.id}
-          isPending={isPending}
           onAddLog={onAddLog}
           disabled={isIncapacity}
         >
@@ -84,7 +75,6 @@ const AQLPlayer: React.FC<AQLPlayerProps> = ({
           <PlayerScoreButton
             color={isIncapacity ? "black" : "red"}
             playerId={player.id}
-            isPending={isPending}
             onAddLog={onAddLog}
             disabled={isIncapacity}
             compact={true}
@@ -94,7 +84,6 @@ const AQLPlayer: React.FC<AQLPlayerProps> = ({
           <PlayerScoreButton
             color={isIncapacity ? "black" : "blue"}
             playerId={player.id}
-            isPending={isPending}
             onAddLog={onAddLog}
             disabled={isIncapacity}
             compact={true}

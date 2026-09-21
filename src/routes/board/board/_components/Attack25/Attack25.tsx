@@ -32,7 +32,6 @@ const COLOR_LABELS: Record<string, string> = {
 type Attack25Props = {
   players: GamePlayerProps[];
   logs: SeriarizedGameLog[];
-  isPending: boolean;
   onAddLog: (
     playerId: string,
     actionType: LogDBProps["variant"],
@@ -45,7 +44,6 @@ type Attack25Props = {
 const Attack25: React.FC<Attack25Props> = ({
   players,
   logs,
-  isPending,
   onAddLog,
   attackChance,
   show_header,
@@ -102,7 +100,7 @@ const Attack25: React.FC<Attack25Props> = ({
    * @param index クリックされたパネル番号
    */
   const handlePanelClick = (index: number) => {
-    if (boardFull || isPending) return;
+    if (boardFull) return;
     if (pendingClaim) {
       // 消去モード: 相手プレイヤーの点灯済みパネルのみクリックで消去
       if (
@@ -144,7 +142,7 @@ const Attack25: React.FC<Attack25Props> = ({
 
   /** アタックチャンスで相手パネルを消さずに獲得を確定する */
   const handleSkipRemoval = () => {
-    if (!pendingClaim || isPending) return;
+    if (!pendingClaim) return;
     onAddLog(pendingClaim.playerId, "correct", { panel: pendingClaim.panel });
     setPendingClaim(null);
     setSelectedPlayerId(null);
@@ -152,7 +150,7 @@ const Attack25: React.FC<Attack25Props> = ({
 
   /** 選択中プレイヤーの誤答を記録する */
   const handleWrong = () => {
-    if (!selectedPlayerId || isPending) return;
+    if (!selectedPlayerId) return;
     onAddLog(selectedPlayerId, "wrong");
     setSelectedPlayerId(null);
   };
@@ -181,7 +179,7 @@ const Attack25: React.FC<Attack25Props> = ({
             <Text className={classes.message_text} fw={700} c="orange">
               アタックチャンス！消すパネルを選択してください
             </Text>
-            <Button size="xs" variant="default" onClick={handleSkipRemoval} disabled={isPending}>
+            <Button size="xs" variant="default" onClick={handleSkipRemoval}>
               消さずに確定
             </Button>
           </>
@@ -204,15 +202,10 @@ const Attack25: React.FC<Attack25Props> = ({
                 </Text>
               )}
             </Text>
-            <Button size="xs" color="blue" onClick={handleWrong} disabled={isPending}>
+            <Button size="xs" color="blue" onClick={handleWrong}>
               誤答
             </Button>
-            <Button
-              size="xs"
-              variant="default"
-              onClick={() => setSelectedPlayerId(null)}
-              disabled={isPending}
-            >
+            <Button size="xs" variant="default" onClick={() => setSelectedPlayerId(null)}>
               選択解除
             </Button>
           </>
@@ -230,7 +223,7 @@ const Attack25: React.FC<Attack25Props> = ({
                 className={classes.player_card}
                 data-color={color}
                 data-selected={isSelected}
-                disabled={boardFull || !!pendingClaim || isPending}
+                disabled={boardFull || !!pendingClaim}
                 aria-pressed={isSelected}
                 aria-label={`${COLOR_LABELS[color]}・${name}・${counts[player.id] ?? 0}枚保持`}
                 onClick={() => {
@@ -270,7 +263,7 @@ const Attack25: React.FC<Attack25Props> = ({
                 className={classes.panel}
                 data-color={color}
                 data-actionable={isRemovable || isClaimable}
-                disabled={boardFull || isPending || (!isRemovable && !isClaimable)}
+                disabled={boardFull || (!isRemovable && !isClaimable)}
                 aria-label={panelLabel}
                 onClick={() => handlePanelClick(index)}
               >

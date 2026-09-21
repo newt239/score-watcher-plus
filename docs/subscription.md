@@ -78,3 +78,31 @@ Webhook の署名検証は必須であり、機密鍵はサーバー環境変数
 ## テスト戦略と移行
 
 単体テストでは、上限判定関数、観戦レート集約ロジック、Webhook ステートマシンの主要分岐を検証する。E2E では Free プランでの作成制限発火と Pro プランでの成功パス、観戦のレート制限の動作を確認する。移行時には既存ユーザーに対して Free 相当の挙動が保証されるようにし、運用を通じて `plan` の値を調整できる体制を整える。これにより、プランの追加や上限の改定にも柔軟に対応できる。
+
+## TanStack DB との整合
+
+スコアボードは TanStack DB のコレクションでゲームログを保持し、`@tanstack/offline-transactions` の IndexedDB アウトボックスで未送信の操作を永続化する。この仕組みはプラン上限の実装に次の制約を課す。
+
+### 同期系コレクションの書き込みに上限チェックを追加しない
+
+`checkCreationLimit` を呼んでよいのは `game/post-create.ts` / `game/post-import.ts` / `player/post-create.ts` / `quiz/post-create.ts` の4つだけである。とくに `POST /api/games/logs` をはじめとするゲームログの書き込みには追加してはならない。
+
+アウトボックスに溜まった操作は「ユーザーが既に完了したと認識している操作」であり、後から 403 で恒久エラーになると楽観的状態がロールバックされて盤面のスコアが巻き戻る。`getUserSubscription` は `status` が `active` / `trialing` 以外なら猶予なく free 扱いを返すため、Stripe webhook の到達タイミング次第で「plus のときに積んだ操作が復帰後に free 上限で弾かれる」が実際に起こりうる。
+
+上限で作成を抑止したい場合は `GET /api/subscription/status` の結果を使ってキュー投入前（クライアント側）に抑止する。サーバー側の上限チェックは最後の防波堤として残し、403 は `NonRetriableError` に変換して破棄したうえで通知する（`src/utils/db/offline-error.ts`）。
+
+この不変条件は `src/server/utils/subscription/creation-limit-guard.test.ts` で固定している。
+
+### `visibleCount` による切り詰めを同期元エンドポイントで行わない
+
+query collection の `queryFn` は「そのコレクションの完全な状態」を返す契約であり、**レスポンスに含まれなかった行はローカルからも削除される**。上限超過を理由にサーバーが行を間引くと、ローカルからは物理削除と区別がつかない。ボードであれば `computeOnlineScore` の入力ログが減ってスコアが勝手に巻き戻る。
+
+したがって、
+
+- 同期元エンドポイントは常に全件を返す。`GET /api/games/:gameId/logs` はいかなる理由でも行を間引かない
+- 切り詰めが必要な画面では `totalCount` / `visibleCount` をメタ情報として返し、絞り込みはクライアント側の live query（`limit()`）で表現する
+- どうしてもサーバー側で絞る必要がある場合は、コレクション同期用と表示用でエンドポイントを分ける
+
+### ボードのポーリングは観戦レート制限を消費しない
+
+429 と `Retry-After` を返すのは `GET /api/viewer/games/:gameId/board` だけで、ボードの同期元 `GET /api/games/:gameId/logs` にレート制限はない。将来ボード側にレート制限を入れる場合、1ゲームを2タブで開く運用でも 3 秒ポーリング × 2 = 40 req/分に操作分が加わるため、`viewerRateLimitPerMinute` の free 値（60/分）をそのまま流用してはならない。ボード用の定数を別に定義すること。

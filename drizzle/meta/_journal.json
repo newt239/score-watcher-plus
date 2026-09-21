@@ -64,6 +64,13 @@
       "when": 1789190802733,
       "tag": "0008_fair_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789985277345,
+      "tag": "0009_tiny_lethal_legion",
+      "breakpoints": true
     }
   ]
 }
