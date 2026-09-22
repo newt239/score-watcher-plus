@@ -1,5 +1,5 @@
 import { Avatar, Box, Group, Text, Title } from "@mantine/core";
-import { IconCreditCard } from "@tabler/icons-react";
+import { IconCreditCard, IconFileImport } from "@tabler/icons-react";
 
 import ButtonLink from "@/components/ButtonLink";
 import { userContext } from "@/context";
@@ -43,9 +43,14 @@ const AccountPage = ({ loaderData }: Route.ComponentProps) => {
         <SignOutButton />
       </Group>
 
-      <ButtonLink href="/user/plan" variant="default" leftSection={<IconCreditCard size={16} />}>
-        プランを確認する
-      </ButtonLink>
+      <Group gap="sm">
+        <ButtonLink href="/user/plan" variant="default" leftSection={<IconCreditCard size={16} />}>
+          プランを確認する
+        </ButtonLink>
+        <ButtonLink href="/migration" variant="default" leftSection={<IconFileImport size={16} />}>
+          ローカル版からデータを移行する
+        </ButtonLink>
+      </Group>
 
       <UserPreferencesSettings initialPreferences={preferences} userId={user.id} />
 

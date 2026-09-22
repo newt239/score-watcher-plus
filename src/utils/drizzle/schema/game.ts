@@ -28,93 +28,95 @@ export const gameRuleValues = [
 export type RuleNames = (typeof gameRuleValues)[number];
 
 // ゲームテーブル
-export const game = sqliteTable("game", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  name: text("name").notNull(),
-  ruleType: text("rule_type", { enum: gameRuleValues }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  discordWebhookUrl: text("discord_webhook_url"),
-  option: blob("options", { mode: "json" }),
-  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
-  // 得点表示画面で問題文を表示するために紐づけるクイズセット名（未設定の場合は問題を表示しない）
-  quizSetName: text("quiz_set_name"),
-  // クイズセット内の何問目から開始するかのオフセット
-  quizOffset: integer("quiz_offset").default(0).notNull(),
-  // スコアを手動で書き換える「スコアの手動更新」モードが有効かどうか
-  editable: integer("editable", { mode: "boolean" }).default(false).notNull(),
-  userId: text("user_id").references(() => user.id),
-});
-
-// ゲームテーブルのユーザーごとのインデックス
-export const gameUserIdIdx = index("idx_game_user_id").on(game.userId);
-
-// ゲームテーブルの形式ごとのインデックス
-export const gameRuleTypeIdx = index("idx_game_rule_type").on(game.ruleType);
-
-// ゲームテーブルの公開状態のインデックス
-export const gameIsPublicIdx = index("idx_game_is_public").on(game.isPublic);
+export const game = sqliteTable(
+  "game",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    name: text("name").notNull(),
+    ruleType: text("rule_type", { enum: gameRuleValues }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    discordWebhookUrl: text("discord_webhook_url"),
+    option: blob("options", { mode: "json" }),
+    isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
+    // 得点表示画面で問題文を表示するために紐づけるクイズセット名（未設定の場合は問題を表示しない）
+    quizSetName: text("quiz_set_name"),
+    // クイズセット内の何問目から開始するかのオフセット
+    quizOffset: integer("quiz_offset").default(0).notNull(),
+    // スコアを手動で書き換える「スコアの手動更新」モードが有効かどうか
+    editable: integer("editable", { mode: "boolean" }).default(false).notNull(),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [
+    index("idx_game_user_id").on(table.userId),
+    index("idx_game_rule_type").on(table.ruleType),
+    index("idx_game_is_public").on(table.isPublic),
+  ]
+);
 
 // タグテーブル
-export const tag = sqliteTable("tag", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  name: text("name").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  userId: text("user_id").references(() => user.id),
-});
-
-export const tagNameIdx = index("idx_tag_name").on(tag.name);
+export const tag = sqliteTable(
+  "tag",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    name: text("name").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [index("idx_tag_name").on(table.name)]
+);
 
 // ゲームとタグの中間
-export const gameTag = sqliteTable("game_tag", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  gameId: text("game_id").references(() => game.id),
-  tagId: text("tag_id").references(() => tag.id),
-  userId: text("user_id").references(() => user.id),
-});
-
-export const gameTagGameIdTagIdIdx = index("idx_game_tag_game_id_tag_id").on(
-  gameTag.gameId,
-  gameTag.tagId
+export const gameTag = sqliteTable(
+  "game_tag",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    gameId: text("game_id").references(() => game.id),
+    tagId: text("tag_id").references(() => tag.id),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [index("idx_game_tag_game_id_tag_id").on(table.gameId, table.tagId)]
 );
 
 // プレイヤーテーブル
-export const player = sqliteTable("player", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  name: text("name").notNull(),
-  displayName: text("display_name").notNull(),
-  affiliation: text("affiliation"),
-  description: text("description"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  userId: text("user_id").references(() => user.id),
-});
-
-export const playerNameIdx = index("idx_player_name").on(player.name);
+export const player = sqliteTable(
+  "player",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    name: text("name").notNull(),
+    displayName: text("display_name").notNull(),
+    affiliation: text("affiliation"),
+    description: text("description"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [index("idx_player_name").on(table.name)]
+);
 
 // プレイヤータグ
 export const playerTag = sqliteTable("player_tag", {
@@ -136,57 +138,59 @@ export const playerTag = sqliteTable("player_tag", {
 });
 
 // プレイヤーとプレイヤータグの中間テーブル
-export const playerPlayerTag = sqliteTable("player_player_tag", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  playerId: text("player_id").references(() => player.id, {
-    onDelete: "cascade",
-  }),
-  playerTagId: text("player_tag_id").references(() => playerTag.id, {
-    onDelete: "cascade",
-  }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-});
-
-export const playerPlayerTagPlayerIdTagNameIdx = index(
-  "idx_player_player_tag_player_id_tag_name"
-).on(playerPlayerTag.playerId, playerPlayerTag.playerTagId);
+export const playerPlayerTag = sqliteTable(
+  "player_player_tag",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    playerId: text("player_id").references(() => player.id, {
+      onDelete: "cascade",
+    }),
+    playerTagId: text("player_tag_id").references(() => playerTag.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  },
+  (table) => [
+    index("idx_player_player_tag_player_id_tag_name").on(table.playerId, table.playerTagId),
+  ]
+);
 
 // ゲーム参加プレイヤーテーブル
-export const gamePlayer = sqliteTable("game_player", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  gameId: text("game_id").references(() => game.id),
-  playerId: text("player_id").references(() => player.id),
-  displayOrder: integer("display_order").notNull(),
-  initialScore: integer("initial_score").default(0),
-  initialCorrectCount: integer("initial_correct_count").default(0),
-  initialWrongCount: integer("initial_wrong_count").default(0),
-  // Variables形式でプレイヤーごとに設定する変動値N
-  baseCorrectPoint: integer("base_correct_point").default(1).notNull(),
-  userId: text("user_id").references(() => user.id),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-});
-
-export const gamePlayerGameIdIdx = index("idx_game_player_game_id").on(gamePlayer.gameId);
-
-export const gamePlayerGameIdPlayerIdIdx = index("idx_game_player_game_id_player_id").on(
-  gamePlayer.gameId,
-  gamePlayer.playerId
+export const gamePlayer = sqliteTable(
+  "game_player",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    gameId: text("game_id").references(() => game.id),
+    playerId: text("player_id").references(() => player.id),
+    displayOrder: integer("display_order").notNull(),
+    initialScore: integer("initial_score").default(0),
+    initialCorrectCount: integer("initial_correct_count").default(0),
+    initialWrongCount: integer("initial_wrong_count").default(0),
+    // Variables形式でプレイヤーごとに設定する変動値N
+    baseCorrectPoint: integer("base_correct_point").default(1).notNull(),
+    userId: text("user_id").references(() => user.id),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  },
+  (table) => [
+    index("idx_game_player_game_id").on(table.gameId),
+    index("idx_game_player_game_id_player_id").on(table.gameId, table.playerId),
+  ]
 );
 
 const actionTypeValues = [
@@ -200,30 +204,33 @@ const actionTypeValues = [
 ] as const;
 
 // ゲーム操作ログテーブル
-export const gameLog = sqliteTable("game_log", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  gameId: text("game_id").references(() => game.id),
-  playerId: text("player_id").references(() => player.id),
-  questionNumber: integer("question_number"),
-  actionType: text("action_type", { enum: actionTypeValues }).notNull(),
-  scoreChange: integer("score_change").default(0),
-  // アタック25で獲得したパネル番号(0-24)
-  panel: integer("panel"),
-  // アタック25のアタックチャンスで消去したパネル番号(0-24)
-  removedPanel: integer("removed_panel"),
-  timestamp: integer("timestamp", { mode: "timestamp_ms" })
-    .default(sql`(unixepoch('subsec') * 1000)`)
-    .notNull(),
-  isSystemAction: integer("is_system_action", { mode: "boolean" }).default(false),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  userId: text("user_id").references(() => user.id),
-});
-
-export const gameLogGameIdIdx = index("idx_game_log_game_id").on(gameLog.gameId);
-
-export const gameLogTimestampIdx = index("idx_game_log_timestamp").on(gameLog.timestamp);
+export const gameLog = sqliteTable(
+  "game_log",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    gameId: text("game_id").references(() => game.id),
+    playerId: text("player_id"),
+    questionNumber: integer("question_number"),
+    actionType: text("action_type", { enum: actionTypeValues }).notNull(),
+    scoreChange: integer("score_change").default(0),
+    // アタック25で獲得したパネル番号(0-24)
+    panel: integer("panel"),
+    // アタック25のアタックチャンスで消去したパネル番号(0-24)
+    removedPanel: integer("removed_panel"),
+    timestamp: integer("timestamp", { mode: "timestamp_ms" })
+      .default(sql`(unixepoch('subsec') * 1000)`)
+      .notNull(),
+    isSystemAction: integer("is_system_action", { mode: "boolean" }).default(false),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [
+    index("idx_game_log_game_id").on(table.gameId),
+    index("idx_game_log_timestamp").on(table.timestamp),
+  ]
+);
 
 // game のリレーション
 export const gameRelations = relations(game, ({ one, many }) => ({

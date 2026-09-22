@@ -61,7 +61,7 @@ API は上限超過時に 403 を返し、ボディにはコード、タイト�
 
 ## 影響範囲と更新が必要な箇所一覧
 
-Drizzle スキーマに `billing.ts` を追加し、`schema/index.ts` にエクスポートを加える（`user_subscription` のみ）。`src/server/controllers` には `subscription` と `stripe` のディレクトリを追加し、Checkout/Portal/Webhook/Status の各ハンドラーを実装する。`src/server/repositories` には `subscription.ts` を追加し、契約状態の取得・更新を実装する。観戦レート集約は Cloudflare KV にアクセスする `src/server/repositories/viewer-rate.ts` を追加する。既存の `game/post-create.ts`, `player/post-create.ts`, `quiz/post-create.ts` に上限ガードを入れる。`src/models` には `subscription.ts` と `stripe.ts` を追加し、プランコード、API リクエスト・レスポンス、Webhook ペイロードの Zod スキーマを定義する。フロントエンドでは `/online/subscription` などにプラン画面を追加し、API クライアントで Checkout/Portal を呼び出す。観戦APIのハンドラーではレートリミットを適用し、HTTP 429 を返す分岐を加える。
+Drizzle スキーマに `billing.ts` を追加し、`schema/index.ts` にエクスポートを加える（`user_subscription` のみ）。`src/server/controllers` には `subscription` と `stripe` のディレクトリを追加し、Checkout/Portal/Webhook/Status の各ハンドラーを実装する。`src/server/repositories` には `subscription.ts` を追加し、契約状態の取得・更新を実装する。観戦レート集約は Cloudflare KV にアクセスする `src/server/repositories/viewer-rate.ts` を追加する。既存の `game/post-create.ts`, `player/post-create.ts`, `quiz/post-create.ts` に上限ガードを入れる。ローカル版からの一括取り込み `migration/post-import.ts` も作成系のため対象とし、game / player / quiz の3種類をまとめて事前判定してから書き込む。`src/models` には `subscription.ts` と `stripe.ts` を追加し、プランコード、API リクエスト・レスポンス、Webhook ペイロードの Zod スキーマを定義する。フロントエンドでは `/online/subscription` などにプラン画面を追加し、API クライアントで Checkout/Portal を呼び出す。観戦APIのハンドラーではレートリミットを適用し、HTTP 429 を返す分岐を加える。
 
 ## ハードコードするプラン設定の配置と使用方針
 
