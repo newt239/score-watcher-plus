@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 
 import { user } from "./auth";
@@ -23,29 +23,33 @@ export const quizSet = sqliteTable("quiz_set", {
 });
 
 // クイズ問題テーブル
-export const quizQuestion = sqliteTable("quiz_question", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
-  quizSetId: text("quiz_set_id").references(() => quizSet.id, {
-    onDelete: "cascade",
-  }),
-  questionNumber: integer("question_number").notNull(),
-  questionText: text("question_text").notNull(),
-  answerText: text("answer_text").notNull(),
-  category: text("category"),
-  difficultyLevel: integer("difficulty_level"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .default(sql`(unixepoch())`)
-    .notNull(),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  userId: text("user_id").references(() => user.id),
-});
-
-export const quizQuestionUniqueIdx = unique().on(
-  quizQuestion.quizSetId,
-  quizQuestion.questionNumber
+export const quizQuestion = sqliteTable(
+  "quiz_question",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    quizSetId: text("quiz_set_id").references(() => quizSet.id, {
+      onDelete: "cascade",
+    }),
+    questionNumber: integer("question_number").notNull(),
+    questionText: text("question_text").notNull(),
+    answerText: text("answer_text").notNull(),
+    category: text("category"),
+    difficultyLevel: integer("difficulty_level"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .default(sql`(unixepoch())`)
+      .notNull(),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    userId: text("user_id").references(() => user.id),
+  },
+  (table) => [
+    index("idx_quiz_question_quiz_set_id_question_number").on(
+      table.quizSetId,
+      table.questionNumber
+    ),
+  ]
 );
