@@ -26,6 +26,7 @@ import postCopyPlayersHandler from "./controllers/game/post-copy-players";
 import postCreateGameHandler from "./controllers/game/post-create";
 import postImportGameHandler from "./controllers/game/post-import";
 import postImportLocalDataHandler from "./controllers/migration/post-import";
+import postPreviewLocalDataHandler from "./controllers/migration/post-preview";
 import postSentryTunnelHandler from "./controllers/monitoring/post-tunnel";
 import deletePlayerHandler from "./controllers/player/delete-player";
 import deletePlayerTagHandler from "./controllers/player/delete-tag";
@@ -106,6 +107,7 @@ const app = new Hono()
   .delete("/quizes", ...deleteQuizHandler)
   .get("/quizes/:id", ...getQuizDetailHandler)
   // Migration API
+  .post("/migration/preview", ...postPreviewLocalDataHandler)
   .post("/migration/import", ...postImportLocalDataHandler)
   // Subscription API
   .get("/subscription/status", ...getSubscriptionStatusHandler)

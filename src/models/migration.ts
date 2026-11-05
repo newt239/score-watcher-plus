@@ -109,7 +109,7 @@ const LocalLogSchema = z.object({
 });
 
 /** ローカル版から書き出した移行用JSONのスキーマ */
-export const ImportLocalDataRequestSchema = z.object({
+export const LocalExportFileSchema = z.object({
   meta: z
     .object({
       format: z.string().optional(),
@@ -126,7 +126,25 @@ export const ImportLocalDataRequestSchema = z.object({
 });
 
 /** ローカル版から書き出した移行用JSONの型 */
-export type ImportLocalDataRequestType = z.infer<typeof ImportLocalDataRequestSchema>;
+export type LocalExportFileType = z.infer<typeof LocalExportFileSchema>;
 
 /** ローカル版のゲーム1件の型 */
 export type LocalGameType = z.infer<typeof LocalGameSchema>;
+
+export const PreviewLocalDataImportRequestSchema = z.object({
+  data: LocalExportFileSchema,
+});
+
+export type PreviewLocalDataImportResponseType = {
+  usage: { game: number; player: number; quiz: number };
+  limits: { game: number; player: number; quiz: number };
+  graceLimits: { game: number; player: number; quiz: number };
+  canStartLimitGrace: boolean;
+  limitGraceDays: number;
+  matchedPlayerIds: string[];
+};
+
+export const ImportLocalDataRequestSchema = z.object({
+  data: LocalExportFileSchema,
+  startLimitGrace: z.boolean(),
+});

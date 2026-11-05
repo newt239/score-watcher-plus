@@ -1,0 +1,1 @@
+ALTER TABLE `user_subscription` ADD `limit_grace_until` integer;

@@ -3,7 +3,14 @@ import { and, count, eq, isNull } from "drizzle-orm";
 import { DBClient } from "@/utils/drizzle/client";
 import { game, player, quizQuestion, userSubscription } from "@/utils/drizzle/schema";
 
-import { DEFAULT_PLAN_CODE, PLAN_LIMITS } from "../utils/subscription/config";
+import {
+  DEFAULT_PLAN_CODE,
+  PLAN_LIMITS,
+  canStartLimitGrace,
+  isLimitGraceActive,
+  resolveCreationLimits,
+} from "../utils/subscription/config";
+import { isBillingAvailable } from "../utils/subscription/stripe";
 
 import type { PlanCode } from "../utils/subscription/config";
 
@@ -35,6 +42,7 @@ export const getUserSubscription = async (userId: string) => {
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
       stripeCustomerId: null,
+      limitGraceUntil: null,
     } as const;
   }
 
@@ -48,6 +56,7 @@ export const getUserSubscription = async (userId: string) => {
     currentPeriodEnd: subscription.currentPeriodEnd,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     stripeCustomerId: subscription.stripeCustomerId,
+    limitGraceUntil: subscription.limitGraceUntil,
   } as const;
 };
 
@@ -140,10 +149,13 @@ export const countUserResources = async (userId: string) => {
 export const checkCreationLimit = async (
   userId: string,
   resource: "game" | "player" | "quiz",
-  addingCount: number
+  addingCount: number,
+  options: { withLimitGrace?: boolean } = {}
 ) => {
-  const { planCode } = await getUserSubscription(userId);
-  const limits = PLAN_LIMITS[planCode];
+  const { planCode, limitGraceUntil } = await getUserSubscription(userId);
+  const limits = options.withLimitGrace
+    ? PLAN_LIMITS.plus
+    : resolveCreationLimits(planCode, limitGraceUntil, new Date());
   const usage = await countUserResources(userId);
 
   const limit = limits[resource];
@@ -155,4 +167,58 @@ export const checkCreationLimit = async (
     current,
     planCode,
   } as const;
+};
+
+export const getSubscriptionStatus = async (userId: string) => {
+  const subscription = await getUserSubscription(userId);
+  const usage = await countUserResources(userId);
+  const now = new Date();
+  const planLimits = PLAN_LIMITS[subscription.planCode];
+  const creationLimits = resolveCreationLimits(
+    subscription.planCode,
+    subscription.limitGraceUntil,
+    now
+  );
+
+  return {
+    planCode: subscription.planCode,
+    planName: planLimits.name,
+    status: subscription.status,
+    currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    limits: {
+      ...creationLimits,
+      viewerRateLimitPerMinute: planLimits.viewerRateLimitPerMinute,
+    },
+    usage,
+    limitGrace: {
+      until: subscription.limitGraceUntil?.toISOString() ?? null,
+      isActive: isLimitGraceActive(subscription.limitGraceUntil, now),
+      canStart: canStartLimitGrace(
+        subscription.planCode,
+        subscription.limitGraceUntil,
+        isBillingAvailable()
+      ),
+    },
+  } as const;
+};
+
+export const startLimitGrace = async (userId: string, until: Date) => {
+  const [existing] = await DBClient.select({ id: userSubscription.id })
+    .from(userSubscription)
+    .where(eq(userSubscription.userId, userId))
+    .limit(1);
+
+  if (existing) {
+    await DBClient.update(userSubscription)
+      .set({ limitGraceUntil: until, updatedAt: new Date() })
+      .where(eq(userSubscription.id, existing.id));
+    return;
+  }
+
+  await DBClient.insert(userSubscription).values({
+    userId,
+    planCode: DEFAULT_PLAN_CODE,
+    limitGraceUntil: until,
+  });
 };

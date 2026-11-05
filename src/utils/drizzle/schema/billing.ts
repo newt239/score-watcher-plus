@@ -38,6 +38,7 @@ export const userSubscription = sqliteTable(
     cancelAtPeriodEnd: integer("cancel_at_period_end", { mode: "boolean" })
       .notNull()
       .default(false),
+    limitGraceUntil: integer("limit_grace_until", { mode: "timestamp" }),
     createdAt: integer("created_at", { mode: "timestamp" })
       .default(sql`(unixepoch())`)
       .notNull(),

@@ -4,8 +4,14 @@ import { createFactory } from "hono/factory";
 import { ImportLocalDataRequestSchema } from "@/models/migration";
 import { getUserId } from "@/server/repositories/auth";
 import { commitLocalDataImport, prepareLocalDataImport } from "@/server/repositories/migration";
-import { checkCreationLimit } from "@/server/repositories/subscription";
+import {
+  checkCreationLimit,
+  getSubscriptionStatus,
+  startLimitGrace,
+} from "@/server/repositories/subscription";
+import { getLimitGraceUntil } from "@/server/utils/subscription/config";
 import { buildPlanLimitError } from "@/server/utils/subscription/limit-response";
+import { formatDisplayDate } from "@/utils/date";
 
 const factory = createFactory();
 
@@ -20,11 +26,19 @@ const handler = factory.createHandlers(
         return c.json({ error: "認証が必要です" } as const, 401);
       }
 
-      const plan = await prepareLocalDataImport(c.req.valid("json"), userId);
+      const { data, startLimitGrace: withLimitGrace } = c.req.valid("json");
+
+      if (withLimitGrace && !(await getSubscriptionStatus(userId)).limitGrace.canStart) {
+        return c.json({ error: "上限超過の猶予期間を開始できません" } as const, 400);
+      }
+
+      const plan = await prepareLocalDataImport(data, userId);
 
       // 部分的に取り込むと再実行時に重複するため、1つでも超過していたら何も書き込まない
       for (const resource of ["game", "player", "quiz"] as const) {
-        const limitCheck = await checkCreationLimit(userId, resource, plan.counts[resource]);
+        const limitCheck = await checkCreationLimit(userId, resource, plan.counts[resource], {
+          withLimitGrace,
+        });
 
         if (!limitCheck.allowed) {
           return c.json(
@@ -39,12 +53,22 @@ const handler = factory.createHandlers(
         }
       }
 
+      const limitGraceUntil = withLimitGrace ? getLimitGraceUntil(new Date()) : null;
+
+      if (limitGraceUntil) {
+        await startLimitGrace(userId, limitGraceUntil);
+      }
+
       const result = await commitLocalDataImport(plan);
+      const summary = `ゲーム${result.gameCount}件、プレイヤー${result.playerCount}件、問題${result.quizCount}件を取り込みました`;
 
       return c.json(
         {
           ...result,
-          message: `ゲーム${result.gameCount}件、プレイヤー${result.playerCount}件、問題${result.quizCount}件を取り込みました`,
+          limitGraceUntil: limitGraceUntil?.toISOString() ?? null,
+          message: limitGraceUntil
+            ? `${summary}。${formatDisplayDate(limitGraceUntil, "YYYY年MM月DD日")}までにプラスプランへアップグレードしてください`
+            : summary,
         } as const,
         201
       );

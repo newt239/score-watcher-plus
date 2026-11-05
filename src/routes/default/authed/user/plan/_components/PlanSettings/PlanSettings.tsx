@@ -1,8 +1,18 @@
 import { useEffect, useState, useTransition } from "react";
 
-import { Badge, Button, Card, Group, List, SegmentedControl, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  List,
+  SegmentedControl,
+  Text,
+  Title,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconExternalLink } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconExternalLink } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
 import { useSearchParams } from "react-router";
 
@@ -124,6 +134,10 @@ const PlanSettings: React.FC<PlanSettingsProps> = ({
   };
 
   const isPlus = subscription.planCode === "plus";
+  const { limitGrace } = subscription;
+  const isOverLimit = (["game", "player", "quiz"] as const).some(
+    (key) => subscription.usage[key] > subscription.limits[key]
+  );
 
   return (
     <>
@@ -140,6 +154,19 @@ const PlanSettings: React.FC<PlanSettingsProps> = ({
             ? `${formatDisplayDate(subscription.currentPeriodEnd, "YYYY年MM月DD日")}にフリープランへ戻ります。`
             : `次回の更新日は${formatDisplayDate(subscription.currentPeriodEnd, "YYYY年MM月DD日")}です。`}
         </Text>
+      )}
+
+      {!isPlus && limitGrace.isActive && limitGrace.until && (
+        <Alert color="yellow" icon={<IconAlertTriangle />} title="上限超過の猶予期間中です" mb="md">
+          {formatDisplayDate(limitGrace.until, "YYYY年MM月DD日 HH:mm")}
+          まではプラスプランの上限で利用できます。期限までにプラスプランへアップグレードしてください。
+        </Alert>
+      )}
+
+      {!isPlus && !limitGrace.isActive && limitGrace.until && isOverLimit && (
+        <Alert color="red" icon={<IconAlertTriangle />} title="猶予期間が終了しました" mb="md">
+          プランの上限を超えているため、新しく作成できません。不要なデータを削除するか、プラスプランへアップグレードしてください。
+        </Alert>
       )}
 
       <Title order={4} mt="lg" mb="xs">
