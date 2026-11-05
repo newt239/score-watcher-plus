@@ -39,6 +39,11 @@ export type GetSubscriptionStatusResponseType = {
     player: number;
     quiz: number;
   };
+  limitGrace: {
+    until: string | null;
+    isActive: boolean;
+    canStart: boolean;
+  };
 };
 
 /** プランの価格情報（取得できない場合はnull） */
