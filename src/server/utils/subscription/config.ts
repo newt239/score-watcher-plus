@@ -37,6 +37,34 @@ export const PLAN_LIMITS: Record<PlanCode, PlanLimits> = {
 /** 契約情報が無いユーザーに適用するプラン */
 export const DEFAULT_PLAN_CODE: PlanCode = "free";
 
+export const LIMIT_GRACE_DAYS = 7;
+
+export type CreationLimits = Pick<PlanLimits, "game" | "player" | "quiz">;
+
+export const isLimitGraceActive = (limitGraceUntil: Date | null, now: Date) =>
+  limitGraceUntil !== null && limitGraceUntil.getTime() > now.getTime();
+
+export const resolveCreationLimits = (
+  planCode: PlanCode,
+  limitGraceUntil: Date | null,
+  now: Date
+): CreationLimits => {
+  const { game, player, quiz } = isLimitGraceActive(limitGraceUntil, now)
+    ? PLAN_LIMITS.plus
+    : PLAN_LIMITS[planCode];
+
+  return { game, player, quiz } as const;
+};
+
+export const canStartLimitGrace = (
+  planCode: PlanCode,
+  limitGraceUntil: Date | null,
+  isBillingAvailable: boolean
+) => isBillingAvailable && planCode === DEFAULT_PLAN_CODE && limitGraceUntil === null;
+
+export const getLimitGraceUntil = (now: Date) =>
+  new Date(now.getTime() + LIMIT_GRACE_DAYS * 24 * 60 * 60 * 1000);
+
 /**
  * StripeのProduct IDからプランコードを解決する
  *

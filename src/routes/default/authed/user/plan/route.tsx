@@ -1,9 +1,8 @@
 import { Box, Title } from "@mantine/core";
 
 import { userContext } from "@/context";
-import { countUserResources, getUserSubscription } from "@/server/repositories/subscription";
-import { PLAN_LIMITS } from "@/server/utils/subscription/config";
-import { getPlanPrices } from "@/server/utils/subscription/stripe";
+import { getSubscriptionStatus } from "@/server/repositories/subscription";
+import { getPlanPrices, isBillingAvailable } from "@/server/utils/subscription/stripe";
 
 import PlanSettings from "./_components/PlanSettings/PlanSettings";
 
@@ -18,28 +17,10 @@ export const meta: Route.MetaFunction = () => [
 export const loader = async ({ context }: Route.LoaderArgs) => {
   const user = context.get(userContext);
 
-  const subscription = await getUserSubscription(user.id);
-  const usage = await countUserResources(user.id);
-  const limits = PLAN_LIMITS[subscription.planCode];
-  const prices = await getPlanPrices("plus");
-
   return {
-    prices,
-    subscription: {
-      planCode: subscription.planCode,
-      planName: limits.name,
-      status: subscription.status,
-      currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
-      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-      limits: {
-        game: limits.game,
-        player: limits.player,
-        quiz: limits.quiz,
-        viewerRateLimitPerMinute: limits.viewerRateLimitPerMinute,
-      },
-      usage,
-    },
-    isBillingAvailable: Boolean(process.env.STRIPE_SECRET_KEY),
+    prices: await getPlanPrices("plus"),
+    subscription: await getSubscriptionStatus(user.id),
+    isBillingAvailable: isBillingAvailable(),
   } as const;
 };
 

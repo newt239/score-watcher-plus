@@ -8,6 +8,8 @@ import type { BillingIntervalType, PlanPricesType } from "@/models/subscription"
 
 let stripeClient: Stripe | null = null;
 
+export const isBillingAvailable = () => Boolean(process.env.STRIPE_SECRET_KEY);
+
 /**
  * Stripeクライアントを取得する
  *
