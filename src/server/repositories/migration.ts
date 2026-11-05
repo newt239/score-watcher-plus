@@ -14,13 +14,11 @@ import {
   quizQuestion,
   quizSet,
 } from "@/utils/drizzle/schema";
+import { getQuizSetName } from "@/utils/migration/local-data";
 
-import type { ImportLocalDataRequestType } from "@/models/migration";
+import type { LocalExportFileType } from "@/models/migration";
 
 const INSERT_CHUNK_SIZE = 100;
-
-/** ローカル版でセット名が空のまま保存された問題をまとめる先 */
-const FALLBACK_QUIZ_SET_NAME = "インポート";
 
 const toDate = (value: string | null | undefined) => {
   if (!value) return new Date();
@@ -50,10 +48,13 @@ const toLogPlayerId = (localPlayerId: string, playerIdMap: Map<string, string>) 
  * @param userId 取り込み先のユーザーID
  * @returns 書き込む行と、プラン上限の判定に使う件数
  */
-export const prepareLocalDataImport = async (data: ImportLocalDataRequestType, userId: string) => {
-  const existingPlayers = await DBClient.select({ id: player.id, name: player.name })
+export const listExistingPlayers = async (userId: string) =>
+  DBClient.select({ id: player.id, name: player.name })
     .from(player)
     .where(and(eq(player.userId, userId), isNull(player.deletedAt)));
+
+export const prepareLocalDataImport = async (data: LocalExportFileType, userId: string) => {
+  const existingPlayers = await listExistingPlayers(userId);
 
   const playerIdSet = new Set(existingPlayers.map((p) => p.id));
   const playerIdByName = new Map(existingPlayers.map((p) => [p.name, p.id]));
@@ -149,10 +150,10 @@ export const prepareLocalDataImport = async (data: ImportLocalDataRequestType, u
     })
   );
 
-  const quizesBySetName = new Map<string, ImportLocalDataRequestType["quizes"]>();
+  const quizesBySetName = new Map<string, LocalExportFileType["quizes"]>();
 
   for (const quiz of data.quizes) {
-    const setName = quiz.set_name?.trim() ? quiz.set_name : FALLBACK_QUIZ_SET_NAME;
+    const setName = getQuizSetName(quiz);
     const quizes = quizesBySetName.get(setName);
 
     if (quizes) {
@@ -251,10 +252,7 @@ export const prepareLocalDataImport = async (data: ImportLocalDataRequestType, u
     });
   }
 
-  const logsByGameId = new Map<
-    string,
-    { gameId: string; logs: ImportLocalDataRequestType["logs"] }
-  >();
+  const logsByGameId = new Map<string, { gameId: string; logs: LocalExportFileType["logs"] }>();
 
   for (const log of data.logs) {
     const gameId = gameIdMap.get(log.game_id);
