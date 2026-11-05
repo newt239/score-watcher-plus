@@ -8,7 +8,6 @@ import type { ComputedScoreProps, GamePlayerProps, LogDBProps } from "@/models/g
 type AQLProps = {
   scores: ComputedScoreProps[];
   players: GamePlayerProps[];
-  isPending: boolean;
   onAddLog: (playerId: string, actionType: LogDBProps["variant"]) => void;
   team_name: {
     left_team: string;
@@ -17,14 +16,7 @@ type AQLProps = {
   show_header: boolean;
 };
 
-const AQL: React.FC<AQLProps> = ({
-  scores,
-  players,
-  isPending,
-  onAddLog,
-  team_name,
-  show_header,
-}) => {
+const AQL: React.FC<AQLProps> = ({ scores, players, onAddLog, team_name, show_header }) => {
   const playerScoreList = players
     .map((player) => {
       const score = scores.find((score) => score.player_id === player.id);
@@ -84,7 +76,6 @@ const AQL: React.FC<AQLProps> = ({
               player={item.player}
               score={item.score}
               isIncapacity={item.score.is_incapacity}
-              isPending={isPending}
               onAddLog={onAddLog}
             />
           ))}
@@ -105,7 +96,6 @@ const AQL: React.FC<AQLProps> = ({
               player={item.player}
               score={item.score}
               isIncapacity={item.score.is_incapacity}
-              isPending={isPending}
               onAddLog={onAddLog}
             />
           ))}

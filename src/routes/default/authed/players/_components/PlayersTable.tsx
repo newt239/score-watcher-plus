@@ -3,18 +3,10 @@ import { useEffect, useState, useTransition } from "react";
 import { Box, Button, Checkbox, Group, Table, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
-  type FilterFn,
-} from "@tanstack/react-table";
+import { createColumnHelper, flexRender, useTable, type FilterFn } from "@tanstack/react-table";
 
 import TablePagenation from "@/components/TablePagination";
+import { appTableFeatures, type AppTableFeatures } from "@/utils/table";
 
 import type { UpdatePlayerType } from "@/models/player";
 
@@ -34,7 +26,7 @@ const PlayersTable: React.FC<Props> = ({ players: playersProp, deletePlayers, re
     setPlayers(playersProp);
   }, [playersProp]);
 
-  const fuzzyFilter: FilterFn<UpdatePlayerType> = (row) => {
+  const fuzzyFilter: FilterFn<AppTableFeatures, UpdatePlayerType> = (row) => {
     const data = row.original;
     return (
       data.name?.includes(searchText) ||
@@ -45,15 +37,15 @@ const PlayersTable: React.FC<Props> = ({ players: playersProp, deletePlayers, re
     );
   };
 
-  const columnHelper = createColumnHelper<UpdatePlayerType>();
-  const columns: ColumnDef<UpdatePlayerType, string>[] = [
+  const columnHelper = createColumnHelper<AppTableFeatures, UpdatePlayerType>();
+  const columns = columnHelper.columns([
     columnHelper.accessor("id", {
       header: ({ table }) => {
         return (
           <Checkbox
             radius="xs"
             checked={table.getIsAllRowsSelected()}
-            indeterminate={table.getIsSomeRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
             onChange={() => table.toggleAllRowsSelected()}
           />
         );
@@ -77,9 +69,10 @@ const PlayersTable: React.FC<Props> = ({ players: playersProp, deletePlayers, re
     columnHelper.accessor("affiliation", {
       header: "所属",
     }),
-  ];
+  ]);
 
-  const table = useReactTable<UpdatePlayerType>({
+  const table = useTable({
+    features: appTableFeatures,
     data: players || [],
     columns,
     state: {
@@ -89,9 +82,6 @@ const PlayersTable: React.FC<Props> = ({ players: playersProp, deletePlayers, re
     onRowSelectionChange: setSelectedPlayers,
     globalFilterFn: fuzzyFilter,
     onGlobalFilterChange: setSearchText,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const deletePlayerList = table

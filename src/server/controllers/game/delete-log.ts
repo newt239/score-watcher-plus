@@ -25,7 +25,7 @@ const handler = factory.createHandlers(async (c) => {
     const logInfo = await getGameLogById(logId, userId);
 
     if (!logInfo?.gameId) {
-      return c.json({ error: "ログが見つかりません" } as const, 404);
+      return c.json({ success: true, alreadyDeleted: true } as const);
     }
 
     // ログ削除前のゲーム状態を取得
@@ -51,7 +51,7 @@ const handler = factory.createHandlers(async (c) => {
       }
     }
 
-    return c.json({ success: true } as const);
+    return c.json({ success: true, alreadyDeleted: false } as const);
   } catch (error) {
     console.error("Error removing cloud game log:", error);
     return c.json({ error: "サーバーエラーが発生しました" } as const, 500);

@@ -289,6 +289,8 @@ export const RemoveGamePlayersRequestJsonSchema = z.object({
 
 /** ゲームログ追加リクエストのスキーマ */
 export const AddGameLogRequestSchema = z.object({
+  id: z.string().min(1),
+  timestamp: z.number().int().positive(),
   gameId: z.string().min(1),
   playerId: z.string().min(1),
   questionNumber: z.number().int().optional(),
@@ -318,6 +320,32 @@ export type AddPlayerToGameRequestType = z.infer<typeof AddPlayerToGameRequestSc
 
 /** ゲームログ追加リクエストの型 */
 export type AddGameLogRequestType = z.infer<typeof AddGameLogRequestSchema>;
+/** TanStack DBのコレクションが同期するゲームログ1件のスキーマ */
+export const GameLogRowSchema = z.object({
+  id: z.string(),
+  gameId: z.string().nullable(),
+  playerId: z.string().nullable(),
+  questionNumber: z.number().int().nullable(),
+  actionType: z.enum([
+    "correct",
+    "wrong",
+    "through",
+    "mutiple_correct",
+    "multiple_wrong",
+    "skip",
+    "blank",
+  ]),
+  scoreChange: z.number().int().nullable(),
+  panel: z.number().int().nullable(),
+  removedPanel: z.number().int().nullable(),
+  timestamp: z.string(),
+  isSystemAction: z.boolean().nullable(),
+  deletedAt: z.string().nullable(),
+  userId: z.string().nullable(),
+});
+
+/** ゲームログ1件の型（APIレスポンス形式） */
+export type GameLogRowType = z.infer<typeof GameLogRowSchema>;
 
 /** ゲームオプション更新リクエストのスキーマ */
 export const UpdateGameOptionsRequestParamSchema = z.object({

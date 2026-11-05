@@ -3,18 +3,10 @@ import { useEffect, useState, useTransition } from "react";
 import { Box, Button, Checkbox, Group, Table, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
-  type FilterFn,
-} from "@tanstack/react-table";
+import { createColumnHelper, flexRender, useTable, type FilterFn } from "@tanstack/react-table";
 
 import TablePagenation from "@/components/TablePagination";
+import { appTableFeatures, type AppTableFeatures } from "@/utils/table";
 
 import type { ApiQuizDataType } from "@/models/quiz";
 
@@ -34,7 +26,7 @@ const QuizesTable: React.FC<Props> = ({ quizes: quizesProp, deleteQuizes, refetc
     setQuizes(quizesProp);
   }, [quizesProp]);
 
-  const fuzzyFilter: FilterFn<ApiQuizDataType> = (row) => {
+  const fuzzyFilter: FilterFn<AppTableFeatures, ApiQuizDataType> = (row) => {
     const data = row.original;
     return !!(
       data.question?.includes(searchText) ||
@@ -44,15 +36,15 @@ const QuizesTable: React.FC<Props> = ({ quizes: quizesProp, deleteQuizes, refetc
     );
   };
 
-  const columnHelper = createColumnHelper<ApiQuizDataType>();
-  const columns: ColumnDef<ApiQuizDataType, string>[] = [
+  const columnHelper = createColumnHelper<AppTableFeatures, ApiQuizDataType>();
+  const columns = columnHelper.columns([
     columnHelper.accessor("id", {
       header: ({ table }) => {
         return (
           <Checkbox
             radius="xs"
             checked={table.getIsAllRowsSelected()}
-            indeterminate={table.getIsSomeRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
             onChange={() => table.toggleAllRowsSelected()}
           />
         );
@@ -80,9 +72,10 @@ const QuizesTable: React.FC<Props> = ({ quizes: quizesProp, deleteQuizes, refetc
     columnHelper.accessor("category", {
       header: "カテゴリ",
     }),
-  ];
+  ]);
 
-  const table = useReactTable<ApiQuizDataType>({
+  const table = useTable({
+    features: appTableFeatures,
     data: quizes || [],
     columns,
     state: {
@@ -92,9 +85,6 @@ const QuizesTable: React.FC<Props> = ({ quizes: quizesProp, deleteQuizes, refetc
     onRowSelectionChange: setSelectedQuizes,
     globalFilterFn: fuzzyFilter,
     onGlobalFilterChange: setSearchText,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const deleteQuizList = table.getSelectedRowModel().rows.map(({ original: quiz }) => quiz.id);

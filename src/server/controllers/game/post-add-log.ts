@@ -21,20 +21,7 @@ const handler = factory.createHandlers(zValidator("json", AddGameLogRequestSchem
     const logData = c.req.valid("json");
     const logId = await addGameLog(logData, userId);
 
-    const gameData = await getGameById(logData.gameId, userId);
-
-    // 公開ゲームの場合はスコアを計算し直して観戦用キャッシュを更新する
-    await refreshBoardCache(gameData);
-
-    // Discord Webhook通知を送信（勝ち抜け通知）
-    if (gameData) {
-      try {
-        await sendDiscordWinnerNotification(gameData);
-      } catch (discordError) {
-        // Discord通知の失敗は非致命的エラーとして扱う
-        console.error("Discord notification failed:", discordError);
-      }
-    }
+    c.executionCtx.waitUntil(notifyAfterAddLog(logData.gameId, userId));
 
     return c.json({ logId } as const, 201);
   } catch (error) {
@@ -42,5 +29,19 @@ const handler = factory.createHandlers(zValidator("json", AddGameLogRequestSchem
     return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
 });
+
+const notifyAfterAddLog = async (gameId: string, userId: string) => {
+  try {
+    const gameData = await getGameById(gameId, userId);
+
+    await refreshBoardCache(gameData);
+
+    if (gameData) {
+      await sendDiscordWinnerNotification(gameData);
+    }
+  } catch (error) {
+    console.error("Post-processing for cloud game log failed:", error);
+  }
+};
 
 export default handler;

@@ -1,0 +1,6 @@
+.status {
+  position: fixed;
+  right: var(--mantine-spacing-xs);
+  bottom: var(--mantine-spacing-xs);
+  z-index: 200;
+}

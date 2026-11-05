@@ -3,6 +3,7 @@ import { Box, Title } from "@mantine/core";
 import { userContext } from "@/context";
 import { countUserResources, getUserSubscription } from "@/server/repositories/subscription";
 import { PLAN_LIMITS } from "@/server/utils/subscription/config";
+import { getPlanPrices } from "@/server/utils/subscription/stripe";
 
 import PlanSettings from "./_components/PlanSettings/PlanSettings";
 
@@ -20,8 +21,10 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
   const subscription = await getUserSubscription(user.id);
   const usage = await countUserResources(user.id);
   const limits = PLAN_LIMITS[subscription.planCode];
+  const prices = await getPlanPrices("plus");
 
   return {
+    prices,
     subscription: {
       planCode: subscription.planCode,
       planName: limits.name,
@@ -49,6 +52,7 @@ const PlanPage = ({ loaderData }: Route.ComponentProps) => {
       <PlanSettings
         subscription={loaderData.subscription}
         isBillingAvailable={loaderData.isBillingAvailable}
+        prices={loaderData.prices}
       />
     </Box>
   );

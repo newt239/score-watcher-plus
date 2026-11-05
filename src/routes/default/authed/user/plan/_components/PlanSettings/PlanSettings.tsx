@@ -1,27 +1,77 @@
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Badge, Button, Card, Group, List, SegmentedControl, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconExternalLink } from "@tabler/icons-react";
 import { parseResponse } from "hono/client";
+import { useSearchParams } from "react-router";
 
 import { formatDisplayDate } from "@/utils/date";
 import createApiClient from "@/utils/hono/browser";
 
 import classes from "./PlanSettings.module.css";
 
-import type { BillingIntervalType, GetSubscriptionStatusResponseType } from "@/models/subscription";
+import type {
+  BillingIntervalType,
+  GetSubscriptionStatusResponseType,
+  PlanPricesType,
+  PriceInfoType,
+} from "@/models/subscription";
 
 type PlanSettingsProps = {
   subscription: GetSubscriptionStatusResponseType;
   /** 決済機能が利用できる状態かどうか */
   isBillingAvailable: boolean;
+  /** プランの月払い・週払いの価格 */
+  prices: PlanPricesType;
+};
+
+/** 価格を日本語の通貨表記に整形する */
+const formatPrice = (price: PriceInfoType): string => {
+  if (!price) {
+    return "";
+  }
+  const formatted = new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: price.currency,
+  }).format(price.amount);
+  return ` ${formatted}`;
 };
 
 /** 契約中のプランと利用状況を表示し、プランの変更導線を提供するコンポーネント */
-const PlanSettings: React.FC<PlanSettingsProps> = ({ subscription, isBillingAvailable }) => {
+const PlanSettings: React.FC<PlanSettingsProps> = ({
+  subscription,
+  isBillingAvailable,
+  prices,
+}) => {
   const [isPending, startTransition] = useTransition();
   const [interval, setInterval] = useState<BillingIntervalType>("month");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status !== "success" && status !== "cancel") {
+      return;
+    }
+
+    if (status === "success") {
+      notifications.show({
+        title: "アップグレードが完了しました",
+        message: "プラスプランの機能が利用できます。",
+        color: "green",
+      });
+    } else {
+      notifications.show({
+        title: "決済をキャンセルしました",
+        message: "プランの変更は行われませんでした。",
+        color: "gray",
+      });
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("status");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   /** Checkoutページへ遷移する */
   const startCheckout = () => {
@@ -133,8 +183,8 @@ const PlanSettings: React.FC<PlanSettingsProps> = ({ subscription, isBillingAvai
             value={interval}
             onChange={(value) => setInterval(value === "week" ? "week" : "month")}
             data={[
-              { label: "月払い", value: "month" },
-              { label: "週払い", value: "week" },
+              { label: `月払い${formatPrice(prices.month)}`, value: "month" },
+              { label: `週払い${formatPrice(prices.week)}`, value: "week" },
             ]}
           />
           <Button mt="md" onClick={startCheckout} loading={isPending}>

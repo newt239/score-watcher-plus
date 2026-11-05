@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { DBClient } from "@/utils/drizzle/client";
 import { game, gameLog, gamePlayer, player } from "@/utils/drizzle/schema";
 
+import { clampLogTimestamp } from "../utils/game-log";
 import { parseGameOption, setupDefaultGameOption } from "../utils/options";
 
 import type {
@@ -23,6 +24,7 @@ export const getGameById = async (gameId: string, userId: string) => {
     with: {
       gameLog: {
         where: isNull(gameLog.deletedAt),
+        orderBy: (log, { asc }) => [asc(log.timestamp), asc(log.id)],
       },
       gamePlayer: {
         where: isNull(gamePlayer.deletedAt),
@@ -241,29 +243,30 @@ export const getGameLogsById = async (gameId: string, userId: string) => {
   const logs = await DBClient.select()
     .from(gameLog)
     .where(and(eq(gameLog.gameId, gameId), eq(gameLog.userId, userId), isNull(gameLog.deletedAt)))
-    .orderBy(asc(gameLog.timestamp));
+    .orderBy(asc(gameLog.timestamp), asc(gameLog.id));
 
   return logs;
 };
 
 /** クラウドゲームログ追加 */
 export const addGameLog = async (logData: AddGameLogRequestType, userId: string) => {
-  const logId = nanoid();
+  await DBClient.insert(gameLog)
+    .values({
+      id: logData.id,
+      gameId: logData.gameId,
+      playerId: logData.playerId,
+      questionNumber: logData.questionNumber,
+      actionType: logData.actionType,
+      scoreChange: logData.scoreChange || 0,
+      isSystemAction: logData.isSystemAction || false,
+      panel: logData.panel,
+      removedPanel: logData.removedPanel,
+      timestamp: clampLogTimestamp(logData.timestamp),
+      userId,
+    })
+    .onConflictDoNothing({ target: gameLog.id });
 
-  await DBClient.insert(gameLog).values({
-    id: logId,
-    gameId: logData.gameId,
-    playerId: logData.playerId,
-    questionNumber: logData.questionNumber,
-    actionType: logData.actionType,
-    scoreChange: logData.scoreChange || 0,
-    isSystemAction: logData.isSystemAction || false,
-    panel: logData.panel,
-    removedPanel: logData.removedPanel,
-    userId,
-  });
-
-  return logId;
+  return logData.id;
 };
 
 /** ゲームログ情報を取得 */
@@ -509,6 +512,7 @@ export const getPublicGameById = async (gameId: string) => {
     with: {
       gameLog: {
         where: isNull(gameLog.deletedAt),
+        orderBy: (log, { asc }) => [asc(log.timestamp), asc(log.id)],
       },
       gamePlayer: {
         where: isNull(gamePlayer.deletedAt),

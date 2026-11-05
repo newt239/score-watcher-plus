@@ -6,17 +6,15 @@ import { IconFilter, IconSettings } from "@tabler/icons-react";
 import {
   createColumnHelper,
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
+  useTable,
   type FilterFn,
+  type RowSelectionState,
 } from "@tanstack/react-table";
 
 import ButtonLink from "@/components/ButtonLink";
 import TablePagenation from "@/components/TablePagination";
 import createApiClient from "@/utils/hono/browser";
+import { appTableFeatures, type AppTableFeatures } from "@/utils/table";
 
 import { useGameState } from "../../_hooks/useGameState";
 
@@ -37,11 +35,11 @@ const CompactPlayerTable: React.FC<CompactPlayerTableProps> = ({
   onPlayersChange,
 }) => {
   const [isPending, startTransition] = useTransition();
-  const [rowSelection, setRowSelection] = useState<{ [key: number]: boolean }>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [searchText, setSearchText] = useState<string>("");
   const { updateGame } = useGameState();
 
-  const fuzzyFilter: FilterFn<PlayerProps> = (row) => {
+  const fuzzyFilter: FilterFn<AppTableFeatures, PlayerProps> = (row) => {
     const data = row.original;
     return (
       data.name?.includes(searchText) ||
@@ -50,47 +48,46 @@ const CompactPlayerTable: React.FC<CompactPlayerTableProps> = ({
     );
   };
 
-  const columnHelper = createColumnHelper<PlayerProps>();
-  const columns = useMemo<ColumnDef<PlayerProps, string>[]>(
-    () => [
-      columnHelper.accessor("id", {
-        header: "氏名",
-        cell: ({ row }) => {
-          return (
-            <Checkbox
-              label={row.original.name}
-              {...{
-                checked: row.getIsSelected(),
-                onChange: row.getToggleSelectedHandler(),
-                disabled: isPending,
-              }}
-            />
-          );
-        },
-        footer: (info) => info.column.id,
-      }),
-      columnHelper.accessor("description", {
-        header: "順位",
-        footer: (info) => info.column.id,
-      }),
-      columnHelper.accessor("affiliation", {
-        header: "所属",
-        footer: (info) => info.column.id,
-      }),
-    ],
+  const columnHelper = createColumnHelper<AppTableFeatures, PlayerProps>();
+  const columns = useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor("id", {
+          header: "氏名",
+          cell: ({ row }) => {
+            return (
+              <Checkbox
+                label={row.original.name}
+                {...{
+                  checked: row.getIsSelected(),
+                  onChange: row.getToggleSelectedHandler(),
+                  disabled: isPending,
+                }}
+              />
+            );
+          },
+          footer: (info) => info.column.id,
+        }),
+        columnHelper.accessor("description", {
+          header: "順位",
+          footer: (info) => info.column.id,
+        }),
+        columnHelper.accessor("affiliation", {
+          header: "所属",
+          footer: (info) => info.column.id,
+        }),
+      ]),
     [isPending]
   );
 
-  const table = useReactTable<PlayerProps>({
+  const table = useTable({
+    features: appTableFeatures,
     data: players,
     columns,
     globalFilterFn: fuzzyFilter,
     onGlobalFilterChange: setSearchText,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     state: {
       globalFilter: searchText,
       rowSelection,
@@ -99,7 +96,7 @@ const CompactPlayerTable: React.FC<CompactPlayerTableProps> = ({
 
   useEffect(() => {
     (async () => {
-      const initialPlayerIdList: { [key: number]: boolean } = {};
+      const initialPlayerIdList: RowSelectionState = {};
       players.forEach((player, i) => {
         if (gamePlayerIds.includes(player.id)) {
           initialPlayerIdList[i] = true;

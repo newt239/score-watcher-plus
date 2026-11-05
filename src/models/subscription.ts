@@ -41,5 +41,19 @@ export type GetSubscriptionStatusResponseType = {
   };
 };
 
+/** プランの価格情報（取得できない場合はnull） */
+export type PriceInfoType = {
+  /** 最小単位の金額（円ならそのまま円） */
+  amount: number;
+  /** 通貨コード（例: jpy） */
+  currency: string;
+} | null;
+
+/** 課金間隔ごとの価格 */
+export type PlanPricesType = {
+  month: PriceInfoType;
+  week: PriceInfoType;
+};
+
 /** 上限に達したときにAPIが返すエラーコード */
 export const PLAN_LIMIT_REACHED = "PLAN_LIMIT_REACHED";

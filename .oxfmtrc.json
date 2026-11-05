@@ -1,4 +1,5 @@
 {
+  "ignorePatterns": ["worker-configuration.d.ts"],
   "semi": true,
   "singleQuote": false,
   "quoteProps": "as-needed",
@@ -8,7 +9,7 @@
   "arrowParens": "always",
   "proseWrap": "preserve",
   "htmlWhitespaceSensitivity": "css",
-  "lineWidth": 80,
+  "printWidth": 100,
   "sortImports": {
     "groups": [
       "react",

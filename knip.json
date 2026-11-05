@@ -4,7 +4,6 @@
     "@css-modules-kit/stylelint-plugin",
     "@typescript/native-preview",
     "dotenv",
-    "lefthook",
     "postcss-load-config",
     "@react-router/node",
     "cloudflare"
