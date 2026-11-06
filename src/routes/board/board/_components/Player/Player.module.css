@@ -47,6 +47,7 @@
 
   @media (width >= 62em) {
     align-items: center;
+    container-type: size;
 
     &[data-rows="1"] {
       height: calc(80vh - 4rem);
