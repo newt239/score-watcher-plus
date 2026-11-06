@@ -47,6 +47,7 @@ export const getPlayers = async (userId: string) => {
   const mappedPlayers = players.map((player) => ({
     id: player.id,
     name: player.name,
+    displayName: player.displayName,
     description: player.description || "",
     affiliation: player.affiliation || "",
     tags: player.playerPlayerTag
