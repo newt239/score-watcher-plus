@@ -5,15 +5,18 @@ import Avatar from "boring-avatars";
 import ButtonLink from "@/components/ButtonLink";
 import Link from "@/components/Link";
 import { formatDisplayDate } from "@/utils/date";
+import { formatGameProgress } from "@/utils/functions";
 
 import PublicityBadge from "../PublicityBadge/PublicityBadge";
 import classes from "./GameListGrid.module.css";
+
+import type { RuleNames } from "@/models/game";
 
 type GameListGridProps = {
   gameList: {
     id: string;
     name: string;
-    ruleType: string;
+    ruleType: RuleNames;
     playerCount: number;
     logCount: number;
     updatedAt: string;
@@ -38,6 +41,8 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
                 <Avatar
                   name={game.id}
                   square
+                  size="100%"
+                  preserveAspectRatio="xMidYMid slice"
                   colors={["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"]}
                 />
               </CardSection>
@@ -49,7 +54,7 @@ const GameListGrid: React.FC<GameListGridProps> = ({ gameList }) => {
               </Group>
               <CardSection className={classes.game_description}>
                 <Text size="sm">
-                  {game.logCount}問目 ・ {game.playerCount}人 ・{" "}
+                  {formatGameProgress(game.logCount)} ・ {game.playerCount}人 ・{" "}
                   {formatDisplayDate(game.updatedAt, "MM/DD")}
                 </Text>
               </CardSection>
