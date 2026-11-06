@@ -3,7 +3,12 @@ import { reactRouter } from "@react-router/dev/vite";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
+import packageJson from "./package.json" with { type: "json" };
+
 export default defineConfig({
+  define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(packageJson.version),
+  },
   // E2E（playwright.config.ts）とGoogle OAuthのリダイレクトURIが3000番を前提にしている
   server: {
     port: 3000,
