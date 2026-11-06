@@ -11,14 +11,17 @@ type Props = {
 };
 
 const PlayerName: React.FC<Props> = ({ player_name, rows, isAQL = false }) => {
+  const displayName = zenkaku2Hankaku(player_name);
+
   return (
     <Flex
       className={classes.player_name}
       data-aql={isAQL}
       data-rows={rows}
       data-testid="player-name"
+      style={{ "--name-length": Array.from(displayName).length }}
     >
-      {zenkaku2Hankaku(player_name)}
+      {displayName}
     </Flex>
   );
 };

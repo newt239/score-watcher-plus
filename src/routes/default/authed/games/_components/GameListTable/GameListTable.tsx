@@ -13,14 +13,18 @@ import { IconAdjustmentsHorizontal, IconEye } from "@tabler/icons-react";
 import ButtonLink from "@/components/ButtonLink";
 import Link from "@/components/Link";
 import { formatDisplayDate } from "@/utils/date";
+import { formatGameProgress } from "@/utils/functions";
+import { rules } from "@/utils/rules";
 
 import PublicityBadge from "../PublicityBadge/PublicityBadge";
+
+import type { RuleNames } from "@/models/game";
 
 type GameListTableProps = {
   gameList: {
     id: string;
     name: string;
-    ruleType: string;
+    ruleType: RuleNames;
     playerCount: number;
     logCount: number;
     updatedAt: string;
@@ -55,9 +59,9 @@ const GameListTable: React.FC<GameListTableProps> = ({ gameList }) => {
               {gameList.map((game) => (
                 <TableTr key={game.id}>
                   <TableTd>{game.name}</TableTd>
-                  <TableTd>{game.ruleType}</TableTd>
+                  <TableTd>{rules[game.ruleType].name}</TableTd>
                   <TableTd>{game.playerCount}人</TableTd>
-                  <TableTd>{game.logCount}問目</TableTd>
+                  <TableTd>{formatGameProgress(game.logCount)}</TableTd>
                   <TableTd>
                     <PublicityBadge isPublic={game.isPublic} size="lg" />
                   </TableTd>

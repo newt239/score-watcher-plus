@@ -49,3 +49,6 @@ export const zenkaku2Hankaku = (str: string) => {
     return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
   });
 };
+
+export const formatGameProgress = (logCount: number) =>
+  logCount === 0 ? "未開始" : `${logCount + 1}問目`;

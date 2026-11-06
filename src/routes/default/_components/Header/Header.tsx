@@ -10,9 +10,10 @@ import type { User } from "@/utils/auth/auth";
 
 type HeaderProps = {
   user: User | null;
+  copyrightYear: string;
 };
 
-const Header: React.FC<HeaderProps> = ({ user }) => {
+const Header: React.FC<HeaderProps> = ({ user, copyrightYear }) => {
   return (
     <Box component="header" className={classes.header}>
       <Flex className={classes.header_inner}>
@@ -41,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                   newt239
                 </Anchor>
               </Box>
-              <Box>2022-2025</Box>
+              <Box>2022-{copyrightYear}</Box>
             </Flex>
           </Flex>
         </Flex>

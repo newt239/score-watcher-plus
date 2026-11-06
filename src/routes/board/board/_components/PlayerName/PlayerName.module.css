@@ -20,19 +20,25 @@
   }
 
   @media (width >= 62em) {
+    --name-max-font-size: clamp(2rem, 8vh, 4.5rem);
+
+    flex-grow: 1;
+    min-height: 0;
     padding-top: 0;
-    font-size: clamp(2rem, 8vh, 4.5rem);
-    line-height: clamp(2rem, 8vh, 4.5rem);
+    overflow: hidden;
+    font-size: max(
+      1rem,
+      min(var(--name-max-font-size), calc((100cqh - 2.5rem) / var(--name-length, 1)))
+    );
+    line-height: 1.1;
     writing-mode: vertical-rl;
 
     &[data-rows="3"] {
-      font-size: clamp(1.8rem, 7vh, 4rem);
-      line-height: clamp(1.8rem, 7vh, 4rem);
+      --name-max-font-size: clamp(1.8rem, 7vh, 4rem);
     }
 
     &[data-aql="true"] {
-      font-size: clamp(1.5rem, 6vh, 3rem);
-      line-height: clamp(1.5rem, 6vh, 3rem);
+      --name-max-font-size: clamp(1.5rem, 6vh, 3rem);
     }
   }
 }

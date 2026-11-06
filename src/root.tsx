@@ -1,4 +1,11 @@
-import { ColorSchemeScript, mantineHtmlProps, MantineProvider, Title } from "@mantine/core";
+import {
+  Anchor,
+  ColorSchemeScript,
+  mantineHtmlProps,
+  MantineProvider,
+  Stack,
+  Title,
+} from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v8";
@@ -108,22 +115,25 @@ const App = () => {
   return <Outlet />;
 };
 
+const ErrorMessage = ({ title }: { title: string }) => (
+  <Stack align="center" mt="xl" gap="md">
+    <Title order={1}>{title}</Title>
+    <Anchor href="/">トップページへ戻る</Anchor>
+  </Stack>
+);
+
 export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   if (isRouteErrorResponse(error)) {
     return (
-      <Title order={1} ta="center" mt="xl">
-        {error.status === 404 ? "ページが見つかりません" : "エラーが発生しました"}
-      </Title>
+      <ErrorMessage
+        title={error.status === 404 ? "ページが見つかりません" : "エラーが発生しました"}
+      />
     );
   }
 
   console.error(error);
 
-  return (
-    <Title order={1} ta="center" mt="xl">
-      エラーが発生しました
-    </Title>
-  );
+  return <ErrorMessage title="エラーが発生しました" />;
 };
 
 export default App;

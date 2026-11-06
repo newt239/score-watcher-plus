@@ -38,5 +38,7 @@ export default [
         route("plan", "routes/default/authed/user/plan/route.tsx"),
       ]),
     ]),
+
+    route("*", "routes/default/not-found/route.tsx"),
   ]),
 ] satisfies RouteConfig;

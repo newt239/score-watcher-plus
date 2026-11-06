@@ -87,7 +87,7 @@ const GameLogs: React.FC<GameLogsProps> = ({
   return (
     <Box className={classes.game_logs}>
       <Group justify="space-between" mb="1rem">
-        <Text fw={700}>Game Logs</Text>
+        <Text fw={700}>ログ</Text>
         <Group>
           <Button
             size="xs"
@@ -108,7 +108,7 @@ const GameLogs: React.FC<GameLogsProps> = ({
         </Group>
       </Group>
       {filteredLogs.length !== 0 ? (
-        <Table.ScrollContainer minWidth={1000}>
+        <Table.ScrollContainer minWidth={showQuiz ? 1000 : 0}>
           <Table highlightOnHover>
             <Table.Tbody>
               {shownLogs.map((log, qn) => {

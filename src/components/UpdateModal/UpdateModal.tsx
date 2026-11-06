@@ -11,8 +11,6 @@ const UpdateModal: React.FC = () => {
   const latestVersion = import.meta.env.VITE_APP_VERSION;
 
   useEffect(() => {
-    // バージョンが未設定の環境（ローカル・CI）では告知を出さない。
-    // 未設定のまま保存すると文字列"undefined"が入り、毎回モーダルが開いてしまう
     if (latestVersion) {
       const raw = window.localStorage.getItem("scorewatcher-version");
       if (raw !== latestVersion) {
